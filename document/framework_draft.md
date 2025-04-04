@@ -16,8 +16,8 @@
 ## 类似往年程设项目：
 
 [MindfulMeadow](https://github.com/MindfulMeadow-Dev-Team/MindfulMeadow),
-[MindFlow](https://github.com/Oscarhouhyk/MindFlow)
-,[Qt_taskorganizer](https://github.com/MethierAdde/Qt_taskorganizer)...
+[MindFlow](https://github.com/Oscarhouhyk/MindFlow),
+[Qt_taskorganizer](https://github.com/MethierAdde/Qt_taskorganizer)...
 
 ## 核心功能：
 
