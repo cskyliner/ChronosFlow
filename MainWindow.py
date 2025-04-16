@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QPushButton, QHBoxLayout, QLabel, QStackedWidget
+from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QPushButton, QHBoxLayout
 from PySide6.QtCore import QPropertyAnimation, QEasingCurve, QDate, Qt
 from SideBar import SideBar
 from Calendar import Calendar
@@ -15,6 +15,7 @@ class MainWindow(QMainWindow):
 
 		# 动画管理集
 		self.animations = {}
+
 		# 主窗口中心部件（容纳 main_layout）
 		self.central_widget = QWidget()
 		self.setCentralWidget(self.central_widget)
@@ -54,7 +55,7 @@ class MainWindow(QMainWindow):
             }
         """)
 		self.toggle_btn.clicked.connect(self.toggle_sidebar)
-		main_window_layout.addWidget(self.toggle_btn, alignment=Qt.AlignLeft)
+		main_window_layout.addWidget(self.toggle_btn, alignment=Qt.AlignmentFlag.AlignLeft)
 
 		# 创建日历界面
 		self.main_window_calendar = Calendar()
