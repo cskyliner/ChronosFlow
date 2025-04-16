@@ -1,15 +1,30 @@
 # project Untitled
+- [Preparation](#preparation)
+  - [Python Essential](#python-essential)
+  - [版本控制与协作](#版本控制与协作)
+  - [类似开源项目](#类似开源项目)
+  - [核心功能](#核心功能)
+  - [主要功能](#主要功能)
+- [class设计](#class设计)
+  - [Event](#event)
+  - [MainWindow](#mainwindow)
+  - [Calendar](#calendar)
+  - [CreateEventWindow](#createeventwindow)
+  - [CreateDailyWindow](#createdailywindow)
+  - [FindWindow](#findwindow)
+  - [SideBar](#siderbar)
+- [页面设计](#页面设计)
+- [性能优化](#性能优化)
 
+
+# Preparation
 
 ## Python Essential:
 conda\
 Python3.10\
-[PySide6](https://doc.qt.io/qtforpython-6/index.html)\
+[PySide6](https://doc.qt.io/qtforpython-6/index.html)(>=6.72)\
 [PEP 8 代码风格规范](https://peps.python.org/pep-0008/)\
 ...
-## 界面美化设计：
-
-	QtDesigner,QSS...
 
 ## 版本控制与协作
 	git,github...
@@ -65,7 +80,7 @@ plyer.notification（通用桌面通知）：
 
 9. 数据统计与可视化处理：
 
-10.  数据库存储读取:\
+10. 数据库存储读取:\
 MySQL,json格式（ ~~是否需要服务器存储~~ 纯本地读写）
 
 11. *模板化：\
@@ -79,45 +94,46 @@ MySQL,json格式（ ~~是否需要服务器存储~~ 纯本地读写）
 不同位置左右键点击的触发任务设置。
 
 ...
-## Class设计
+# Class设计
 
-~~### DayBlock：
+~~## DayBlock：
 以日为单位设置日历？储存日程？~~
-### Event: 
+## Event: 
 事件日程基类\
 也许可以根据事件类型划分子类：
 *Task（短期任务）*，*Activity（公共活动）*,*Clocks（长期打卡）*...
-### MainWindow: 
+## MainWindow: 
 主窗口类\
-侧边栏功能对应不同主窗口，两种实现方法?
-1. 多个主页面，复制一种侧边栏sidebar
-2. 一个主页面，切换不同页面形式，以一个MainWindow为母类，下存储多个主窗口样式
-### Calendar:
+存储多个主窗口样式
+包含一个侧边栏
+## Calendar:
 日历显示类\
 已经实现了基本月单位的日历，支持基本的右键添加操作菜单\
 TODO：日，周，（年）的处理
-### CreateEventWindow：
+是否可以拖拽实现多选？
+添加操作需要connect创建日程窗口
+## CreateEventWindow：
 创建日程窗口？
-### CreateDailyWindow：
+## CreateDailyWindow：
 创建日记窗口？
-### FindWindow：
+## FindWindow：
 检索结果
-### SiderBar:
-侧边栏类
-实现多种功能切换\
+## SiderBar:
+侧边栏类\
+实现多种功能切换,提供搜索栏入口\
+动画:连接toggle_btn，使用InOutQuad曲线滑动处理
 FIXME:似乎对于Dark模式的支持不好
 ...
 
-## 页面设计
-动画:\
-拖拽?过渡?\
-风格：\
-简洁？\
+# 页面设计
 tools:\
 [qss](https://doc.qt.io/qtforpython-6/tutorials/basictutorial/widgetstyling.html#tutorial-widgetstyling)(类似前端css)自定义qtUI格式\
+操作动画：QPropertyAnimation\
+Layout自动布局
 图标与背景图案设计:
+toggle_btn的图标，搜索按键的图标（日历的背景图案？）
 
-## 性能表现优化
+# 性能优化
 多线程、异步操作保证页面流畅…
 <!--stackedit_data:
 eyJoaXN0b3J5IjpbLTExMzUxNDEwMDEsLTEwMzMyODg2MDBdfQ
