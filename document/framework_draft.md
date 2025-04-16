@@ -26,17 +26,17 @@ Python3.10\
 ## 主要功能（待选）：
 1. 选择日期界面：\
 day week month year 切换 日历导入？万年历计算。\
-分级展示日程形式
+分级展示日程形式\
 day:\
-![](WechatIMG73.jpg)
+![day](WechatIMG73.jpg){:width="200px" height="200px"}
 week:\
-![](WechatIMG72.jpg)
+![](WechatIMG72.jpg){:width="200px" height="200px"}
 month:\
-![](WechatIMG71.jpg)
+![](WechatIMG71.jpg){:width="200px" height="200px"}
 or\
-![](<Screenshot 2025-04-14 at 12.03.53.png>)
+![](<Screenshot 2025-04-14 at 12.03.53.png>){:width="200px" height="200px"}
 year(maybe):\
-![](WechatIMG70.jpg)
+![](WechatIMG70.jpg){:width="200px" height="200px"}
 热度图？
 
 2. 音频提示，视觉提示：\
