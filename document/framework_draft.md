@@ -9,7 +9,7 @@ Python3.10\
 ...
 ## 界面美化设计：
 
-	QtDesigner...
+	QtDesigner,QSS...
 
 ## 版本控制与协作
 	git,github...
@@ -25,18 +25,18 @@ Python3.10\
 
 ## 主要功能（待选）：
 1. 选择日期界面：\
-day week month year 切换 日历导入？万年历计算。\
+day week month year 切换 使用Qt自带QCalendarWidget组件显示基本月历\
 分级展示日程形式\
 day:\
-![day](WechatIMG73.jpg){:width="200px" height="200px"}
+<img src="CalendarSampleDay1.jpg" width="200" height="350"/>\
 week:\
-![](WechatIMG72.jpg){:width="200px" height="200px"}
+<img src="CalendarSampleWeek1.jpg" width="200" height="350"/>\
 month:\
-![](WechatIMG71.jpg){:width="200px" height="200px"}
+<img src="CalendarSampleMonth1.jpg" width="200" height="350"/>\
 or\
-![](<Screenshot 2025-04-14 at 12.03.53.png>){:width="200px" height="200px"}
+<img src="CalendarSampleYear2.png" width="300" height="200"/>\
 year(maybe):\
-![](WechatIMG70.jpg){:width="200px" height="200px"}
+<img src="CalendarSampleYear1.jpg" width="200" height="350"/>\
 热度图？
 
 2. 音频提示，视觉提示：\
@@ -81,8 +81,8 @@ MySQL,json格式（ ~~是否需要服务器存储~~ 纯本地读写）
 ...
 ## Class设计
 
-### DayBlock：
-以日为单位设置日历？
+~~### DayBlock：
+以日为单位设置日历？储存日程？~~
 ### Event: 
 事件日程基类\
 也许可以根据事件类型划分子类：
@@ -92,13 +92,20 @@ MySQL,json格式（ ~~是否需要服务器存储~~ 纯本地读写）
 侧边栏功能对应不同主窗口，两种实现方法?
 1. 多个主页面，复制一种侧边栏sidebar
 2. 一个主页面，切换不同页面形式，以一个MainWindow为母类，下存储多个主窗口样式
+### Calendar:
+日历显示类\
+已经实现了基本月单位的日历，支持基本的右键添加操作菜单\
+TODO：日，周，（年）的处理
 ### CreateEventWindow：
 创建日程窗口？
 ### CreateDailyWindow：
 创建日记窗口？
 ### FindWindow：
 检索结果
-
+### SiderBar:
+侧边栏类
+实现多种功能切换\
+FIXME:似乎对于Dark模式的支持不好
 ...
 
 ## 页面设计
