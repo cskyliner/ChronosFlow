@@ -6,14 +6,14 @@ from PySide6.QtGui import QTextOption
 class Calendar(QCalendarWidget):
 	def __init__(self, parent=None):
 		super().__init__(parent)
-		self.notes = {}  # 存储每日文本 {QDate: str}
+		self.notes = {}  # 存储每日文本 {QDate: str}TODO:与后端数据库连接
 		self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 		self.customContextMenuRequested.connect(self.show_context_menu)
 
 	def paintCell(self, painter, rect, date):
 		"""重写绘制单元格方法"""
 		super().paintCell(painter, rect, date)
-
+		painter.drawRect(rect)
 		# 如果有该日期的文本，则绘制
 		if date in self.notes:
 			painter.save()
@@ -36,20 +36,20 @@ class Calendar(QCalendarWidget):
 
 	def show_context_menu(self, pos):
 		"""显示右键菜单"""
-		# 获取当前选中的日期（而不是点击位置的日期）
+		# 获取当前选中的日期（而不是点击位置的日期）FIXME：这里可能需要商榷
 		date = self.selectedDate()
 
 		menu = QMenu(self)
 
-		add_action = menu.addAction("添加/编辑文本")
-		clear_action = menu.addAction("清除文本")
+		add_action = menu.addAction("添加/编辑日程")
+		clear_action = menu.addAction("清除日程")
 
 		action = menu.exec(self.mapToGlobal(pos))
 
 		if action == add_action:
 			text, ok = QInputDialog.getText(
-				self, "输入文本",
-				f"为 {date.toString('yyyy-MM-dd')} 添加文本:",
+				self, "输入时间",
+				f"为 {date.toString('yyyy-MM-dd')} 添加时间:",
 				text=self.notes.get(date, "")
 			)
 			if ok and text:
