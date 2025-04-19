@@ -100,14 +100,18 @@ MySQL,json格式（ ~~是否需要服务器存储~~ 纯本地读写）
 ~~## DayBlock：
 以日为单位设置日历？储存日程？~~
 ## Event: 
-事件日程基类\
+事件日程基类，后端储存与提取\
 也许可以根据事件类型划分子类：
 *Task（短期日程）*，*Activity（公共活动）*,*Clocks（长期打卡）*,*DDL（截止日期）*...\
 数据储存：\
 核心存储用 SQLite：利用数据库管理复杂任务关系,高效快捷\
 ~~(导出/导入功能用 iCalendar：通过iCalendar库实现标准格式的互通?)~~
-函数：\
+函数接口：\
+创建事件
+EventFactory.create(事件类型，事件标题)
 增删改
+event.add_event(),event.delete_event(),event.modify_event()
+搜索事件
 ## MainWindow: 
 主窗口类\
 存储多个主窗口样式
@@ -127,7 +131,8 @@ TODO：日，周，（年）的处理
 ## Settings:
 设置窗口
 具体类别：
-？
+本地存储地址设置？
+通知设置？
 ## SiderBar:
 侧边栏类\
 实现多种功能切换,提供搜索栏入口\
