@@ -108,9 +108,9 @@ MySQL,json格式（ ~~是否需要服务器存储~~ 纯本地读写）
 ~~(导出/导入功能用 iCalendar：通过iCalendar库实现标准格式的互通?)~~
 函数接口：\
 创建事件
-EventFactory.create(事件类型，事件标题)
-增删改
-event.add_event(),event.delete_event(),event.modify_event()
+EventFactory.create(事件类型，事件标题)\
+增删改:
+event.add_event(),event.delete_event(),event.modify_event()\
 搜索事件
 ## MainWindow: 
 主窗口类\
@@ -136,7 +136,7 @@ TODO：日，周，（年）的处理
 ## SiderBar:
 侧边栏类\
 实现多种功能切换,提供搜索栏入口\
-动画:连接toggle_btn，使用InOutQuad曲线滑动处理
+动画:连接toggle_btn，使用InOutQuad曲线滑动处理\
 FIXME:似乎对于Dark模式的支持不好
 ...
 
