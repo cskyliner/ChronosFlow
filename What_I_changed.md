@@ -5,7 +5,8 @@
 
 # 2
 
-更改了sidebar搜索按钮、侧栏控制按钮的样式，并添加了向MainWindow发信号的self.emitter
+1.更改了sidebar搜索按钮的样式
+2.添加了向MainWindow发信号的self.emitter;要想再向sidebar中添加新按钮，只需在存储按钮名字的元组中添加新页面的名字，即可创建好一个向MainWindow发射的新信号,接下来只需要在MainWindow中创建对应页面即可
 
 # 3
 
