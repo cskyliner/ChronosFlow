@@ -27,14 +27,8 @@ class Emitter(QObject):
 
 
 class TempEmitter(QObject):
-	def __init__(self, parent=None):
-		super().__init__(parent)
+	dynamic_signal = Signal(object)  # 使用 object 类型接收任意参数
 
-		self.signal1 = Signal(str)
-		self.signal3 = Signal(str, str, str)
-
-	def send_signal1(self, s):
-		self.signal1.emit(s)
-
-	def send_signal3(self, s1, s2, s3):
-		self.signal3.emit(s1, s2, s3)
+	def send_signal(self, *args):
+		#发射可变数量的字符串参数
+		self.dynamic_signal.emit(args)  # 将参数打包为元组发射

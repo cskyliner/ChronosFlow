@@ -75,13 +75,12 @@ class Schedule(QWidget):
 		filename, _ = QFileDialog.getSaveFileName(self, "保存文件")
 		if filename:
 			emitter = TempEmitter()
-			emitter.send_signal3(filename, self.theme_text_edit.text(), self.text_edit.toPlainText())  # 路径,主题,内容
-			print("OK!")
+			emitter.send_signal(filename, self.theme_text_edit.text(), self.text_edit.toPlainText())  # 路径,主题,内容
 
 	# 加载内容
 	def load_text(self):
 		filename, _ = QFileDialog.getOpenFileName(self, "打开文件")
 		if filename:
 			emitter = TempEmitter()
-			emitter.send_signal1(filename)
+			emitter.send_signal(filename)
 # TODO:从后端接收内容

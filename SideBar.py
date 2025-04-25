@@ -90,4 +90,4 @@ class SideBar(QFrame):
 	# 获取文本框内容
 	def get_text(self):
 		emitter = TempEmitter()
-		emitter.send_signal1(self.search_edit.text())
+		emitter.send_signal(self.search_edit.text())
