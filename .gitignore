@@ -1,0 +1,8 @@
+.idea/
+*.iml
+.vscode/
+.DS_Store
+__pycache__/
+*.pyc
+local_data/
+/Calendar.py
