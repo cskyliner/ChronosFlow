@@ -4,7 +4,7 @@ from SideBar import SideBar
 from Calendar import Calendar
 from functools import partial
 from CreateEventWindow import Schedule
-from Emitter import TempEmitter
+
 
 class MainWindow(QMainWindow):
 	def __init__(self, width=800, height=600, show_x=100, show_y=100):
