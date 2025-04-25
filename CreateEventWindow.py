@@ -11,7 +11,7 @@ class Schedule(QWidget):
 
 		self.height = height
 		self.width = width
-		self.date = None
+		self.date = ""
 
 		layout = QVBoxLayout(self)
 
