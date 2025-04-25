@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QPlainTextEdit, QLabel, QHBoxLayout, QVBoxLayout, 
 	QLineEdit
 from PySide6.QtGui import QFont
 from Emitter import TempEmitter
+from PySide6.QtCore import Qt
 
 
 class Schedule(QWidget):
@@ -11,11 +12,11 @@ class Schedule(QWidget):
 		self.height = height
 		self.width = width
 		self.date = None
-		self.date_label = QLabel()
 
 		layout = QVBoxLayout(self)
 
-		layout.addWidget(self.date_label)
+		self.date_label = QLabel()
+		layout.addWidget(self.date_label, alignment=Qt.AlignmentFlag.AlignCenter)
 
 		# 单行文本框
 		self.theme_text_edit = QLineEdit()
@@ -67,7 +68,7 @@ class Schedule(QWidget):
 
 	# 接收date
 	def receive_signal(self, date):
-		self.date_label.setText(date.toString("yyyy年MM月dd日"))
+		self.date_label.setText(date[0].toString("yyyy年MM月dd日"))
 		self.date = date
 
 	# 保存内容 TODO:发送日期
@@ -75,7 +76,8 @@ class Schedule(QWidget):
 		filename, _ = QFileDialog.getSaveFileName(self, "保存文件")
 		if filename:
 			emitter = TempEmitter()
-			emitter.send_signal(filename, self.theme_text_edit.text(), self.text_edit.toPlainText())  # 路径,主题,内容
+			emitter.send_signal(filename, self.date, self.theme_text_edit.text(),
+								self.text_edit.toPlainText())  # 路径,日期,主题,内容
 
 	# 加载内容
 	def load_text(self):

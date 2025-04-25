@@ -1,6 +1,6 @@
 # 1
 
-在Schedule类中，通过save_text向后端发送路径、主题、内容（目前无法发送日期），通过load_text加载内容;sidebar中的文本框用类似的方式发送信息
+在Schedule类中，通过save_text向后端发送路径、日期、主题、内容，通过load_text加载内容;sidebar中的文本框用类似的方式发送信息
 
 # 2
 

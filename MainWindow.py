@@ -48,7 +48,7 @@ class MainWindow(QMainWindow):
 
 		# 设置 main_stack各页面的内容
 		self.setup_main_window()  # 日历窗口（主界面）
-		self.setup_schedule_window()  # 日程填写窗口
+		self.setup_create_event_window()  # 日程填写窗口
 		self.setup_setting_window()
 		self.setup_upcoming_window()
 
@@ -85,12 +85,12 @@ class MainWindow(QMainWindow):
 
 		self.add_page(self.main_stack, self.main_window, "Calendar")  # main_window 是日历，故名为calendar
 
-	# 创建 schedule_window
-	def setup_schedule_window(self):
-		self.schedule_window = QWidget()
+	# 创建 create_event_window
+	def setup_create_event_window(self):
+		self.create_event_window = QWidget()
 		schedule_layout = QVBoxLayout()  # 内容区域布局
 		schedule_layout.setContentsMargins(20, 5, 20, 20)
-		self.schedule_window.setLayout(schedule_layout)
+		self.create_event_window.setLayout(schedule_layout)
 
 		# 返回按钮，回到calendar
 		self.schedule_toggle_btn = QPushButton("✕")
@@ -111,7 +111,7 @@ class MainWindow(QMainWindow):
 		#创建Schedule
 		self.schedule = Schedule()
 		schedule_layout.addWidget(self.schedule)
-		self.add_page(self.main_stack, self.schedule_window, "Schedule")
+		self.add_page(self.main_stack, self.create_event_window, "Schedule")
 
 	# TODO
 	def setup_setting_window(self):
@@ -131,12 +131,11 @@ class MainWindow(QMainWindow):
 	def navigate_to(self, name, stack, date=None):
 		if name in self.main_stack_map:
 			#向Schedule传输date
-			"""
 			if not date is None:
 				emitter=TempEmitter()
-				emitter.signal1.connect(self.schedule.receive_signal)
-				emitter.send_signal1(date)
-			"""
+				emitter.dynamic_signal.connect(self.schedule.receive_signal)
+				emitter.send_signal(date)
+
 			stack.setCurrentIndex(self.main_stack_map[name])
 		else:
 			print(f"警告：未知页面 {name}")
