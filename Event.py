@@ -19,8 +19,11 @@ TABLE_MAP = {
     "taskevents": "Task",
     "clockevents": "Clock",
 }
-#TODO: tag的三表多对多查询机制
+
 def create_table_if_not_exist(table_name:str,data)->None:
+    """
+    根据输入表名创建新表TODO: tag的三表多对多查询机制
+    """
     columns = ', '.join([f"{key} {TYPE_MAP.get(key,'TEXT')}" for key in data.keys()])
     create_query = f"""
         CREATE TABLE IF NOT EXISTS {table_name} (
@@ -29,19 +32,32 @@ def create_table_if_not_exist(table_name:str,data)->None:
     """
     cursor.execute(create_query)
     conn.commit()
+
+
 class BaseEvent:
+    """
+    事件基类
+    """
     def __init__(self, title:str):
         self.title = title
         self.id = None
+
     def to_dict(self):
         raise NotImplementedError
+
+    def table_name(self):
+        """
+        给出该类对应表名
+        """
+        return self.__class__.__name__.lower()+'s'
+
     def add_event(self):
         """
         将Event加入日程中，若已经存在于table中则跳过
         """
         if self.id is not None:
             raise RuntimeError("事件对象已有 ID，可能已经添加过数据库。")
-        table_name = self.__class__.__name__.lower()+'s' # 类名小写转换变复数作为table_name,注意是复数！！！
+        table_name = self.table_name() # 类名小写转换变复数作为table_name,注意是复数！！！
         data = self.to_dict()
         create_table_if_not_exist(table_name, data)
         columns = ', '.join(data.keys())
@@ -51,28 +67,33 @@ class BaseEvent:
         cursor.execute(query, values)
         self.id = cursor.lastrowid # 获取table中的唯一id值
         conn.commit()
+
     def delete_event(self):
         """
         删除日程
         """
-        table_name = self.__class__.__name__.lower()+'s'
+        table_name = self.table_name()
         query = f"DELETE FROM {table_name} WHERE id = ?"
         cursor.execute(query, (self.id,))
         conn.commit()
+
     def modify_event(self):
         """
         修改日程
         """
-        table_name = self.__class__.__name__.lower()+'s'
+        table_name = self.table_name()
         data = self.to_dict()
         columns = ', '.join([f"{k} = ?" for k in data.keys()])
         values = list(data.values()) + [self.id]
         query = f"UPDATE {table_name} SET {columns} WHERE id = ?"
         cursor.execute(query, values)
         conn.commit()
+
+
 class DDLEvent(BaseEvent):
     """
-    标题，截止时间，备注，是否完成，提前提醒时间
+    DDL类
+    输入：标题，截止时间，备注，是否完成，提前提醒时间
     """
     def __init__(self, title:str, date:str, notes:str, done:bool, advance_time:int):
         super().__init__(title)
@@ -80,6 +101,7 @@ class DDLEvent(BaseEvent):
         self.notes = notes
         self.done = done
         self.advance_time = advance_time
+
     def to_dict(self):
         return {
             "title": self.title,
@@ -88,14 +110,28 @@ class DDLEvent(BaseEvent):
             "done": self.done,
             "advance_time": self.advance_time,
         }
+
+
 class TaskEvent(BaseEvent):
-    def __init__(self, title):
-        super().__init__(title)
-class ClockEvent(BaseEvent):
+    """
+    TODO:任务管理
+    """
     def __init__(self, title):
         super().__init__(title)
 
+
+class ClockEvent(BaseEvent):
+    """
+    TODO:打卡
+    """
+    def __init__(self, title):
+        super().__init__(title)
+
+
 class EventFactory:
+    """
+    事件工厂
+    """
     registry = {
         "DDL": DDLEvent,
         "Task": TaskEvent,
