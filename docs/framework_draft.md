@@ -12,6 +12,10 @@
   - [CreateEventWindow](#createeventwindow)
   - [CreateDailyWindow](#createdailywindow)
   - [FindWindow](#findwindow)
+<<<<<<< HEAD
+=======
+  - [Settings](#settings)
+>>>>>>> b2ace54c2f2ea1e8050270428236425f6e036898
   - [SideBar](#siderbar)
 - [页面设计](#页面设计)
 - [性能优化](#性能优化)
@@ -123,6 +127,13 @@ TODO：日，周，（年）的处理
 创建日记窗口？
 ## FindWindow：
 检索结果
+<<<<<<< HEAD
+=======
+## Settings:
+设置窗口
+具体类别：
+？
+>>>>>>> b2ace54c2f2ea1e8050270428236425f6e036898
 ## SiderBar:
 侧边栏类\
 实现多种功能切换,提供搜索栏入口\
