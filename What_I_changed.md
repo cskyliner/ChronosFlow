@@ -5,7 +5,7 @@
 # 2
 
 1.新建Emitter类，管理sidebar按钮的信号，并负责向MainWindow发送信号
-2.新建Schedule类，负责日程添加
+2.在CreateEventWindow新建Schedule类，负责日程添加
 
 # 3
 

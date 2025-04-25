@@ -3,7 +3,7 @@ from PySide6.QtCore import QPropertyAnimation, QEasingCurve, Qt
 from SideBar import SideBar
 from Calendar import Calendar
 from functools import partial
-from Schedule import Schedule
+from CreateEventWindow import Schedule
 from Emitter import TempEmitter
 
 class MainWindow(QMainWindow):
