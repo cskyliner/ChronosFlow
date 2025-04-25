@@ -31,9 +31,45 @@ Python3.10\
 ...
 
 ## 版本控制与协作
-	git,github...
-    **分支策略**  
-  `main`(稳定版) + `docs`(开发文档) + `userX/*`(开发分支)
+[GitHub网址](https://github.com/cskyliner/todolist)\
+**分支策略**  \
+`main`(稳定版) + `docs`(开发文档) + `userX/*`(开发分支)
+**工作流程**
+1. 获取某分支新代码
+```
+git checkout branchX
+git pull origin branchX
+```
+2. 同步某分支进度
+```
+git fetch origin
+git merge branchX
+```
+如果出现冲突，处理冲突后重新提交一次
+```
+git add .
+git commit 
+```
+3. 进行开发 → 提交更改 → 推送到远程
+```
+git add .
+git commit -m "feat: 添加xxx功能"
+git push origin userX
+```
+4. 通过 Pull Request 提交合并请求：
+
+**commit规范**
+```
+<标签>: <简洁描述>
+```
+可参考[conventional commits](https://www.conventionalcommits.org/en/v1.0.0/)
+|标签|含义|
+|---|----|
+|fix| 修改bug|
+|feat| 添加功能|
+|docs| 修改文档|
+|style| 格式调整|
+|refactor|重构代码（无功能影响）|
 ## 类似开源项目：
 往年程设：\
 [MindfulMeadow](https://github.com/MindfulMeadow-Dev-Team/MindfulMeadow),
@@ -74,7 +110,7 @@ Clock则为长期打卡任务，实现重复提醒操作
 支持markdown格式，文本本地储存，允许用户自定义地址
 7. 课表：\
 支持excel导入，尽可能减少手动操作
-8. 快速检索：\
+8. **快速检索**：\
 根据日期、标题或tag准确搜索，加入对内容的模糊搜索。
 9. 数据统计与可视化处理：
 周总结，热度图直观显示每日安排
@@ -106,12 +142,15 @@ plyer.notification（通用桌面通知）：
 ## Calendar:
 日历显示类\
 月分级为主要窗口
-使用Qt自带QCalendarWidget组件实现了以月单位的日历，支持基本的右键添加操作菜单\
+使用Qt自带QCalendarWidget组件实现了以月单位的日历，~~支持基本的右键添加操作菜单~~，左键单击后到专门的添加日程页面\
 TODO： 日，周，年的处理。（拖拽实现多选）。 日历中快速添加日程，解析自然语言时间。和创建日程窗口连接。
 “联动操作”，点击月分级中的日方块，跳转到日窗口之类的人性化快捷操作。
-## CreateEventWindow：
+## CreateEventWindow（Schedule）：
 创建日程窗口：
+通过save_text向后端发送路径、日期、主题、内容，通过load_text加载内容;sidebar中的文本搜索框用类似的方式发送信息\
 和Event类实现前后端对接
+## Emitter：
+管理sidebar按钮的信号，并负责向MainWindow发送信号
 ## CreateDailyWindow：
 创建日记窗口：
 记录日记，实现markdown渲染
@@ -124,9 +163,9 @@ TODO： 日，周，年的处理。（拖拽实现多选）。 日历中快速�
 通知设置
 ## SiderBar:
 侧边栏类\
-实现多种功能切换,提供搜索栏入口，（整合进Task的文件夹分类）\
-动画:连接toggle_btn，使用InOutQuad曲线滑动处理\
-FIXME:似乎对于Dark模式的支持不好
+实现多种功能切换,提供搜索栏入口\
+添加了向MainWindow发信号的self.emitter\
+要想再向sidebar中添加新按钮，只需在存储按钮名字的元组中添加新页面的名字，即可创建好一个向MainWindow发射的新信号,接下来只需要在MainWindow中创建对应页面即可
 ## Upcoming:
 即将到来的日程：
 按照时间轴排序，同时支持拖拽快速修改日程
