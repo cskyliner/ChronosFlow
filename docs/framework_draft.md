@@ -2,6 +2,9 @@
 - [Preparation](#preparation)
   - [Python Essential](#python-essential)
   - [版本控制与协作](#版本控制与协作)
+    - [分支策略](#分支策略)
+    - [工作流程](#工作流程)
+    - [commit规范](#commit规范)
   - [类似开源项目](#类似开源项目)
   - [核心功能](#核心功能)
   - [主要功能](#主要功能)
@@ -11,7 +14,8 @@
   - [Notice](#notice)
   - [MainWindow](#mainwindow)
   - [Calendar](#calendar)
-  - [CreateEventWindow](#createeventwindow)
+  - [Emitter](#emitter)
+  - [CreateEventWindow](#createeventwindowschedule)
   - [CreateDailyWindow](#createdailywindow)
   - [FindWindow](#findwindow)
   - [Settings](#settings)
@@ -32,9 +36,9 @@ Python3.10\
 
 ## 版本控制与协作
 [GitHub网址](https://github.com/cskyliner/todolist)\
-**分支策略**  \
+### 分支策略
 `main`(稳定版) + `docs`(开发文档) + `userX/*`(开发分支)
-**工作流程**
+### 工作流程
 1. 获取某分支新代码
 ```
 git checkout branchX
@@ -45,7 +49,7 @@ git pull origin branchX
 git fetch origin
 git merge branchX
 ```
-如果出现冲突，处理冲突后重新提交一次
+*如果出现冲突，处理冲突后重新提交一次*
 ```
 git add .
 git commit 
@@ -58,7 +62,7 @@ git push origin userX
 ```
 4. 通过 Pull Request 提交合并请求：
 
-**commit规范**
+### commit规范
 ```
 <标签>: <简洁描述>
 ```
