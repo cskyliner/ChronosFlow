@@ -69,7 +69,7 @@ class Schedule(QWidget):
 	# 接收date
 	def receive_signal(self, date):
 		self.date_label.setText(date[0].toString("yyyy年MM月dd日"))
-		self.date = date
+		self.date = date[0].toString("yyyy年MM月dd日")
 
 	# 保存内容 TODO:发送日期
 	def save_text(self):
