@@ -102,6 +102,11 @@ MySQL,json格式（ ~~是否需要服务器存储~~ 纯本地读写）
 
 ~~## DayBlock：
 以日为单位设置日历？储存日程？~~
+## Emitter
+用于发送信号，不同信号用不同的函数发射；除send_dynamic_signal外，信号格式均为纯字符串，且不同信号所含的字符串个数、含义固定
+## CreateEventWindow：
+创建日程窗口\
+TODO：添加调整当前日期的功能？
 ## Event: 
 事件日程基类\
 也许可以根据事件类型划分子类：
@@ -115,31 +120,29 @@ MySQL,json格式（ ~~是否需要服务器存储~~ 纯本地读写）
 主窗口类\
 存储多个主窗口样式
 包含一个侧边栏
+支持多种主题？
 ## Calendar:
 日历显示类\
-已经实现了基本月单位的日历，支持基本的右键添加操作菜单\
+已经实现了基本月单位的日历，支持单击进入日程创建页面\
 TODO：日，周，（年）的处理
 是否可以拖拽实现多选？
 添加操作需要connect创建日程窗口
-## CreateEventWindow：
-创建日程窗口？
-## CreateDailyWindow：
-创建日记窗口？
-## FindWindow：
+## CreateDiaryWindow：
+创建日记窗口\
+TODO：与CreateEventWindow共享一个页面，通过按钮切换？
+## SearchWindow：
 检索结果
 <<<<<<< HEAD
 =======
 ## Settings:
 设置窗口
-具体类别：
-？
+具体类别：？
 >>>>>>> b2ace54c2f2ea1e8050270428236425f6e036898
 ## SiderBar:
 侧边栏类\
 实现多种功能切换,提供搜索栏入口\
 动画:连接toggle_btn，使用InOutQuad曲线滑动处理
-FIXME:似乎对于Dark模式的支持不好
-...
+TODO：支持多种主题
 
 # 页面设计
 tools:\

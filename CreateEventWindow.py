@@ -1,17 +1,16 @@
 from PySide6.QtWidgets import QPlainTextEdit, QLabel, QHBoxLayout, QVBoxLayout, QWidget, QPushButton, QFileDialog, \
 	QLineEdit
 from PySide6.QtGui import QFont
-from Emitter import TempEmitter
+from Emitter import Emitter
 from PySide6.QtCore import Qt
 
 
 class Schedule(QWidget):
-	def __init__(self, height=None, width=None, parent=None):
+	def __init__(self, parent=None):
 		super().__init__(parent)
 
-		self.height = height
-		self.width = width
-		self.date = ""
+		self.date = ['0','0','0']
+		self.emitter = Emitter()
 
 		layout = QVBoxLayout(self)
 
@@ -68,21 +67,19 @@ class Schedule(QWidget):
 
 	# 接收date
 	def receive_signal(self, date):
-		self.date_label.setText(date[0].toString("yyyy年MM月dd日"))
-		self.date = date[0].toString("yyyy年MM月dd日")
+		temp = date[0].toString("yyyy,MM,dd")
+		self.date = temp.split(',')
+		self.date_label.setText(f"{self.date[0]}年{self.date[1]}月{self.date[2]}日")
 
-	# 保存内容 TODO:发送日期
+	# 保存内容 TODO:后端
 	def save_text(self):
 		filename, _ = QFileDialog.getSaveFileName(self, "保存文件")
 		if filename:
-			emitter = TempEmitter()
-			emitter.send_signal(filename, self.date, self.theme_text_edit.text(),
-								self.text_edit.toPlainText())  # 路径,日期,主题,内容
+			self.emitter.send_create_event_signal("create_event", filename, self.date[0], self.date[1], self.date[2],
+												  self.theme_text_edit.text(),
+												  self.text_edit.toPlainText())  # 路径,日期,主题,内容
 
-	# 加载内容
+	# 加载内容TODO:后端
 	def load_text(self):
-		filename, _ = QFileDialog.getOpenFileName(self, "打开文件")
-		if filename:
-			emitter = TempEmitter()
-			emitter.send_signal(filename)
-# TODO:从后端接收内容
+		# TODO:从后端接收内容
+		pass

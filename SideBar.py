@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QVBoxLayout, QPushButton, QLineEdit, QFrame, QHBoxLayout
 from PySide6.QtGui import QFont, QIcon
 from functools import partial
-from Emitter import Emitter, TempEmitter
+from Emitter import Emitter
 
 
 class SideBar(QFrame):
@@ -80,14 +80,12 @@ class SideBar(QFrame):
             """)
 			btn.setFont(button_font)
 			layout.addWidget(btn)
-			# 添加到信号管理集
-			self.emitter.add_signal(name)
-			btn.clicked.connect(partial(self.emitter.send_signal, name))
+			#发信号
+			btn.clicked.connect(partial(self.emitter.send_page_change_signal, name))
 
 		layout.addStretch()
 		self.setLayout(layout)
 
-	# 获取文本框内容
+	# 获取文本框内容TODO:后端
 	def get_text(self):
-		emitter = TempEmitter()
-		emitter.send_signal(self.search_edit.text())
+		self.emitter.send_search_signal(self.search_edit.text())

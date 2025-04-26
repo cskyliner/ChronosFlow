@@ -4,7 +4,8 @@ from SideBar import SideBar
 from Calendar import Calendar
 from functools import partial
 from CreateEventWindow import Schedule
-from Emitter import TempEmitter
+from Emitter import Emitter
+
 
 class MainWindow(QMainWindow):
 	def __init__(self, width=800, height=600, show_x=100, show_y=100):
@@ -14,6 +15,9 @@ class MainWindow(QMainWindow):
 		self.height = height
 		self.setWindowTitle("todolist")
 		self.setGeometry(show_x, show_y, width, height)
+
+		# 信号
+		self.emitter = Emitter()
 
 		# 动画管理集
 		self.animations = {}
@@ -40,8 +44,7 @@ class MainWindow(QMainWindow):
 		self.main_layout.addWidget(self.main_stack)
 
 		# 连接sidebar的信号
-		for signal in self.sidebar.emitter.signals.values():
-			signal.connect(partial(self.navigate_to, stack=self.main_stack, date=None))
+		self.sidebar.emitter.page_change_signal.connect(partial(self.navigate_to, stack=self.main_stack, date=None))
 
 		# 通过名称记录页面，使用字典双向映射
 		self.main_stack_map = {}  # 名称→索引
@@ -108,7 +111,7 @@ class MainWindow(QMainWindow):
 		self.schedule_toggle_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
 		schedule_layout.addWidget(self.schedule_toggle_btn, alignment=Qt.AlignmentFlag.AlignLeft)
 
-		#创建Schedule
+		# 创建Schedule
 		self.schedule = Schedule()
 		schedule_layout.addWidget(self.schedule)
 		self.add_page(self.main_stack, self.create_event_window, "Schedule")
@@ -127,14 +130,13 @@ class MainWindow(QMainWindow):
 	def add_page(self, stack, widget, name):
 		self.main_stack_map[name] = stack.addWidget(widget)
 
-	# 通过名称跳转页面 TODO:与Schedule连接
+	# 通过名称跳转页面
 	def navigate_to(self, name, stack, date=None):
 		if name in self.main_stack_map:
-			#向Schedule传输date
+			# 向Schedule传输date
 			if not date is None:
-				emitter=TempEmitter()
-				emitter.dynamic_signal.connect(self.schedule.receive_signal)
-				emitter.send_signal(date)
+				self.emitter.dynamic_signal.connect(self.schedule.receive_signal)
+				self.emitter.send_dynamic_signal(date)
 
 			stack.setCurrentIndex(self.main_stack_map[name])
 		else:

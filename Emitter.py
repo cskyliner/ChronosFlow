@@ -3,32 +3,38 @@ from PySide6.QtCore import Signal, QObject
 
 # 发射信号的类
 class Emitter(QObject):
+	# 定义信号
+	dynamic_signal = Signal(object)  # 可接收任意参数
+	page_change_signal = Signal(str)  # 向 main_stack发送改变页面的信号
+	create_event_signal = Signal(str, str, str, str, str, str, str)  # 标签、路径、年、月、日、主题、内容TODO：int or str?
+	search_signal = Signal(str)  # 发送sidebar搜索文本框的信息
+
 	def __init__(self, parent=None):
 		super().__init__(parent)
 
-		# 信号管理集，管理信号
-		self.signals = {}
+	def send_page_change_signal(self, name):
+		"""
+		向 main_stack发送改变页面的信号
+		"""
+		self.page_change_signal.emit(name)
 
-	# 添加信号
-	def add_signal(self, name):
-		if not name in self.signals:
-			# 动态将信号添加到类中
-			setattr(self.__class__, name, Signal(str))
-			self.signals[name] = getattr(self, name)
-		else:
-			print(f"{name}已存在！")
+	# TODO
+	def send_create_event_signal(self, name, filename, year, month, day, theme, content):
+		"""
+		发射可变数量的字符串参数
+		name为标签，如 create_ddl
+		格式：（标签，路径，日期，主题，内容）
+		"""
+		self.create_event_signal.emit(name, filename, year, month, day, theme, content)
 
-	# 发送信号
-	def send_signal(self, name):
-		if name in self.signals:
-			self.signals[name].emit(name)
-		else:
-			print(f"信号{name}未定义！")
+	def send_search_signal(self, content):
+		"""
+		发送sidebar搜索文本框的信息
+		"""
+		self.search_signal.emit(content)
 
-
-class TempEmitter(QObject):
-	dynamic_signal = Signal(object)  # 使用 object 类型接收任意参数
-
-	def send_signal(self, *args):
-		#发射可变数量的字符串参数
-		self.dynamic_signal.emit(args)  # 将参数打包为元组发射
+	def send_dynamic_signal(self, *args):
+		"""
+		发送格式不定的信号（元组形式）
+		"""
+		self.dynamic_signal.emit(args)
