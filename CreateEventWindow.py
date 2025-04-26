@@ -9,8 +9,8 @@ class Schedule(QWidget):
 	def __init__(self, parent=None):
 		super().__init__(parent)
 
-		self.date = ['0000','00','00']
-		self.emitter = Emitter()
+		self.date = ['0000', '00', '00']  # 日期
+		self.emitter = Emitter()  # 信号
 
 		layout = QVBoxLayout(self)
 
@@ -38,9 +38,9 @@ class Schedule(QWidget):
 		for i in range(len(btn_name)):
 			btn = QPushButton(btn_name[i])
 			if i == 0:
-				btn.clicked.connect(self.save_text)
+				btn.clicked.connect(self.create_new_event)
 			elif i == 1:
-				btn.clicked.connect(self.load_text)
+				btn.clicked.connect(self.load_created_event)
 
 			btn.setStyleSheet("""
 								QPushButton {
@@ -72,7 +72,7 @@ class Schedule(QWidget):
 		self.date_label.setText(f"{self.date[0]}年{self.date[1]}月{self.date[2]}日")
 
 	# 保存内容 TODO:后端
-	def save_text(self):
+	def create_new_event(self):
 		filename, _ = QFileDialog.getSaveFileName(self, "保存文件")
 		if filename:
 			self.emitter.send_create_event_signal("create_event", filename, self.date[0], self.date[1], self.date[2],
@@ -80,6 +80,6 @@ class Schedule(QWidget):
 												  self.text_edit.toPlainText())  # 路径,日期,主题,内容
 
 	# 加载内容TODO:后端
-	def load_text(self):
-		# TODO:从后端接收内容
+	def load_created_event(self):
+		# TODO:从后端接收内容;弹出搜索框？
 		pass

@@ -21,7 +21,6 @@ class Emitter(QObject):
 	# TODO
 	def send_create_event_signal(self, name, filename, year, month, day, theme, content):
 		"""
-		发射可变数量的字符串参数
 		name为标签，如 create_event
 		格式：标签、路径、年、月（两位）、日（两位）、主题、内容
 		"""
