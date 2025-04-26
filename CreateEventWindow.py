@@ -9,7 +9,7 @@ class Schedule(QWidget):
 	def __init__(self, parent=None):
 		super().__init__(parent)
 
-		self.date = ['0','0','0']
+		self.date = ['0000','00','00']
 		self.emitter = Emitter()
 
 		layout = QVBoxLayout(self)
