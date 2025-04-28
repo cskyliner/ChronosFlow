@@ -8,7 +8,7 @@
   - [类似开源项目](#类似开源项目)
   - [核心功能](#核心功能)
   - [主要功能](#主要功能)
-- [class设计](#class设计)
+- [文件及class功能设计](#文件及class功能设计)
   - [Event](#event)
   - [Data](#data)
   - [Notice](#notice)
@@ -20,6 +20,8 @@
   - [FindWindow](#findwindow)
   - [Settings](#settings)
   - [SideBar](#siderbar)
+  - [common](#common)
+  - [SignalConnect](#signalconnect)
 - [页面设计](#页面设计)
 - [性能优化](#性能优化)
 
@@ -35,9 +37,9 @@ Python3.10\
 ...
 
 ## 版本控制与协作
-[GitHub网址](https://github.com/cskyliner/todolist)\
+[本项目GitHub网址](https://github.com/cskyliner/ChronosFlow)
 ### 分支策略
-`main`(稳定版) + `docs`(开发文档) + `userX/*`(开发分支)
+`main`(稳定版) + `docs`(更新开发文档) + `userX/*`(开发分支)
 ### 工作流程
 1. 获取某分支新代码
 ```
@@ -121,7 +123,7 @@ Clock则为长期打卡任务，实现重复提醒操作
 10. 模板化：\
 针对北京大学，提供一种or多种**特色**预制模板形式，以供快速布置任务安排or进行每日记录
 ...
-# Class设计
+# 文件及class功能设计
 
 ## Event: 
 事件日程基类，连接前后端\
@@ -134,6 +136,10 @@ EventFactory.create(事件类型，事件标题)\
 event.add_event(),event.delete_event(),event.modify_event()\
 搜索事件：
 search_all(keywords:str)(全局搜索)
+对接前端：
+recieve_signal(object)
+接受输入的元组，提取第一项表示前端命令，后面代表相应参数
+TODO:回传给前端数据
 ## Notice:
 QSystemTrayIcon（Qt 托盘通知）任务栏：
 处理UI设计，通知管理，菜单弹出设计\
@@ -143,6 +149,7 @@ plyer.notification（通用桌面通知）：
 主窗口类\
 存储多个主窗口样式
 包含一个侧边栏
+TODO：支持多种主题样式
 ## Calendar:
 日历显示类\
 月分级为主要窗口
@@ -150,38 +157,52 @@ plyer.notification（通用桌面通知）：
 TODO： 日，周，年的处理。（拖拽实现多选）。 日历中快速添加日程，解析自然语言时间。和创建日程窗口连接。
 “联动操作”，点击月分级中的日方块，跳转到日窗口之类的人性化快捷操作。
 ## CreateEventWindow（Schedule）：
-创建日程窗口：
-通过save_text向后端发送路径、日期、主题、内容，通过load_text加载内容;sidebar中的文本搜索框用类似的方式发送信息\
-和Event类实现前后端对接
+有Schedule类，创建日程窗口\
+ TODO：添加调整当前日期时间的功能
+通过save_text向后端发送路径、日期、主题、内容，TODO:通过load_text加载内容\
+和Event类实现前后端对接\
+实现了对接后端创建DDL事件 
+TODO:选择创建多种事件
 ## Emitter：
-管理sidebar按钮的信号，并负责向MainWindow发送信号
+用于发送信号，不同信号用不同的函数发射\
+**统一实例化**：
+为了便于信号发射接收的统一，设置单独实例化
+，每次调用emitter时候，只需要```Emitter.instance().函数名.connect/emit()```就可以了，**是否有必要多次实例化有待讨论**\
+ send_dynamic_signal发射**元组**\
+ send_create_event发射**元组(object)**，第一项为"create_event"表示**命令**，后续为创建event参数\
+ 其余传给后端的信号同理\
+ 其余信号格式均为若干个纯字符串
 ## CreateDailyWindow：
-创建日记窗口：
+TODO:创建日记窗口：\
 记录日记，实现markdown渲染
 ## FindWindow：
-检索结果
+TODO:检索结果
 ## Settings:
-设置窗口
+TODO:设置窗口\
 具体类别：
 本地存储地址设置
 通知设置
 ## SiderBar:
 侧边栏类\
 实现多种功能切换,提供搜索栏入口\
-添加了向MainWindow发信号的self.emitter\
 要想再向sidebar中添加新按钮，只需在存储按钮名字的元组中添加新页面的名字，即可创建好一个向MainWindow发射的新信号,接下来只需要在MainWindow中创建对应页面即可
 ## Upcoming:
 即将到来的日程：
 按照时间轴排序，同时支持拖拽快速修改日程
+## common:
+打包导入的库，避免每次import大量库，直接
+```from common import *```即可
+## SignalConnect:
+初始化前后端连接
+
 ...
 
 # 页面设计
-tools:\
-[qss](https://doc.qt.io/qtforpython-6/tutorials/basictutorial/widgetstyling.html#tutorial-widgetstyling)(类似前端css)自定义qtUI格式\
-操作动画：QPropertyAnimation\
-Layout自动布局
-图标与背景图案设计:
-toggle_btn的图标，搜索按键的图标，日历的背景图案
+**Tools**:[qss](https://doc.qt.io/qtforpython-6/tutorials/basictutorial/widgetstyling.html#tutorial-widgetstyling)(类似前端css)自定义qtUI格式\
+**操作动画**：QPropertyAnimation\
+**图标与背景图案设计**:
+日历的背景图案，设置否需要单独一个图标而不是放在侧边栏，
+创建事件窗口的美化，日历不会随着窗口缩放而缩放
 
 # 性能优化
 多线程、异步操作保证页面流畅…
