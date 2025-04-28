@@ -1,5 +1,4 @@
-from PySide6.QtWidgets import QVBoxLayout, QPushButton, QLineEdit, QFrame, QHBoxLayout
-from PySide6.QtGui import QFont, QIcon
+from common import * 
 from functools import partial
 from Emitter import Emitter
 
@@ -9,14 +8,11 @@ class SideBar(QFrame):
 		super().__init__(parent)
 		self.setFrameShape(QFrame.StyledPanel)
 
-		# 信号
-		self.emitter = Emitter()
-
-		# 侧边栏内容
+		# ===侧边栏内容===
 		layout = QVBoxLayout()
 		layout.setContentsMargins(10, 10, 10, 20)
 
-		# 添加search文本框
+		# ===添加search文本框===
 		search_layout = QHBoxLayout()
 		# 左侧文本框
 		self.search_edit = QLineEdit()
@@ -33,7 +29,7 @@ class SideBar(QFrame):
 						            }
 						        """)
 		search_layout.addWidget(self.search_edit)
-		# 右侧按钮
+		# ===右侧按钮===
 		btn = QPushButton()
 		btn.setIcon(QIcon.fromTheme("system-search"))
 		btn.setStyleSheet("""
@@ -55,12 +51,14 @@ class SideBar(QFrame):
 		btn.setFixedSize(40, 40)
 		btn.clicked.connect(self.get_text)
 		search_layout.addWidget(btn)
-
 		layout.addLayout(search_layout)
 
-		# 添加按钮
+		# ===添加功能按钮===
 		names = ("Calendar", "Upcoming", "Setting", "Schedule")
-		button_font = QFont("微软雅黑", 11)
+		#使用Qt的字体回退机制，解决在Mac上找不到字体报错的问题 FIXME:前端可能需要调试一下字体大小，以及缩放问题
+		button_font = QFont()
+		button_font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
+		button_font.setPointSize(15)
 		for name in names:
 			btn = QPushButton(f"{name}")
 			btn.setStyleSheet("""
@@ -80,12 +78,11 @@ class SideBar(QFrame):
             """)
 			btn.setFont(button_font)
 			layout.addWidget(btn)
-			#发信号
-			btn.clicked.connect(partial(self.emitter.send_page_change_signal, name))
-
+			#连接按钮与切换页面信号
+			btn.clicked.connect(partial(Emitter.instance().send_page_change_signal, name))
 		layout.addStretch()
 		self.setLayout(layout)
 
-	# 获取文本框内容TODO:后端
+	# 获取文本框内容 TODO:后端
 	def get_text(self):
-		self.emitter.send_search_signal(self.search_edit.text())
+		Emitter.instance().send_search_signal(self.search_edit.text())

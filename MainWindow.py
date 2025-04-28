@@ -1,12 +1,11 @@
-from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QPushButton, QHBoxLayout, QStackedWidget
-from PySide6.QtCore import QPropertyAnimation, QEasingCurve, Qt
+from common import *
 from SideBar import SideBar
 from Calendar import Calendar
 from functools import partial
 from CreateEventWindow import Schedule
 from Emitter import Emitter
 
-
+log = logging.getLogger(__name__)
 class MainWindow(QMainWindow):
 	def __init__(self, width=800, height=600, show_x=100, show_y=100):
 		super().__init__()
@@ -16,11 +15,8 @@ class MainWindow(QMainWindow):
 		self.setWindowTitle("todolist")
 		self.setGeometry(show_x, show_y, width, height)
 
-		# 信号
-		self.emitter = Emitter()
-
 		# 动画管理集
-		self.animations = {}
+		self.animations:dict[str,QPropertyAnimation] = {}
 
 		# 主窗口中心部件（容纳 main_layout）
 		self.central_widget = QWidget()
@@ -44,7 +40,7 @@ class MainWindow(QMainWindow):
 		self.main_layout.addWidget(self.main_stack)
 
 		# 连接sidebar的信号
-		self.sidebar.emitter.page_change_signal.connect(partial(self.navigate_to, stack=self.main_stack, date=None))
+		Emitter.instance().page_change_signal.connect(partial(self.navigate_to, stack=self.main_stack, date=None))
 
 		# 通过名称记录页面，使用字典双向映射
 		self.main_stack_map = {}  # 名称→索引
@@ -55,8 +51,10 @@ class MainWindow(QMainWindow):
 		self.setup_setting_window()
 		self.setup_upcoming_window()
 
-	# main_window创建
 	def setup_main_window(self):
+		'''
+		main_window创建
+		'''
 		self.main_window = QWidget()
 		main_window_layout = QVBoxLayout()  # 内容区域布局
 		main_window_layout.setContentsMargins(20, 5, 20, 20)
@@ -88,8 +86,10 @@ class MainWindow(QMainWindow):
 
 		self.add_page(self.main_stack, self.main_window, "Calendar")  # main_window 是日历，故名为calendar
 
-	# 创建 create_event_window
 	def setup_create_event_window(self):
+		'''
+		创建 create_event_window
+		'''
 		self.create_event_window = QWidget()
 		schedule_layout = QVBoxLayout()  # 内容区域布局
 		schedule_layout.setContentsMargins(20, 5, 20, 20)
@@ -116,40 +116,53 @@ class MainWindow(QMainWindow):
 		schedule_layout.addWidget(self.schedule)
 		self.add_page(self.main_stack, self.create_event_window, "Schedule")
 
-	# TODO
 	def setup_setting_window(self):
+		'''
+		TODO:创建设置栏
+		'''
 		self.setting_window = QWidget()
 		self.add_page(self.main_stack, self.setting_window, "Setting")
 
-	# TODO
 	def setup_upcoming_window(self):
+		'''
+		TODO:
+		'''
 		self.upcoming_window = QWidget()
 		self.add_page(self.main_stack, self.upcoming_window, "Upcoming")
 
-	# 向 stack 中添加页面
-	def add_page(self, stack, widget, name):
+	def add_page(self, stack:QStackedWidget, widget:QWidget, name:str):
+		'''
+		向 stack 中添加页面
+		'''
 		self.main_stack_map[name] = stack.addWidget(widget)
 
-	# 通过名称跳转页面
-	def navigate_to(self, name, stack, date=None):
+	def navigate_to(self, name:str, stack:QStackedWidget, date:QDate=None):
+		'''
+		通过名称跳转页面
+		'''
 		if name in self.main_stack_map:
 			# 向Schedule传输date
 			if not date is None:
-				self.emitter.dynamic_signal.connect(self.schedule.receive_signal)
-				self.emitter.send_dynamic_signal(date)
-
+				# Emitter.instance().dynamic_signal.connect(self.schedule.receive_signal)
+				# Emitter.instance().send_dynamic_signal(date)
+				self.schedule.receive_date(date)
 			stack.setCurrentIndex(self.main_stack_map[name])
+			log.info(f"跳转到{name}页面，日期为{date.toString() if date else date}")
 		else:
-			print(f"警告：未知页面 {name}")
+			raise RuntimeError(f"错误：未知页面 {name}")
 
-	# 侧边栏展开动画设置
 	def setup_animation(self) -> None:
+		'''
+		侧边栏展开动画设置
+		'''
 		self.animations["sidebar"] = QPropertyAnimation(self.sidebar, b"maximumWidth")
 		self.animations["sidebar"].setDuration(300)
 		self.animations["sidebar"].setEasingCurve(QEasingCurve.Type.InOutQuad)
 
-	# 处理sidebar的变化
 	def toggle_sidebar(self) -> None:
+		'''
+		处理sidebar的变化
+		'''
 		self.sidebar_visible = not self.sidebar_visible
 
 		if self.sidebar_visible:

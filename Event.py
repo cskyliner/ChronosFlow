@@ -1,17 +1,23 @@
+from common import logging
 import os
 import sqlite3
+from Emitter import Emitter
+log = logging.getLogger(__name__)
+#TODO:前端提供路径接口，处理文件存储位置问题，当前储存位置为根目录下local_data/events.db
+#===连接数据库===
 BASE_DIR = os.path.dirname(__file__)
-#TODO:前端提供路径接口，处理文件存储位置问题
 DB_PATH = os.path.join(BASE_DIR, "local_data/events.db")
 conn = sqlite3.connect(DB_PATH)
 cursor = conn.cursor()
 print("数据库路径:", DB_PATH)
+#===数据名对应数据类型===
 TYPE_MAP = {
     "title": "TEXT",
-    "date": "TEXT",
+    "datetime": "DATETIME",
     "notes": "TEXT",
+    "importance":"TEXT",
     "done": "INTEGER",
-    "advance_time": "INTEGER",
+    "advance_time": "DATETIME",
     "tags": "TEXT",
 }
 TABLE_MAP = {
@@ -22,7 +28,7 @@ TABLE_MAP = {
 
 def create_table_if_not_exist(table_name:str,data)->None:
     """
-    根据输入表名创建新表TODO: tag的三表多对多查询机制
+    根据输入表名和数据创建新表TODO: tag的三表多对多查询机制
     """
     columns = ', '.join([f"{key} {TYPE_MAP.get(key,'TEXT')}" for key in data.keys()])
     create_query = f"""
@@ -42,22 +48,22 @@ class BaseEvent:
         self.title = title
         self.id = None
 
-    def to_dict(self):
+    def to_dict(self)->dict:
         raise NotImplementedError
 
-    def table_name(self):
+    def table_name(self)->str:
         """
-        给出该类对应表名
+        给出该类对应表名,类名小写转换变**复数**
         """
         return self.__class__.__name__.lower()+'s'
 
-    def add_event(self):
+    def add_event(self)->None:
         """
         将Event加入日程中，若已经存在于table中则跳过
         """
         if self.id is not None:
             raise RuntimeError("事件对象已有 ID，可能已经添加过数据库。")
-        table_name = self.table_name() # 类名小写转换变复数作为table_name,注意是复数！！！
+        table_name = self.table_name()
         data = self.to_dict()
         create_table_if_not_exist(table_name, data)
         columns = ', '.join(data.keys())
@@ -68,7 +74,7 @@ class BaseEvent:
         self.id = cursor.lastrowid # 获取table中的唯一id值
         conn.commit()
 
-    def delete_event(self):
+    def delete_event(self)->None:
         """
         删除日程
         """
@@ -77,7 +83,7 @@ class BaseEvent:
         cursor.execute(query, (self.id,))
         conn.commit()
 
-    def modify_event(self):
+    def modify_event(self)->None:
         """
         修改日程
         """
@@ -93,22 +99,24 @@ class BaseEvent:
 class DDLEvent(BaseEvent):
     """
     DDL类
-    输入：标题，截止时间，备注，是否完成，提前提醒时间
+    输入：标题，截止时间，具体内容，提前提醒时间，重要程度，是否完成，
     """
-    def __init__(self, title:str, date:str, notes:str, done:bool, advance_time:int):
+    def __init__(self, title:str, datetime:str, notes:str, advance_time:str,importance:str,done:bool = False):
         super().__init__(title)
-        self.date = date
+        self.date = datetime
         self.notes = notes
-        self.done = done
         self.advance_time = advance_time
+        self.importance = importance
+        self.done = done
 
-    def to_dict(self):
+    def to_dict(self)->dict:
         return {
             "title": self.title,
             "date": self.date,
             "notes": self.notes,
-            "done": self.done,
             "advance_time": self.advance_time,
+            "importance": self.importance,
+            "done": self.done,
         }
 
 
@@ -132,23 +140,47 @@ class EventFactory:
     """
     事件工厂
     """
-    registry = {
+    registry:dict[str,BaseEvent] = {
         "DDL": DDLEvent,
         "Task": TaskEvent,
         "Clock": ClockEvent
     }
     @classmethod
-    def create(cls,event_type:str, **kwargs) -> BaseEvent:
+    def create(cls,event_type:str,add:bool, *args) -> BaseEvent:
         """
         根据种类创造不同Event
-        :param event_type:
-        :param kwargs:
-        :return: BaseEvent
+        :param event_type:事件类型
+        :param kwargs:参数
+        :return: BaseEvent 事件类
         """
         if event_type not in cls.registry:
             raise Exception(f"event_type {event_type} not supported")
         event_cls = cls.registry[event_type]
-        return event_cls(**kwargs)
+        try:
+            n_event:BaseEvent = event_cls(*args)
+            log.info(f"create new event in {n_event.table_name()} table successfully")
+            if add is True:
+                n_event.add_event()
+                log.info(f"add event {n_event.title} to {n_event.table_name()} table successfully")
+            return n_event
+        except TypeError as e:
+            log.error(f"创建event失败，创建使用参数为{args}，Error:{e}")
+            return None
+
+#===连接信号===
+def recieve_signal(emit_data: tuple)-> None:
+    if not emit_data or len(emit_data) == 0 :
+        log.error("接收信号失败，参数为空")
+    elif emit_data[0] == "create_event":
+        event_type = emit_data[1]
+        add = emit_data[2]
+        args = emit_data[3:]
+        EventFactory.create(event_type, add, *args)
+        log.info(f"接收信号成功，创建事件{event_type}，参数为{args}")
+    else:
+        log.error(f"接收信号失败，未知信号类型{emit_data[0]}，参数为{emit_data}")
+
+
 def search_all(keyword:str) -> list[BaseEvent]:
     """
     关键词全局搜索
@@ -170,8 +202,7 @@ def search_all(keyword:str) -> list[BaseEvent]:
         rows = cursor.fetchall()
         for row in rows:
             paras = row[1:]
-            kwargs = dict(zip(columns_name, paras)) # 将除了唯一id以外的参数传入工厂中，将数据转为类结构
-            event = EventFactory.create(TABLE_MAP.get(table,"DDL"),**kwargs)
+            event = EventFactory.create(TABLE_MAP.get(table,"DDL"),False,*paras)
             event.id = row[0]
             result.append(event)
     return result
