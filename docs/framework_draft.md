@@ -9,6 +9,7 @@
   - [核心功能](#核心功能)
   - [主要功能](#主要功能)
 - [文件及class功能设计](#文件及class功能设计)
+  - [main](#main)
   - [Event](#event)
   - [Data](#data)
   - [Notice](#notice)
@@ -46,23 +47,28 @@ Python3.10\
 git checkout branchX
 git pull origin branchX
 ```
-2. 同步某分支进度
+2. 同步main进度
 ```
+git checkout userX
 git fetch origin
-git merge branchX
+git merge origin/main
 ```
-*如果出现冲突，处理冲突后重新提交一次*
+**如果出现冲突，处理冲突后重新提交一次**
 ```
 git add .
 git commit 
 ```
+**尽量不要merge其他user的分支，这样会导致git记录混乱**
 3. 进行开发 → 提交更改 → 推送到远程
 ```
 git add .
 git commit -m "feat: 添加xxx功能"
 git push origin userX
 ```
-4. 通过 Pull Request 提交合并请求：
+4. 通过 Pull Request 提交合并请求，合并到main分支：
++ 填写清晰的标题与描述
++ 选择合并方式：Squash and merge
++ 修改提交信息，给出本次提交实现功能和修改bug的简要描述
 
 ### commit规范
 ```
@@ -116,7 +122,7 @@ Clock则为长期打卡任务，实现重复提醒操作
 支持markdown格式，文本本地储存，允许用户自定义地址
 7. 课表：\
 支持excel导入，尽可能减少手动操作
-8. **快速检索**：\
+8. 快速检索：\
 根据日期、标题或tag准确搜索，加入对内容的模糊搜索。
 9. 数据统计与可视化处理：
 周总结，热度图直观显示每日安排
@@ -124,7 +130,12 @@ Clock则为长期打卡任务，实现重复提醒操作
 针对北京大学，提供一种or多种**特色**预制模板形式，以供快速布置任务安排or进行每日记录
 ...
 # 文件及class功能设计
-
+## main：
+主文件，项目入口\
+实现了主窗口的创建\
+实现了信号连接即SignalConnect\
+实现了读取logging配置\
+实现了检测系统类型\
 ## Event: 
 事件日程基类，连接前后端\
 也许可以根据事件类型划分子类：
@@ -141,6 +152,7 @@ recieve_signal(object)
 接受输入的元组，提取第一项表示前端命令，后面代表相应参数
 TODO:回传给前端数据
 ## Notice:
+TODO:
 QSystemTrayIcon（Qt 托盘通知）任务栏：
 处理UI设计，通知管理，菜单弹出设计\
 plyer.notification（通用桌面通知）：
@@ -170,8 +182,9 @@ TODO:选择创建多种事件
 ，每次调用emitter时候，只需要```Emitter.instance().函数名.connect/emit()```就可以了，**是否有必要多次实例化有待讨论**\
  send_dynamic_signal发射**元组**\
  send_create_event发射**元组(object)**，第一项为"create_event"表示**命令**，后续为创建event参数\
- 其余传给后端的信号同理\
- 其余信号格式均为若干个纯字符串
+ send_search_all_event发射**元组(object)**，第一项为"search_all"表示**命令**，后续为搜索关键词tuple[str]\
+ send_search_columns_event发射**元组(object)**，第一项为"search_columns"表示**命令**，后续为搜索列名tuple[str]+搜索关键词tuple[str]\
+ 其余前端窗口信号格式均为若干个纯字符串
 ## CreateDailyWindow：
 TODO:创建日记窗口：\
 记录日记，实现markdown渲染
