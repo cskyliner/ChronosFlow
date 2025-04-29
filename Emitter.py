@@ -12,6 +12,7 @@ class Emitter(QObject):
 	create_event_signal:Signal = Signal(object)  # 发送创建事件的信号
 	search_signal:Signal = Signal(str)  # 发送sidebar搜索文本框的信息
 	search_all_event_signal:Signal = Signal(object)  # 向后端发送搜索全局事件的信号
+	send_search_somecolomns_event_signal:Signal = Signal(object)  # 向后端发送搜索部分列的事件
 	@staticmethod
 	def instance()->"Emitter":
 		if Emitter._instance is None:
@@ -63,4 +64,6 @@ class Emitter(QObject):
 		"""
 		向后端发送搜索部分列的事件
 		"""
-		raise NotImplementedError("send_search_somecolomns_event_signal not implemented")
+		log.info(f"send search some columns event signal，搜索列为{colomns}，关键字为{keyword}")
+		out = ("search_some_columns",colomns,keyword)
+		self.send_search_somecolomns_event_signal.emit(out)
