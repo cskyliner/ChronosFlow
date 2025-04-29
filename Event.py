@@ -166,24 +166,36 @@ class EventFactory:
         except TypeError as e:
             log.error(f"创建event失败，创建使用参数为{args}，Error:{e}")
             return None
-
-#===连接信号===
-def recieve_signal(emit_data: tuple)-> None:
-    if not emit_data or len(emit_data) == 0 :
+def recieve_signal(recieve_data: tuple)-> None:
+    """
+    接收信号函数
+    """
+    if not recieve_data or len(recieve_data) == 0 :
         log.error("接收信号失败，参数为空")
-    elif emit_data[0] == "create_event":
-        event_type = emit_data[1]
-        add = emit_data[2]
-        args = emit_data[3:]
+    elif recieve_data[0] == "create_event":
+        event_type = recieve_data[1] # 事件类型
+        add = recieve_data[2] # 是否添加到数据库
+        args = recieve_data[3:] # 事件参数
         EventFactory.create(event_type, add, *args)
         log.info(f"接收信号成功，创建事件{event_type}，参数为{args}")
+    elif recieve_data[0] == "search_all":
+        keyword = recieve_data[1]
+        result = search_all(keyword)
+        log.info(f"接收信号成功，搜索事件{keyword}，搜索结果为{result}")
+        return result
+        #sent_signal("search_all", result)
     else:
-        log.error(f"接收信号失败，未知信号类型{emit_data[0]}，参数为{emit_data}")
+        log.error(f"接收信号失败，未知信号类型{recieve_data[0]}，参数为{recieve_data}")
 
-
-def search_all(keyword:str) -> list[BaseEvent]:
+def sent_signal(signal_name:str,emit_data: tuple)-> None:
     """
-    关键词全局搜索
+    发射信号回传数据
+    """
+    raise NotImplementedError("信号发射回传数据函数未实现")
+
+def search_all(keyword:tuple[str]) -> list[BaseEvent]:
+    """
+    多关键词模糊性全局搜索（AND关系）
     """
     result:list[BaseEvent] = []
     cursor.execute("SELECT name FROM sqlite_master WHERE type ='table'") # 获取所有table
@@ -191,14 +203,39 @@ def search_all(keyword:str) -> list[BaseEvent]:
     for table in tables:
         cursor.execute(f"PRAGMA table_info({table})") # 通过PRAGMA获取table列信息
         columns_info = cursor.fetchall()
-        columns_name = [column[1] for column in columns_info][1:]
         possible_columns = [column[1] for column in columns_info if "TEXT" == column[2]] # 排除格式非TEXT的列
         if not possible_columns:
             continue
-        where_column = " OR ".join([f"{col} LIKE ?" for col in possible_columns])
-        values = [f"%{keyword}%"]*len(possible_columns)
+        where_clauses = [
+            " AND ".join(f"{col} LIKE ?" for key in keyword)
+            for col in possible_columns
+        ]
+        where_column = " OR ".join(where_clauses)             # 选择所有匹配所有关键字的列
+        values = [f"%{key}%" for key in keyword ]*len(possible_columns)
         query = f"SELECT * FROM {table} WHERE {where_column}" # 选择匹配关键字的行
         cursor.execute(query, values)
+        rows = cursor.fetchall()
+        for row in rows:
+            paras = row[1:]
+            event = EventFactory.create(TABLE_MAP.get(table,"DDL"),False,*paras)
+            event.id = row[0]
+            result.append(event)
+    return result
+def search_time(start_time:str,end_time:str) -> list[BaseEvent]:
+    """
+    时间范围搜索
+    """
+    result:list[BaseEvent] = []
+    cursor.execute("SELECT name FROM sqlite_master WHERE type ='table'") # 获取所有table名称
+    tables = [row[0] for row in cursor.fetchall()]
+    for table in tables:
+        cursor.execute(f"PRAGMA table_info({table})") # 通过PRAGMA获取table列信息
+        columns_info = cursor.fetchall()
+        columns_name = [column[1] for column in columns_info][1:]
+        if "datetime" not in columns_name:  # 排除没有datetime列的table
+            continue
+        query = f"SELECT * FROM {table} WHERE datetime BETWEEN ? AND ?"
+        cursor.execute(query, (start_time, end_time))
         rows = cursor.fetchall()
         for row in rows:
             paras = row[1:]
