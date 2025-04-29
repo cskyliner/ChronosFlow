@@ -11,6 +11,7 @@ class Emitter(QObject):
 	page_change_signal:Signal = Signal(str)  # 向 main_stack发送改变页面的信号
 	create_event_signal:Signal = Signal(object)  # 发送创建事件的信号
 	search_signal:Signal = Signal(str)  # 发送sidebar搜索文本框的信息
+	search_all_event_signal:Signal = Signal(object)  # 向后端发送搜索全局事件的信号
 	@staticmethod
 	def instance()->"Emitter":
 		if Emitter._instance is None:
@@ -50,3 +51,16 @@ class Emitter(QObject):
 		log.info(f"send create event signal，事件类型为{name}，参数为{args}")
 		out = ("create_event",name,True,*args)
 		self.create_event_signal.emit(out)
+	def send_search_all_event_signal(self,keyword:tuple[str]):
+		"""
+		向后端发送搜索全局事件的信号
+		keyword为搜索关键字，字符串元组
+		"""
+		log.info(f"send search all event signal，搜索关键字为{keyword}")
+		out = ("search_all",keyword)
+		self.search_all_event_signal.emit(out)
+	def send_search_somecolomns_event_signal(self,colomns:tuple[str],keyword:tuple[str]):
+		"""
+		向后端发送搜索部分列的事件
+		"""
+		raise NotImplementedError("send_search_somecolomns_event_signal not implemented")
