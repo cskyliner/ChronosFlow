@@ -166,7 +166,7 @@ class EventFactory:
         except TypeError as e:
             log.error(f"创建event失败，创建使用参数为{args}，Error:{e}")
             return None
-
+        
 def recieve_signal(recieve_data: tuple)-> None:
     """
     接收信号函数
