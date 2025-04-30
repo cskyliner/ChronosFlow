@@ -192,7 +192,7 @@ def recieve_signal(recieve_data: tuple) -> None:
 		result = search_all(keyword)
 		log.info(f"接收信号成功，搜索事件{keyword}，搜索结果为{result}")
 		return result
-		# sent_signal("search_all", result)
+	# sent_signal("search_all", result)
 	else:
 		log.error(f"接收信号失败，未知信号类型{recieve_data[0]}，参数为{recieve_data}")
 

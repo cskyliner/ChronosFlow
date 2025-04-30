@@ -4,6 +4,7 @@ from Calendar import Calendar
 from functools import partial
 from CreateEventWindow import Schedule
 from Emitter import Emitter
+from todolist.Settings import SettingsPage
 
 log = logging.getLogger(__name__)
 
@@ -123,7 +124,30 @@ class MainWindow(QMainWindow):
 		TODO:创建设置栏
 		'''
 		self.setting_window = QWidget()
+		setting_layout = QVBoxLayout() # 内容区域布局
+		setting_layout.setContentsMargins(20, 5, 20, 20)
+		self.setting_window.setLayout(setting_layout)
+
+		# 返回按钮，回到calendar
+		self.setting_toggle_btn = QPushButton("<")
+		self.setting_toggle_btn.setStyleSheet("""
+				            QPushButton {
+				                padding: 8px;
+				                background-color: transparent;
+				                border: 1px solid #ccc;
+				                border-radius: 4px;
+				            }
+				            QPushButton:hover {
+				                background-color: #e0e0e0;
+				            }
+				        """)
+		self.setting_toggle_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
+		setting_layout.addWidget(self.setting_toggle_btn, alignment=Qt.AlignmentFlag.AlignLeft)
+
+		self.setting = SettingsPage()
+		setting_layout.addWidget(self.setting)
 		self.add_page(self.main_stack, self.setting_window, "Setting")
+
 
 	def setup_upcoming_window(self):
 		'''
