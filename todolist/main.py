@@ -1,8 +1,10 @@
 from common import *
 from MainWindow import MainWindow
 from SignalConnect import connect_event_signal
+
+
 def init_platform_style(a):
-	#根据系统选择UI风格
+	# 根据系统选择UI风格
 	if sys.platform == "win32":
 		a.setStyle(QStyleFactory.create("windows"))
 	elif sys.platform == "darwin":
@@ -10,13 +12,14 @@ def init_platform_style(a):
 	elif sys.platform.startswith("linux"):
 		a.setStyle(QStyleFactory.create("fusion"))
 
+
 # ===配置输出日志，方便查询报错信息与位置===
 logging.basicConfig(
-    level=logging.INFO,  # 设置最低日志级别
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",  # 日志格式
-    handlers=[
-        logging.StreamHandler(sys.stdout),   # 输出到控制台
-    ]
+	level=logging.INFO,  # 设置最低日志级别
+	format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",  # 日志格式
+	handlers=[
+		logging.StreamHandler(sys.stdout),  # 输出到控制台
+	]
 )
 
 if __name__ == "__main__":

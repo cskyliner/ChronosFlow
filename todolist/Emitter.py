@@ -1,24 +1,28 @@
 from PySide6.QtCore import Signal, QObject
 from common import logging
+
 log = logging.getLogger(__name__)
+
+
 # 发射信号的类
 class Emitter(QObject):
 	'''
 	通用信号发射器
 	'''
-	_instance = None # 唯一实例
-	dynamic_signal:Signal = Signal(object)  # 可接收任意参数
-	page_change_signal:Signal = Signal(str)  # 向 main_stack发送改变页面的信号
-	create_event_signal:Signal = Signal(object)  # 发送创建事件的信号
-	search_signal:Signal = Signal(str)  # 发送sidebar搜索文本框的信息
-	search_all_event_signal:Signal = Signal(object)  # 向后端发送搜索全局事件的信号
-	send_search_somecolomns_event_signal:Signal = Signal(object)  # 向后端发送搜索部分列的事件
+	_instance = None  # 唯一实例
+	dynamic_signal: Signal = Signal(object)  # 可接收任意参数
+	page_change_signal: Signal = Signal(str)  # 向 main_stack发送改变页面的信号
+	create_event_signal: Signal = Signal(object)  # 发送创建事件的信号
+	search_signal: Signal = Signal(str)  # 发送sidebar搜索文本框的信息
+	search_all_event_signal: Signal = Signal(object)  # 向后端发送搜索全局事件的信号
+	send_search_somecolomns_event_signal: Signal = Signal(object)  # 向后端发送搜索部分列的事件
+
 	@staticmethod
-	def instance()->"Emitter":
+	def instance() -> "Emitter":
 		if Emitter._instance is None:
 			Emitter._instance = Emitter()
 		return Emitter._instance
-	
+
 	def __init__(self):
 		super().__init__()
 
@@ -40,9 +44,9 @@ class Emitter(QObject):
 		发送格式不定的信号（元组形式）,只有一个对象也会变成元组
 		"""
 		self.dynamic_signal.emit(args)
-	
+
 	# ===对接后端信号函数，发送信号第一个参数为命令====
-	def send_create_event_signal(self, name,*args):
+	def send_create_event_signal(self, name, *args):
 		"""
 		name为event类型如 DDL
 		*args代表name_event类对应的参数列表（元组）
@@ -50,20 +54,22 @@ class Emitter(QObject):
 		最后和为元组形式
 		"""
 		log.info(f"send create event signal，事件类型为{name}，参数为{args}")
-		out = ("create_event",name,True,*args)
+		out = ("create_event", name, True, *args)
 		self.create_event_signal.emit(out)
-	def send_search_all_event_signal(self,keyword:tuple[str]):
+
+	def send_search_all_event_signal(self, keyword: tuple[str]):
 		"""
 		向后端发送搜索全局事件的信号
 		keyword为搜索关键字，字符串元组
 		"""
 		log.info(f"send search all event signal，搜索关键字为{keyword}")
-		out = ("search_all",keyword)
+		out = ("search_all", keyword)
 		self.search_all_event_signal.emit(out)
-	def send_search_somecolomns_event_signal(self,colomns:tuple[str],keyword:tuple[str]):
+
+	def send_search_somecolomns_event_signal(self, colomns: tuple[str], keyword: tuple[str]):
 		"""
 		向后端发送搜索部分列的事件
 		"""
 		log.info(f"send search some columns event signal，搜索列为{colomns}，关键字为{keyword}")
-		out = ("search_some_columns",colomns,keyword)
+		out = ("search_some_columns", colomns, keyword)
 		self.send_search_somecolomns_event_signal.emit(out)

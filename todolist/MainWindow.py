@@ -6,6 +6,8 @@ from CreateEventWindow import Schedule
 from Emitter import Emitter
 
 log = logging.getLogger(__name__)
+
+
 class MainWindow(QMainWindow):
 	def __init__(self, width=800, height=600, show_x=100, show_y=100):
 		super().__init__()
@@ -16,7 +18,7 @@ class MainWindow(QMainWindow):
 		self.setGeometry(show_x, show_y, width, height)
 
 		# 动画管理集
-		self.animations:dict[str,QPropertyAnimation] = {}
+		self.animations: dict[str, QPropertyAnimation] = {}
 
 		# 主窗口中心部件（容纳 main_layout）
 		self.central_widget = QWidget()
@@ -130,13 +132,13 @@ class MainWindow(QMainWindow):
 		self.upcoming_window = QWidget()
 		self.add_page(self.main_stack, self.upcoming_window, "Upcoming")
 
-	def add_page(self, stack:QStackedWidget, widget:QWidget, name:str):
+	def add_page(self, stack: QStackedWidget, widget: QWidget, name: str):
 		'''
 		向 stack 中添加页面
 		'''
 		self.main_stack_map[name] = stack.addWidget(widget)
 
-	def navigate_to(self, name:str, stack:QStackedWidget, date:QDate=None):
+	def navigate_to(self, name: str, stack: QStackedWidget, date: QDate = None):
 		'''
 		通过名称跳转页面
 		'''
