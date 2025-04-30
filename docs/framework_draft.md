@@ -165,12 +165,12 @@ TODO：支持多种主题样式
 ## Calendar:
 日历显示类\
 月分级为主要窗口
-使用Qt自带QCalendarWidget组件实现了以月单位的日历，~~支持基本的右键添加操作菜单~~，左键单击后到专门的添加日程页面\
-TODO： 日，周，年的处理。（拖拽实现多选）。 日历中快速添加日程，解析自然语言时间。和创建日程窗口连接。
-“联动操作”，点击月分级中的日方块，跳转到日窗口之类的人性化快捷操作。
+使用Qt自带QCalendarWidget组件实现了以月单位的日历，左键单击后到专门的添加日程页面\
+TODO： 日，周，年的处理。（拖拽实现多选）。 日历中快速添加日程，和创建/修改日程窗口连接。
+“联动操作”，点击月分级中的日方块，跳转到日窗口之类的人性化快捷操作。支持基本的右键添加操作菜单
 ## CreateEventWindow（Schedule）：
-有Schedule类，创建日程窗口\
- TODO：添加调整当前日期时间的功能
+有Schedule类，创建/修改日程窗口\
+ TODO：添加调整当前日期具体时间的功能
 通过save_text向后端发送路径、日期、主题、内容，TODO:通过load_text加载内容\
 和Event类实现前后端对接\
 实现了对接后端创建DDL事件 
@@ -190,6 +190,7 @@ TODO:创建日记窗口：\
 记录日记，实现markdown渲染
 ## FindWindow：
 TODO:检索结果
+未来实现和upcoming实现代码复用
 ## Settings:
 TODO:设置窗口\
 具体类别：
@@ -219,7 +220,3 @@ TODO:设置窗口\
 
 # 性能优化
 多线程、异步操作保证页面流畅…
-<!--stackedit_data:
-eyJoaXN0b3J5IjpbLTExMzUxNDEwMDEsLTEwMzMyODg2MDBdfQ
-==
--->
