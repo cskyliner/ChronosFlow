@@ -22,7 +22,7 @@ logging.basicConfig(
 if __name__ == "__main__":
 	app = QApplication([])
 	init_platform_style(app)
-	app.setWindowIcon(QIcon("/pic/todolist.png"))
+	app.setWindowIcon(QIcon("pic/todolist.png"))
 	connect_event_signal()  # 连接前后端信号
 	main_window = MainWindow(1000, 600, 140, 100)
 	main_window.show()
