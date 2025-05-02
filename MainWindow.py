@@ -166,6 +166,7 @@ class MainWindow(QMainWindow):
 		self.add_page(self.main_stack, self.setting_window, "Setting")
 
 
+
 	def setup_upcoming_window(self):
 		'''
 		TODO:
