@@ -1,14 +1,5 @@
-import os
-import json
-import tkinter as tk
-from tkinter import filedialog
-from datetime import datetime
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
-    QLabel, QLineEdit, QMessageBox, QComboBox,
-    QSlider, QCheckBox, QGroupBox
-)
-from PySide6.QtCore import Qt, Signal
+from common import *
+
 
 class SettingsPage(QWidget):
     settings_saved = Signal()
@@ -103,10 +94,21 @@ class SettingsPage(QWidget):
         path = filedialog.askdirectory(title="选择数据存储目录")
         if path:
             self.storage_path_edit.setText(path)
+            #os.makedirs(path, exist_ok=True)
+            self.config_path_cpy : str = os.path.join(path, "settings_cpy.json")
 
     def get_config_path(self):
         """获取配置文件路径"""
-        config_dir = os.path.join(os.environ['USERPROFILE'], 'AppData', 'Local', 'MyApp')
+        if sys.platform == 'win32':
+            # Windows 路径：%USERPROFILE%\AppData\Local\MyApp\settings.json
+            config_dir = os.path.join(os.environ['USERPROFILE'], 'AppData', 'Local', 'MyApp')
+        elif sys.platform == 'darwin':  # macOS
+            # macOS/Linux 路径：~/Library/Application Support/MyApp/settings.json
+            config_dir = os.path.join(os.path.expanduser('~'), 'Library', 'Application Support', 'MyApp')
+        else:  # Linux 或其他 Unix
+            # macOS/Linux 路径：~/.config/MyApp/settings.json
+            config_dir = os.path.join(os.path.expanduser('~'), '.config', 'MyApp')
+        #config_dir = os.path.join(os.environ['USERPROFILE'], 'AppData', 'Local', 'MyApp')
         os.makedirs(config_dir, exist_ok=True)
         return os.path.join(config_dir, 'settings.json')
 
@@ -128,7 +130,7 @@ class SettingsPage(QWidget):
                     # 加载通知设置
                     self.notify_checkbox.setChecked(settings.get('notifications_enabled', True))
                     self.notify_type_combo.setCurrentText(settings.get('notification_type', '系统通知'))
-                    
+                
                     # 加载音量设置
                     volume = settings.get('volume', 50)
                     self.volume_slider.setValue(volume)
@@ -179,7 +181,8 @@ class SettingsPage(QWidget):
             config_path = self.get_config_path()
             with open(config_path, 'w', encoding='utf-8') as f:
                 json.dump(settings, f, indent=4, ensure_ascii=False)
-
+            with open(self.config_path_cpy, 'w', encoding='utf-8') as f:
+                json.dump(settings, f, indent=4, ensure_ascii=False)
             # 新增：保存人类可读的设置内容文件
             settings_content_path = os.path.join(data_dir, 'settings_content.txt')
             with open(settings_content_path, 'w', encoding='utf-8') as f:
