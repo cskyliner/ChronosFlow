@@ -17,6 +17,7 @@ class Emitter(QObject):
 	search_all_event_signal: Signal = Signal(object)  # 向后端发送搜索全局事件的信号
 	search_some_columns_event_signal: Signal = Signal(object)  # 向后端发送搜索部分列的事件
 	signal_to_schedule_notice: Signal = Signal(str, str, int, str)  # 向Notice中的schedule_notice函数发送信号
+	from_upcoming_to_create_event_signal: Signal = Signal(str,str) #从upcoming跳转到create_event
 
 	@staticmethod
 	def instance() -> "Emitter":
@@ -43,6 +44,11 @@ class Emitter(QObject):
 	def send_signal_to_schedule_notice(self, title, content, notify_time, color="#3498db"):
 		"""向Notice中的schedule_notice函数发送信号"""
 		self.signal_to_schedule_notice.emit(title, content, notify_time, color)
+
+	def send_from_upcoming_to_create_event_signal(self,theme,date):
+		"""从upcoming跳转到create_event"""
+		#TODO:如何确定是哪一个日程（哈希的标准是什么）
+		self.from_upcoming_to_create_event_signal.emit(theme,date)
 
 	# ===对接后端信号函数，发送信号第一个参数为命令====
 	def send_create_event_signal(self, name, *args):

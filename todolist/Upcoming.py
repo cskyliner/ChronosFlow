@@ -1,38 +1,68 @@
 from common import *
+from Emitter import Emitter
+from functools import partial
 
 
-class OneUpcoming(QWidget):
+class CustomListItem(QWidget):
 	"""一条日程"""
 
-	def __init__(self, parent=None):
+	def __init__(self, theme, is_even_row, parent=None):
+		""":param is_even: 判断奇偶，斑马线效果"""
 		super().__init__(parent)
+		self.setAttribute(Qt.WA_StyledBackground, True)
+		base_color = "#f8f8f8" if is_even_row else "#ffffff"
+		self.setStyleSheet(f"""
+		            CustomListItem {{
+		                background-color: {base_color};
+		                border-radius: 4px;
+		            }}
+		            CustomListItem:hover {{
+		                background-color: #e0e0e0;
+		            }}
+		        """)
 
 		# 设置消息布局
 		layout = QHBoxLayout(self)
-		layout.setContentsMargins(10, 5, 10, 5)
+		layout.setContentsMargins(5, 2, 5, 2)  # 边距：左、上、右、下
 
 		# 左侧为是否完成的复选框 TODO:打勾后发信号
 		self.finish_checkbox = QCheckBox()
+		self.finish_checkbox.toggled.connect(partial(self.this_is_finished))
 		layout.addWidget(self.finish_checkbox)
 
-		# 右侧为event，是一个按钮，只显示主题，在点击后会跳转到Schedule页面，显示详细内容 TODO：跳转
-		self.theme_display_button = QPushButton("1")
+		# 展示主题的标签
+		self.theme_display_label = QLabel(f"{theme}")
+		layout.addWidget(self.theme_display_label)
+
+		# 弹性空白区域（将右侧按钮推到最右）
+		spacer = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
+		layout.addItem(spacer)
+
+		# 右侧为event，是一个按钮，只显示+，在点击后会跳转到Schedule页面，显示详细内容 TODO：跳转
+		self.theme_display_button = QPushButton("+")
 		self.theme_display_button.setStyleSheet("""
-		    QPushButton {
-		        background-color: transparent;
-                border: none;
-		        padding: 5px;
-		        qproperty-wordWrap: true; /*自动换行*/
-		    }
-		    QPushButton:hover {
-                background-color: #d0d0d0;
-                border-radius: 4px;
-            }
-            QPushButton:pressed {
-				background-color: #e0e0e0;
-			}
-		""")
+		                QPushButton {
+		                    background-color: transparent;
+		                    border: none;
+		                    padding: 25px;
+		                    qproperty-alignment: 'AlignCenter';
+		                }
+		                QPushButton:hover {
+		                    background-color: #d0d0d0;
+		                    border-radius: 4px;
+		                }
+		                QPushButton:pressed {
+							background-color: #e0e0e0;
+						}
+		            """)
+		self.theme_display_button.clicked.connect(
+			partial(Emitter.instance().send_page_change_signal, name="Schedule"))  # TODO:具体信息的传递（哈希依据）
+
 		layout.addWidget(self.theme_display_button)
+
+	def this_is_finished(self):
+		#TODO:通知后端
+		pass
 
 
 class Upcoming(QListWidget):
@@ -42,9 +72,17 @@ class Upcoming(QListWidget):
 
 	def __init__(self, parent=None):
 		super().__init__(parent)
+		self.setSelectionMode(QListWidget.NoSelection)  # 禁用选中高亮
 
-		custom_widget = OneUpcoming()
-		item = QListWidgetItem()
-		item.setSizeHint(custom_widget.sizeHint())  # 设置合适的大小
-		self.addItem(item)
-		self.setItemWidget(item, custom_widget)
+		# TODO:触底时接连获取
+		for i in range(10):
+			custom_widget = CustomListItem(self.get_theme(), (i % 2 == 0))  # 暂时的写法
+			item = QListWidgetItem()
+			item.setSizeHint(custom_widget.sizeHint())  # 设置合适的大小
+			self.addItem(item)
+			self.setItemWidget(item, custom_widget)
+
+	def get_theme(self):
+		"""从后端获取主题"""
+		# TODO
+		return "theme"
