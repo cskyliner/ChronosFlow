@@ -1,4 +1,4 @@
-from todolist.common import *
+from common import *
 from SideBar import SideBar
 from Calendar import Calendar
 from functools import partial

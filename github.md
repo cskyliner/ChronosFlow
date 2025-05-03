@@ -83,3 +83,9 @@ git pull origin 分支名 --allow-unrelated-histories
 ## 或者合并时允许
 
 git merge origin/分支名 --allow-unrelated-histories
+
+## 强制推送
+git push --force origin userB
+
+## 撤销合并
+git reset --merge ORIG_HEAD
