@@ -77,6 +77,7 @@ class Schedule(QWidget):
 		'''
 		保存内容，暂时后端只做了DDL类 TODO:支持不同形式event的储存
 		传送内容为event类别（DDL），该类别所需参数
+		TODO:向Notice的schedule_notice发信号
 		'''
 		time = QTime(int(self.datetime[0]), int(self.datetime[1]))
 		datetime = QDateTime(self.standard_date, time)

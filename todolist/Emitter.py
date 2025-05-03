@@ -16,6 +16,7 @@ class Emitter(QObject):
 	search_signal: Signal = Signal(str)  # 发送sidebar搜索文本框的信息
 	search_all_event_signal: Signal = Signal(object)  # 向后端发送搜索全局事件的信号
 	search_some_columns_event_signal: Signal = Signal(object)  # 向后端发送搜索部分列的事件
+	signal_to_schedule_notice: Signal = Signal(str, str, int, str)  # 向Notice中的schedule_notice函数发送信号
 
 	@staticmethod
 	def instance() -> "Emitter":
@@ -28,22 +29,20 @@ class Emitter(QObject):
 
 	# ===转发信号函数====
 	def send_page_change_signal(self, name):
-		"""
-		向 main_stack发送改变页面的信号
-		"""
+		"""向 main_stack发送改变页面的信号"""
 		self.page_change_signal.emit(name)
 
 	def send_search_signal(self, content):
-		"""
-		发送sidebar搜索文本框的信息
-		"""
+		"""发送sidebar搜索文本框的信息"""
 		self.search_signal.emit(content)
 
 	def send_dynamic_signal(self, *args):
-		"""
-		发送格式不定的信号（元组形式）,只有一个对象也会变成元组
-		"""
+		"""发送格式不定的信号（元组形式）,只有一个对象也会变成元组"""
 		self.dynamic_signal.emit(args)
+
+	def send_signal_to_schedule_notice(self, title, content, notify_time, color="#3498db"):
+		"""向Notice中的schedule_notice函数发送信号"""
+		self.signal_to_schedule_notice.emit(title, content, notify_time, color)
 
 	# ===对接后端信号函数，发送信号第一个参数为命令====
 	def send_create_event_signal(self, name, *args):

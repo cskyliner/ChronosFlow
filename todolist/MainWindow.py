@@ -62,6 +62,8 @@ class MainWindow(QMainWindow):
 		self.notice_system = Notice()
 		# 用于在通知时自动显示悬浮窗
 		self.notice_system.notify_show_floating_window.connect(self.show_floating_window_and_connect)
+		# 连接schedule_notice的信号
+		Emitter.instance().signal_to_schedule_notice.connect(self.notice_system.schedule_notice)
 
 		# 初始化托盘
 		self.tray = None
