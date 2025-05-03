@@ -30,8 +30,16 @@ class CustomListItem(QWidget):
 		self.finish_checkbox.toggled.connect(partial(self.this_is_finished))
 		layout.addWidget(self.finish_checkbox)
 
+		# 字体
+		font = QFont()
+		font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
+		font.setPointSize(13)
+		font1 = QFont()  # 用于‘+’的字体
+		font1.setPointSize(18)
+
 		# 展示主题的标签
 		self.theme_display_label = QLabel(f"{theme}")
+		self.theme_display_label.setFont(font)
 		layout.addWidget(self.theme_display_label)
 
 		# 弹性空白区域（将右侧按钮推到最右）
@@ -46,15 +54,16 @@ class CustomListItem(QWidget):
 		                    border: none;
 		                    padding: 25px;
 		                    qproperty-alignment: 'AlignCenter';
+		                    color: #a0a0a0;
 		                }
 		                QPushButton:hover {
-		                    background-color: #d0d0d0;
-		                    border-radius: 4px;
+		                    color: #07C160;
 		                }
 		                QPushButton:pressed {
-							background-color: #e0e0e0;
+							color: #05974C;
 						}
 		            """)
+		self.theme_display_button.setFont(font1)
 		self.theme_display_button.clicked.connect(
 			partial(Emitter.instance().send_page_change_signal, name="Schedule"))
 		self.theme_display_button.clicked.connect(
