@@ -17,7 +17,7 @@ class Emitter(QObject):
 	search_all_event_signal: Signal = Signal(object)  # 向后端发送搜索全局事件的信号
 	search_some_columns_event_signal: Signal = Signal(object)  # 向后端发送搜索部分列的事件
 	signal_to_schedule_notice: Signal = Signal(str, str, int, str)  # 向Notice中的schedule_notice函数发送信号
-	from_upcoming_to_create_event_signal: Signal = Signal(str,str) #从upcoming跳转到create_event
+	from_upcoming_to_create_event_signal: Signal = Signal(str,str) #TODO
 
 	@staticmethod
 	def instance() -> "Emitter":

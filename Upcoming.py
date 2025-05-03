@@ -56,12 +56,16 @@ class CustomListItem(QWidget):
 						}
 		            """)
 		self.theme_display_button.clicked.connect(
-			partial(Emitter.instance().send_page_change_signal, name="Schedule"))  # TODO:具体信息的传递（哈希依据）
+			partial(Emitter.instance().send_page_change_signal, name="Schedule"))
+		self.theme_display_button.clicked.connect(self.send_message)  # TODO:传递具体信息（哈希依据），以便跳转到相应的CreateEvent界面；如何将该信息传递给CreateEvent界面
 
 		layout.addWidget(self.theme_display_button)
 
 	def this_is_finished(self):
-		#TODO:通知后端
+		# TODO:通知后端
+		pass
+
+	def send_message(self):
 		pass
 
 
