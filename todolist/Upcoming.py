@@ -1,9 +1,8 @@
 from common import *
 
-class SingleUpcoming(QWidget):
-	"""
-	一条日程
-	"""
+
+class OneUpcoming(QWidget):
+	"""一条日程"""
 
 	def __init__(self, parent=None):
 		super().__init__(parent)
@@ -12,7 +11,7 @@ class SingleUpcoming(QWidget):
 		layout = QHBoxLayout(self)
 		layout.setContentsMargins(10, 5, 10, 5)
 
-		# 左侧为是否完成的复选框 TODO:打勾后
+		# 左侧为是否完成的复选框 TODO:打勾后发信号
 		self.finish_checkbox = QCheckBox()
 		layout.addWidget(self.finish_checkbox)
 
@@ -44,7 +43,7 @@ class Upcoming(QListWidget):
 	def __init__(self, parent=None):
 		super().__init__(parent)
 
-		custom_widget=SingleUpcoming()
+		custom_widget = OneUpcoming()
 		item = QListWidgetItem()
 		item.setSizeHint(custom_widget.sizeHint())  # 设置合适的大小
 		self.addItem(item)

@@ -60,6 +60,8 @@ class MainWindow(QMainWindow):
 
 		# 初始化通知系统
 		self.notice_system = Notice()
+		# 用于在通知时自动显示悬浮窗
+		self.notice_system.notify_show_floating_window.connect(self.show_floating_window_and_connect)
 
 		# 初始化托盘
 		self.tray = None
@@ -67,9 +69,6 @@ class MainWindow(QMainWindow):
 
 		# 悬浮窗口初始化
 		self.floating_window = None
-
-		# 临时测试,手动添加了一个日程 (提供接口)
-		self.add_schedule()
 
 	# 或许可以有
 	# self.setWindowIcon(QIcon(self._get_icon_path()))
@@ -257,19 +256,6 @@ class MainWindow(QMainWindow):
 		"""重写关闭事件"""
 		print("closeEvent 方法被调用")
 		event.accept()
-
-	def add_schedule(self, title="会议提醒", content="10分钟后有项目进度会议",
-					 notify_time=QDateTime.currentDateTime().addSecs(5)
-					 , color="#3498db"):
-		# 示例：添加一个5秒后的通知
-		self.notice_system.schedule_notice(
-			title,
-			content,
-			notify_time,
-			color  # 绿色通知
-		)
-		# 用于在通知时自动显示悬浮窗
-		self.notice_system.notify_show_floating_window.connect(self.show_floating_window_and_connect)
 
 	# 最小化按钮重定义为显示悬浮窗
 	def changeEvent(self, event):
