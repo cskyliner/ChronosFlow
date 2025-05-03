@@ -1,7 +1,6 @@
 from common import logging
 import os
 import sqlite3
-from Emitter import Emitter
 
 log = logging.getLogger(__name__)
 # TODO:前端提供路径接口，处理文件存储位置问题，当前储存位置为根目录下local_data/events.db
