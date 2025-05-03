@@ -5,9 +5,12 @@ from functools import partial
 from CreateEventWindow import Schedule
 from Emitter import Emitter
 from Settings import SettingsPage
-
+from Tray import Tray
+from FloatingWindow import FloatingWindow
+from Notice import Notice
 log = logging.getLogger(__name__)
 class MainWindow(QMainWindow):
+	
 	def __init__(self, width=800, height=600, show_x=100, show_y=100):
 		super().__init__()
 		# 尺寸
@@ -51,6 +54,22 @@ class MainWindow(QMainWindow):
 		self.setup_create_event_window()  # 日程填写窗口
 		self.setup_setting_window()
 		self.setup_upcoming_window()
+
+		# 初始化通知系统
+		self.notice_system = Notice()
+
+		# 初始化托盘
+		self.tray = None
+		self._init_tray()
+        
+        # 悬浮窗口初始化
+		self.floating_window = None
+
+		# 临时测试,手动添加了一个日程 (提供接口)
+		self.add_schedule()
+
+		# 或许可以有
+		# self.setWindowIcon(QIcon(self._get_icon_path()))
 
 	def setup_main_window(self):
 		'''
@@ -127,7 +146,7 @@ class MainWindow(QMainWindow):
 		self.setting_window.setLayout(setting_layout)
 
 		# 返回按钮，回到calendar
-		self.setting_toggle_btn = QPushButton("<")
+		self.setting_toggle_btn = QPushButton("X")
 		self.setting_toggle_btn.setStyleSheet("""
 				            QPushButton {
 				                padding: 8px;
@@ -145,6 +164,7 @@ class MainWindow(QMainWindow):
 		self.setting = SettingsPage()
 		setting_layout.addWidget(self.setting)
 		self.add_page(self.main_stack, self.setting_window, "Setting")
+
 
 
 	def setup_upcoming_window(self):
@@ -199,3 +219,89 @@ class MainWindow(QMainWindow):
 			self.toggle_btn.setText(">")
 
 		self.animations["sidebar"].start()
+
+
+		
+
+	def _init_tray(self):
+		"""初始化系统托盘"""
+		self.tray = Tray(
+			app=QApplication.instance(),
+			icon_path=self._get_icon_path()
+		)
+		# 信号连接：托盘目录(右键显示)
+		self.tray.show_main.connect(self.show)
+		self.tray.show_floating.connect(self.show_floating_window)
+		self.tray.exit_app.connect(self.quit_application)
+		# 初始化托盘图标提醒
+		self.tray.show_notification("启动提醒", "程序已添加到系统托盘")
+		self.notice_system.notify_to_tray.connect(self.tray.notification_received)
+
+
+	def _get_icon_path(self):# 暂时无用
+		"""获取图标路径"""
+		base_dir = os.path.dirname(__file__)
+		return os.path.join(base_dir, "resources", "app_icon.ico")
+
+	def show_floating_window(self):
+		"""显示悬浮窗口"""
+		if not self.floating_window:
+			self.floating_window = FloatingWindow()
+		self.floating_window.show()
+
+	def quit_application(self):
+		"""退出程序"""
+		print("quit_application 方法被调用")
+		self.tray.shutdown()
+		self.floating_window.close()
+		QApplication.quit()
+
+	def closeEvent(self, event):
+		"""重写关闭事件"""
+		print("closeEvent 方法被调用")
+		event.accept()
+
+	def add_schedule(self, title = "会议提醒", content = "10分钟后有项目进度会议", 
+				  notify_time = QDateTime.currentDateTime().addSecs(5)
+				  , color="#3498db"):
+        # 示例：添加一个5秒后的通知
+		self.notice_system.schedule_notice(
+            title,
+           	content,
+            notify_time,
+            color # 绿色通知
+        )
+		# 用于在通知时自动显示悬浮窗
+		self.notice_system.notify_show_floating_window.connect(self.show_floating_window_and_connect)
+		
+	# 最小化按钮重定义为显示悬浮窗
+	def changeEvent(self, event):
+		# 检查事件类型是否为窗口状态改变事件
+		if event.type() == QEvent.WindowStateChange:
+			# 检查窗口是否变为最小化状态
+			if self.windowState() & Qt.WindowMinimized:
+				# 在这里添加窗口最小化时要执行的自定义操作
+				print("悬浮窗已经打开")
+				# 显示悬浮窗并连接通知信号和主窗口
+				self.show_floating_window_and_connect()
+		# 调用父类的 changeEvent 方法以确保默认行为被执行
+		super().changeEvent(event)
+
+	#处理悬浮窗返回主窗口的逻辑
+	def show_main_window(self):
+		if self.windowState() == Qt.WindowMinimized:
+			print("目前最小化")
+			self.showNormal()
+		elif self.isHidden():
+			print("目前隐藏")
+			self.show()
+
+	#打包操作
+	def show_floating_window_and_connect(self):
+		# 显示悬浮窗
+		self.show_floating_window()
+		# 连接通知系统
+		self.notice_system.notify_to_floating_window.connect(self.floating_window.notification_received)
+		# 连接悬浮窗
+		self.floating_window.exit_requested.connect(self.quit_application)
+		self.floating_window.show_main_requested.connect(self.show_main_window)
