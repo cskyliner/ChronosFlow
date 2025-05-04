@@ -1,4 +1,4 @@
-from common import * 
+from common import *
 from functools import partial
 from Emitter import Emitter
 
@@ -54,8 +54,8 @@ class SideBar(QFrame):
 		layout.addLayout(search_layout)
 
 		# ===添加功能按钮===
-		names = ("Calendar", "Upcoming", "Setting", "Schedule")
-		#使用Qt的字体回退机制，解决在Mac上找不到字体报错的问题 FIXME:前端可能需要调试一下字体大小，以及缩放问题
+		names = ("Calendar", "Upcoming", "Setting")
+		# 使用Qt的字体回退机制，解决在Mac上找不到字体报错的问题 FIXME:前端可能需要调试一下字体大小，以及缩放问题
 		button_font = QFont()
 		button_font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
 		button_font.setPointSize(15)
@@ -78,7 +78,7 @@ class SideBar(QFrame):
             """)
 			btn.setFont(button_font)
 			layout.addWidget(btn)
-			#连接按钮与切换页面信号
+			# 连接按钮与切换页面信号
 			btn.clicked.connect(partial(Emitter.instance().send_page_change_signal, name))
 		layout.addStretch()
 		self.setLayout(layout)
