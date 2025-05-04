@@ -1,6 +1,6 @@
 from common import *
-
-
+import pync
+log = logging.getLogger(__name__)
 class Notice(QObject):
 	notify_to_floating_window = Signal(str, str, str)  # 向悬浮窗发送通知信号(标题，内容，颜色代码)
 	notify_to_tray = Signal(str, str, str)  # 向托盘发送通知信号(标题，内容，颜色代码)
@@ -36,17 +36,21 @@ class Notice(QObject):
         # 只处理已到期的通知
 		while self.scheduled_notices and current >= self.scheduled_notices[0]["time"]:
 			notice = self.scheduled_notices.pop(0)
-			self.notify_show_floating_window.emit()
-			self.notify_to_floating_window.emit(
-				notice["title"],
-				notice["content"],
-				notice["color"]
-			)
+			log.info(f"提醒: {notice['title']} - {notice['content']}")
+			if sys.platform == "darwin":
+				pync.notify(notice["content"],title='ChronosFlow',subtitle=notice["title"],sound='Ping')
+			else:
+				self.notify_show_floating_window.emit()
+				self.notify_to_floating_window.emit(
+					notice["title"],
+					notice["content"],
+					notice["color"]
+				)
 			self.notify_to_tray.emit(
-				notice["title"],
-				notice["content"],
-				notice["color"]
-			)
+					notice["title"],
+					notice["content"],
+					notice["color"]
+				)
 
 
 
