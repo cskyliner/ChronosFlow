@@ -5,3 +5,4 @@
 __pycache__/
 *.pyc
 local_data/
+docs/framework_draft.md

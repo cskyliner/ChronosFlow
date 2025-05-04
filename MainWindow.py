@@ -67,7 +67,7 @@ class MainWindow(QMainWindow):
 		# 初始化通知系统
 		self.notice_system = Notice()
 		# 用于在通知时自动显示悬浮窗
-		self.notice_system.notify_show_floating_window.connect(self.show_floating_window_and_connect)
+		self.notice_system.notify_show_floating_window.connect(self.show_floating_window)
 		# 连接schedule_notice的信号
 		Emitter.instance().signal_to_schedule_notice.connect(self.notice_system.schedule_notice)
 
@@ -76,7 +76,7 @@ class MainWindow(QMainWindow):
 		self._init_tray()
 
 		# 悬浮窗口初始化
-		self.floating_window = None
+		self._init_floating_window()
 
 	# 或许可以有
 	# self.setWindowIcon(QIcon(self._get_icon_path()))
@@ -363,6 +363,7 @@ class MainWindow(QMainWindow):
 		self.tray.show_main.connect(self.show)
 		self.tray.show_floating.connect(self.show_floating_window)
 		self.tray.exit_app.connect(self.quit_application)
+		self.tray.activated_response.connect(self.show_main_window)
 		# 初始化托盘图标提醒
 		self.tray.show_notification("启动提醒", "程序已添加到系统托盘")
 		self.notice_system.notify_to_tray.connect(self.tray.notification_received)
@@ -382,13 +383,15 @@ class MainWindow(QMainWindow):
 		"""退出程序"""
 		print("quit_application 方法被调用")
 		self.tray.shutdown()
-		self.floating_window.close()
+		if not self.floating_window is None:
+			self.floating_window.close()
 		QApplication.quit()
 
 	def closeEvent(self, event):
 		"""重写关闭事件"""
 		print("closeEvent 方法被调用")
-		event.accept()
+		self.hide()
+		event.ignore()
 
 	# 最小化按钮重定义为显示悬浮窗
 	def changeEvent(self, event):
@@ -399,28 +402,21 @@ class MainWindow(QMainWindow):
 				# 在这里添加窗口最小化时要执行的自定义操作
 				print("悬浮窗已经打开")
 				# 显示悬浮窗并连接通知信号和主窗口
-				self.show_floating_window_and_connect()
+				self.show_floating_window()
 		# 调用父类的 changeEvent 方法以确保默认行为被执行
 		super().changeEvent(event)
 
 	# 处理悬浮窗返回主窗口的逻辑
 	def show_main_window(self):
 		if self.windowState() == Qt.WindowMinimized:
-			print("目前最小化")
 			self.showNormal()
 		elif self.isHidden():
-			print("目前隐藏")
 			self.show()
 
-	# 打包操作
-	def show_floating_window_and_connect(self):
-		# 显示悬浮窗
-		if not self.floating_window:
-			self.floating_window = FloatingWindow()
-			# 连接通知系统
-			self.notice_system.notify_to_floating_window.connect(self.floating_window.notification_received)
-			# 连接悬浮窗
-			self.floating_window.exit_requested.connect(self.quit_application)
-			self.floating_window.show_main_requested.connect(self.show_main_window)
-
-		self.floating_window.show()
+	def _init_floating_window(self):
+		self.floating_window = FloatingWindow()
+		# 连接通知系统
+		self.notice_system.notify_to_floating_window.connect(self.floating_window.notification_received)
+		# 连接悬浮窗
+		self.floating_window.exit_requested.connect(self.quit_application)
+		self.floating_window.show_main_requested.connect(self.show_main_window)

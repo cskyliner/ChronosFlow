@@ -1,5 +1,6 @@
 from common import *
-import pync
+if sys.platform == 'darwin':
+    import pync
 log = logging.getLogger(__name__)
 class Notice(QObject):
 	notify_to_floating_window = Signal(str, str, str)  # 向悬浮窗发送通知信号(标题，内容，颜色代码)

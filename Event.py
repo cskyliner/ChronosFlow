@@ -194,6 +194,14 @@ def recieve_signal(recieve_data: tuple) -> None:
 	elif recieve_data[0] == "storage_path":
 		global DB_PATH,conn,cursor # 全局变量
 		path = recieve_data[1]
+		log.info(f"path = {os.path.abspath(path)}")
+		# 检查路径是否存在且可写
+		if not os.path.exists(path):
+			os.makedirs(path)  # 自动创建目录
+			
+		if not os.access(path, os.W_OK):
+			QMessageBox.critical(None, "错误", "目标路径不可写！")
+			return
 		DB_PATH = os.path.join(path, "events.db")
 		try:
 			conn = sqlite3.connect(DB_PATH)

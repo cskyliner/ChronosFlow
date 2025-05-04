@@ -66,7 +66,7 @@ class FloatingWindow(QWidget):
 		control_layout.addWidget(self.btn_main)
 
 		# 退出程序按钮
-		self.btn_exit = QPushButton("完全退出")
+		self.btn_exit = QPushButton("退出")
 		self.btn_exit.setStyleSheet("""
             QPushButton {
                 background: #e74c3c;
