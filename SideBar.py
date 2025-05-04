@@ -86,3 +86,4 @@ class SideBar(QFrame):
 	# 获取文本框内容 TODO:后端
 	def get_text(self):
 		Emitter.instance().send_search_signal(self.search_edit.text())
+		self.search_edit.clear()
