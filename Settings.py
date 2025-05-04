@@ -1,8 +1,8 @@
 from common import *
+from Emitter import Emitter
 log = logging.getLogger(__name__)
-
 class SettingsPage(QWidget):
-    settings_saved = Signal()
+    """设置页面"""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -20,7 +20,6 @@ class SettingsPage(QWidget):
         self.storage_path_edit = QLineEdit()
         self.storage_path_edit.setPlaceholderText("请选择目录")
         path_layout.addWidget(self.storage_path_edit)
-        
         browse_btn = QPushButton("浏览...")
         browse_btn.clicked.connect(self.select_storage_path)
         path_layout.addWidget(browse_btn)
@@ -72,7 +71,7 @@ class SettingsPage(QWidget):
 
         # 保存按钮
         save_btn = QPushButton("保存设置")
-        save_btn.clicked.connect(self.save_settings)
+        save_btn.clicked.connect(lambda: self.save_settings(reminder=True)) # 添加reminder参数使得手动保存与默认保存区分开来
 
         # 主布局
         layout.addLayout(path_layout)
@@ -86,7 +85,20 @@ class SettingsPage(QWidget):
     def update_volume_label(self, value):
         """更新音量标签显示"""
         self.volume_label.setText(f"音量: {value}%")
-    
+
+    def get_default_storage_path(self) -> str:
+        """获取默认存储路径（即用户主目录）"""
+        if sys.platform == 'win32':
+            # Windows 路径：%USERPROFILE%\AppData\Local\MyApp\settings.json
+            config_dir = os.path.join(os.environ['USERPROFILE'], 'AppData', 'Local', 'MyApp')
+        elif sys.platform == 'darwin':  # macOS
+            # macOS/Linux 路径：~/Library/Application Support/MyApp/settings.json
+            config_dir = os.path.join(os.path.expanduser('~'), 'Library', 'Application Support', 'MyApp')
+        else:  # Linux 或其他 Unix
+            # macOS/Linux 路径：~/.config/MyApp/settings.json
+            config_dir = os.path.join(os.path.expanduser('~'), '.config', 'MyApp')
+        return config_dir  
+     
     def select_storage_path(self):
         """选择储存路径"""
         if sys.platform == 'darwin':
@@ -100,31 +112,24 @@ class SettingsPage(QWidget):
             log.info(f"用户选择的存储路径: {path}")
             self.storage_path_edit.setText(path)
             #os.makedirs(path, exist_ok=True)
-            self.config_path_cpy : str = os.path.join(path, "settings_cpy.json")
+            #self.config_path_cpy : str = os.path.join(path, "settings_cpy.json")
 
-    def get_config_path(self):
+    def get_config_path(self) -> str:
         """获取配置文件路径"""
-        if sys.platform == 'win32':
-            # Windows 路径：%USERPROFILE%\AppData\Local\MyApp\settings.json
-            config_dir = os.path.join(os.environ['USERPROFILE'], 'AppData', 'Local', 'MyApp')
-        elif sys.platform == 'darwin':  # macOS
-            # macOS/Linux 路径：~/Library/Application Support/MyApp/settings.json
-            config_dir = os.path.join(os.path.expanduser('~'), 'Library', 'Application Support', 'MyApp')
-        else:  # Linux 或其他 Unix
-            # macOS/Linux 路径：~/.config/MyApp/settings.json
-            config_dir = os.path.join(os.path.expanduser('~'), '.config', 'MyApp')
+        # 获取默认存储路径
+        config_dir = self.get_default_storage_path()
         #config_dir = os.path.join(os.environ['USERPROFILE'], 'AppData', 'Local', 'MyApp')
         os.makedirs(config_dir, exist_ok=True)
         return os.path.join(config_dir, 'settings.json')
 
-    def get_data_dir(self):
+    def get_data_dir(self) -> str:
         """获取数据存储目录路径"""
         return os.path.join(self.storage_path_edit.text(), 'AppData')
 
     def load_settings(self):
         """加载设置"""
         config_path = self.get_config_path()
-        print(config_path)
+        log.info(f"配置文件路径: {config_path}")
         if os.path.exists(config_path):
             try:
                 with open(config_path, 'r', encoding='utf-8') as f:
@@ -140,13 +145,17 @@ class SettingsPage(QWidget):
                     volume = settings.get('volume', 50)
                     self.volume_slider.setValue(volume)
                     self.update_volume_label(volume)
+
+                    log.info(f"加载设置: {settings}")
+                    # 发送信号通知储存路径
+                    Emitter.instance().send_storage_path(os.path.join(settings.get('storage_path', ''), "AppData", "Database"))
                     
             except Exception as e:
                 QMessageBox.warning(self, "错误", f"加载设置失败: {str(e)}")
         else:
-            # 如果配置文件不存在，创建新文件并写入默认设置
+            # 如果配置文件不存在，创建新文件并写入默认设置，默认储存路径为用户主目录
             default_settings = {
-                "storage_path": "",
+                "storage_path": self.get_default_storage_path(),
                 "theme": "系统默认",
                 "notifications_enabled": True,
                 "notification_type": "系统通知",
@@ -163,10 +172,14 @@ class SettingsPage(QWidget):
                 volume = default_settings['volume']
                 self.volume_slider.setValue(volume)
                 self.update_volume_label(volume)
+
+                self.save_settings(reminder=False)
+                log.info(f"创建默认设置: {default_settings}")
+                # 发送信号通知默认储存路径
+                Emitter.instance().send_storage_path(os.path.join(default_settings['storage_path'], "AppData", "Database"))
             except Exception as e:
                 QMessageBox.warning(self, "错误", f"创建并写入默认设置失败: {str(e)}")
-
-    def save_settings(self):
+    def save_settings(self,reminder:bool = True):
         """保存设置并创建完整目录结构"""
         settings = {
             'storage_path': self.storage_path_edit.text(),
@@ -184,7 +197,7 @@ class SettingsPage(QWidget):
         try:
             # 创建数据目录结构
             data_dir = self.get_data_dir()
-            print("data_dir:",data_dir)
+            log.info(f"data_dir:{data_dir}")
             subdirs = ['Database', 'Attachments', 'Backups', 'Exports']
         
             for subdir in subdirs:
@@ -204,13 +217,13 @@ class SettingsPage(QWidget):
     - settings_content.txt: 当前配置详情
     """)
 
-            # 保存配置文件 (JSON格式)
+            # 保存配置文件及其在data_dir中的副本 (JSON格式)
             config_path = self.get_config_path()
             with open(config_path, 'w', encoding='utf-8') as f:
                 json.dump(settings, f, indent=4, ensure_ascii=False)
-            with open(self.config_path_cpy, 'w', encoding='utf-8') as f:
+            with open(os.path.join(data_dir, "settings_cpy.json"), 'w', encoding='utf-8') as f:
                 json.dump(settings, f, indent=4, ensure_ascii=False)
-            # 新增：保存人类可读的设置内容文件
+            # 保存人类可读的设置内容文件
             settings_content_path = os.path.join(data_dir, 'settings_content.txt')
             with open(settings_content_path, 'w', encoding='utf-8') as f:
                 f.write(f"""=== 应用程序设置详情 ===
@@ -225,17 +238,21 @@ class SettingsPage(QWidget):
     === 原始JSON数据 ===
     {json.dumps(settings, indent=4, ensure_ascii=False)}
     """)
-
-            QMessageBox.information(
-                self, 
-                "保存成功", 
-                f"""设置已保存！
+            # 提示用户保存成功
+            print(f"[Debug] reminder 参数值为: {reminder}")
+            if reminder is True:
+                QMessageBox.information(
+                    self, 
+                    "保存成功", 
+                    f"""设置已保存！
             
         配置文件位置: {config_path}
         数据目录: {data_dir}
         设置详情已保存至: {settings_content_path}"""
             )
-            self.settings_saved.emit()
+            log.info("设置已保存")
+            # 发送信号通知储存路径
+            Emitter.instance().send_storage_path(os.path.join(settings['storage_path'], "AppData", "Database"))
 
         except Exception as e:
             QMessageBox.critical(self, "错误", f"保存失败:\n{str(e)}")
