@@ -1,10 +1,9 @@
-from common import logging
+from common import *
 import os
 import sqlite3
 
 log = logging.getLogger(__name__)
-# TODO:前端提供路径接口，处理文件存储位置问题，当前储存位置为根目录下local_data/events.db
-# ===连接数据库===
+# ===默认连接数据库（应该不会启用）===
 BASE_DIR = os.path.dirname(__file__)
 DB_PATH = os.path.join(BASE_DIR, "local_data/events.db")
 conn = sqlite3.connect(DB_PATH)
@@ -192,6 +191,21 @@ def recieve_signal(recieve_data: tuple) -> None:
 		log.info(f"接收信号成功，搜索事件{keyword}，搜索结果为{result}")
 		return result
 	# sent_signal("search_all", result)
+	elif recieve_data[0] == "storage_path":
+		global DB_PATH,conn,cursor # 全局变量
+		path = recieve_data[1]
+		DB_PATH = os.path.join(path, "events.db")
+		try:
+			conn = sqlite3.connect(DB_PATH)
+			cursor = conn.cursor()
+		except Exception as e:
+			log.error(f"连接数据库失败：{e}")
+			QMessageBox.warning(
+				None,
+				"错误",
+				"连接数据库失败，请检查存储路径是否正确",
+            )
+		log.info(f"接收信号成功，存储路径为{path}")
 	else:
 		log.error(f"接收信号失败，未知信号类型{recieve_data[0]}，参数为{recieve_data}")
 
