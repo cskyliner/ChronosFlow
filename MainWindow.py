@@ -87,7 +87,7 @@ class MainWindow(QMainWindow):
 		self.setup_main_window()  # 日历窗口（主界面）
 		self.setup_create_event_window()  # 日程填写窗口
 		self.setup_upcoming_window()  # 日程展示窗口
-		self.setup_setting_window()
+		self.setup_setting_window()  # 设置界面
 
 		# 初始化通知系统
 		self.notice_system = Notice()
@@ -285,9 +285,13 @@ class MainWindow(QMainWindow):
 	# 打包操作
 	def show_floating_window_and_connect(self):
 		# 显示悬浮窗
-		self.show_floating_window()
-		# 连接通知系统
-		self.notice_system.notify_to_floating_window.connect(self.floating_window.notification_received)
-		# 连接悬浮窗
-		self.floating_window.exit_requested.connect(self.quit_application)
-		self.floating_window.show_main_requested.connect(self.show_main_window)
+		if not self.floating_window:
+			self.floating_window = FloatingWindow()
+			# 连接通知系统
+			self.notice_system.notify_to_floating_window.connect(self.floating_window.notification_received)
+			# 连接悬浮窗
+			self.floating_window.exit_requested.connect(self.quit_application)
+			self.floating_window.show_main_requested.connect(self.show_main_window)	
+
+		self.floating_window.show()
+

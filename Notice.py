@@ -11,7 +11,7 @@ class Notice(QObject):
 		self.scheduled_notices = []  # 存储计划通知
 		self.timer = QTimer()
 		self.timer.timeout.connect(self.check_notices)
-		self.timer.start(1000)  # 每秒检查一次
+		self.timer.start(200)  # 每秒检查一次
 
 	def schedule_notice(self, title, content, notify_time, color="#3498db"):
 		"""
@@ -27,25 +27,27 @@ class Notice(QObject):
 			"time": notify_time,
 			"color": color
 		})
+		# 按时间对通知列表进行排序，确保先到期的通知先处理
+		self.scheduled_notices.sort(key=lambda x: x["time"])
 
 	def check_notices(self):
 		"""检查是否到达通知时间"""
 		current = QDateTime.currentDateTime()
-		for notice in self.scheduled_notices[:]:
-			if current >= notice["time"]:
-				self.notify_show_floating_window.emit()
-				self.notify_to_floating_window.emit(
-					notice["title"],
-					notice["content"],
-					notice["color"]
-				)
-				self.notify_to_tray.emit(
-					notice["title"],
-					notice["content"],
-					notice["color"]
-				)
+        # 只处理已到期的通知
+		while self.scheduled_notices and current >= self.scheduled_notices[0]["time"]:
+			notice = self.scheduled_notices.pop(0)
+			self.notify_show_floating_window.emit()
+			self.notify_to_floating_window.emit(
+				notice["title"],
+				notice["content"],
+				notice["color"]
+			)
+			self.notify_to_tray.emit(
+				notice["title"],
+				notice["content"],
+				notice["color"]
+			)
 
-				self.scheduled_notices.remove(notice)
 
 
 class NotificationWidget(QFrame):
@@ -89,5 +91,5 @@ class NotificationWidget(QFrame):
 		self.setLayout(layout)
 
 	def _start_close_timer(self):
-		"""5秒后自动关闭"""
-		QTimer.singleShot(5000, self.close)
+		"""8秒后自动关闭"""
+		QTimer.singleShot(8000, self.close)
