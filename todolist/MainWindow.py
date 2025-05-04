@@ -139,21 +139,21 @@ class MainWindow(QMainWindow):
 
 		sidebar_btn = QPushButton("<")
 		sidebar_btn.setStyleSheet("""
-								                QPushButton {
-								                    background-color: transparent;
-								                    border: none;
-								                    padding: 0;
-						    						margin: 0;
-								                    qproperty-alignment: 'AlignCenter';
-								                    color: #a0a0a0;
-								                }
-								                QPushButton:hover {
-								                    color: #07C160;
-								                }
-								                QPushButton:pressed {
-													color: #05974C;
-												}
-								            """)
+								QPushButton {
+								background-color: transparent;
+								border: none;
+								padding: 0;
+								margin: 0;
+								qproperty-alignment: 'AlignCenter';
+								color: #a0a0a0;
+								}
+								QPushButton:hover {
+								color: #07C160;
+								}
+								QPushButton:pressed {
+								color: #05974C;
+								}
+								""")
 		sidebar_btn.setFont(self.button_font)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar,btn=sidebar_btn))
 
@@ -199,20 +199,20 @@ class MainWindow(QMainWindow):
 
 		sidebar_btn = QPushButton("<")
 		sidebar_btn.setStyleSheet("""
-						                QPushButton {
-						                    background-color: transparent;
-						                    border: none;
-						                    padding: 0;
-				    						margin: 0;
-						                    qproperty-alignment: 'AlignCenter';
-						                    color: #a0a0a0;
-						                }
-						                QPushButton:hover {
-						                    color: #07C160;
-						                }
-						                QPushButton:pressed {
-											color: #05974C;
-										}
+								QPushButton {
+								background-color: transparent;
+								border: none;
+								padding: 0;
+								margin: 0;
+								qproperty-alignment: 'AlignCenter';
+								color: #a0a0a0;
+								}
+								QPushButton:hover {
+								color: #07C160;
+								}
+								QPushButton:pressed {
+								color: #05974C;
+								}
 						            """)
 		sidebar_btn.setFont(self.button_font)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar,btn=sidebar_btn))
