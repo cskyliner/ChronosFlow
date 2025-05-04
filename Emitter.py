@@ -14,6 +14,7 @@ class Emitter(QObject):
 	page_change_signal: Signal = Signal(str)  # 向 main_stack发送改变页面的信号
 	create_event_signal: Signal = Signal(object)  # 发送创建事件的信号
 	search_signal: Signal = Signal(str)  # 发送sidebar搜索文本框的信息
+	storage_path_signal: Signal = Signal(object)  # 发送存储路径的信号
 	search_all_event_signal: Signal = Signal(object)  # 向后端发送搜索全局事件的信号
 	search_some_columns_event_signal: Signal = Signal(object)  # 向后端发送搜索部分列的事件
 	signal_to_schedule_notice: Signal = Signal(str, str, QDateTime, str)  # 向Notice中的schedule_notice函数发送信号
@@ -51,6 +52,11 @@ class Emitter(QObject):
 		self.from_upcoming_to_create_event_signal.emit(theme,date)
 
 	# ===对接后端信号函数，发送信号第一个参数为命令====
+	def send_storage_path(self, path):
+		"""发送存储路径"""
+		log.info(f"send storage path signal，存储路径为{path}")
+		out = ("storage_path", path)
+		self.storage_path_signal.emit(out)
 	def send_create_event_signal(self, name, *args):
 		"""
 		name为event类型如 DDL
