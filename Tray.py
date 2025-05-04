@@ -1,7 +1,7 @@
 # ---------------------- 系统托盘类 ----------------------
 from common import *
 #import pystray
-#from PIL import Image
+from PIL import Image
 
 class Tray(QObject):
 	show_main = Signal()
