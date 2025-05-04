@@ -35,7 +35,22 @@ class Schedule(QWidget):
 		self.deadline_edit = QDateTimeEdit()
 		self.deadline_edit.setDisplayFormat("yyyy-MM-dd HH:mm")
 		self.deadline_edit.setDateTime(QDateTime.currentDateTime())
-		self.deadline_edit.setCalendarPopup(True)
+		self.deadline_edit.setCalendarPopup(True) #在点击时弹出日历
+		calendar = self.deadline_edit.calendarWidget()  # 获取日历控件（QCalendarWidget）
+		calendar.setStyleSheet("""
+						            Calendar QAbstractItemView:enabled {     /*禁用选中高亮效果*/
+						                selection-background-color: transparent;  /* 透明背景 */
+						                selection-color: palette(text);        /* 使用正常文本颜色 */
+						            }
+						            QCalendarWidget QAbstractItemView {   /*消除边框*/
+						                border: none;
+						                outline: 0;
+						                selection-background-color: transparent;
+						            }
+						            QCalendarWidget QAbstractItemView:item:hover {  /*鼠标悬停*/
+						                background-color: #d0d0d0;
+						            }
+						        """)  # 设置日历样式
 		layout.addWidget(self.deadline_edit)
 
 		# 提醒时间选择框
@@ -46,6 +61,21 @@ class Schedule(QWidget):
 		self.reminder_edit.setDisplayFormat("yyyy-MM-dd HH:mm")
 		self.reminder_edit.setDateTime(QDateTime.currentDateTime())
 		self.reminder_edit.setCalendarPopup(True)
+		calendar = self.deadline_edit.calendarWidget()# 获取日历控件（QCalendarWidget）
+		calendar.setStyleSheet("""
+				            Calendar QAbstractItemView:enabled {     /*禁用选中高亮效果*/
+				                selection-background-color: transparent;  /* 透明背景 */
+				                selection-color: palette(text);        /* 使用正常文本颜色 */
+				            }
+				            QCalendarWidget QAbstractItemView {   /*消除边框*/
+				                border: none;
+				                outline: 0;
+				                selection-background-color: transparent;
+				            }
+				            QCalendarWidget QAbstractItemView:item:hover {  /*鼠标悬停*/
+				                background-color: #d0d0d0;
+				            }
+				        """)# 设置日历样式
 		layout.addWidget(self.reminder_edit)
 
 		# 创建按钮
