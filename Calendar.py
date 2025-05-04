@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QCalendarWidget
 from PySide6.QtCore import QDate
 
+
 class Calendar(QCalendarWidget):
 	def __init__(self, parent=None):
 		super().__init__(parent)
