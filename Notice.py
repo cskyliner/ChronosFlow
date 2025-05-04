@@ -1,5 +1,6 @@
 from common import *
-#import pync
+if sys.platform == 'darwin':
+    import pync
 log = logging.getLogger(__name__)
 class Notice(QObject):
 	notify_to_floating_window = Signal(str, str, str)  # 向悬浮窗发送通知信号(标题，内容，颜色代码)
@@ -33,7 +34,7 @@ class Notice(QObject):
 	def check_notices(self):
 		"""检查是否到达通知时间"""
 		current = QDateTime.currentDateTime()
-		# 只处理已到期的通知
+        # 只处理已到期的通知
 		while self.scheduled_notices and current >= self.scheduled_notices[0]["time"]:
 			notice = self.scheduled_notices.pop(0)
 			log.info(f"提醒: {notice['title']} - {notice['content']}")
