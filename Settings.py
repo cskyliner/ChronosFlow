@@ -1,5 +1,5 @@
 from common import *
-
+log = logging.getLogger(__name__)
 
 class SettingsPage(QWidget):
     settings_saved = Signal()
@@ -86,13 +86,18 @@ class SettingsPage(QWidget):
     def update_volume_label(self, value):
         """更新音量标签显示"""
         self.volume_label.setText(f"音量: {value}%")
-
+    
     def select_storage_path(self):
-        """使用Tkinter选择目录"""
-        root = tk.Tk()
-        root.withdraw()
-        path = filedialog.askdirectory(title="选择数据存储目录")
+        """选择储存路径"""
+        if sys.platform == 'darwin':
+            # macOS 直接使用Qt自带文件对话框选择目录
+            path = QFileDialog.getExistingDirectory(self, "选择数据存储目录")
+        else:
+            root = tk.Tk()
+            root.withdraw()
+            path = filedialog.askdirectory(title="选择数据存储目录")
         if path:
+            log.info(f"用户选择的存储路径: {path}")
             self.storage_path_edit.setText(path)
             #os.makedirs(path, exist_ok=True)
             self.config_path_cpy : str = os.path.join(path, "settings_cpy.json")
@@ -138,6 +143,28 @@ class SettingsPage(QWidget):
                     
             except Exception as e:
                 QMessageBox.warning(self, "错误", f"加载设置失败: {str(e)}")
+        else:
+            # 如果配置文件不存在，创建新文件并写入默认设置
+            default_settings = {
+                "storage_path": "",
+                "theme": "系统默认",
+                "notifications_enabled": True,
+                "notification_type": "系统通知",
+                "volume": 50
+            }
+            try:
+                with open(config_path, 'w', encoding='utf-8') as f:
+                    json.dump(default_settings, f, ensure_ascii=False, indent=4)
+                # 加载默认设置
+                self.storage_path_edit.setText(default_settings['storage_path'])
+                self.theme_combo.setCurrentText(default_settings['theme'])
+                self.notify_checkbox.setChecked(default_settings['notifications_enabled'])
+                self.notify_type_combo.setCurrentText(default_settings['notification_type'])
+                volume = default_settings['volume']
+                self.volume_slider.setValue(volume)
+                self.update_volume_label(volume)
+            except Exception as e:
+                QMessageBox.warning(self, "错误", f"创建并写入默认设置失败: {str(e)}")
 
     def save_settings(self):
         """保存设置并创建完整目录结构"""

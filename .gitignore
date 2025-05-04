@@ -1,7 +1,8 @@
-.idea/
+/.idea/
 *.iml
 .vscode/
 .DS_Store
 __pycache__/
 *.pyc
 local_data/
+docs/framework_draft.md

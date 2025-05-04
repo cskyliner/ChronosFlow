@@ -12,13 +12,16 @@ class Schedule(QWidget):
 		self.datetime = ['00', '00']  # TODO:调整具体时间（小时，分钟）
 		layout = QVBoxLayout(self)
 
-		self.date_label = QLabel()
-		layout.addWidget(self.date_label, alignment=Qt.AlignmentFlag.AlignCenter)
+		# 字体
+		font = QFont()
+		font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
+		font.setPointSize(12)
 
 		# 单行文本框
 		self.theme_text_edit = QLineEdit()
 		self.theme_text_edit.setFont(QFont("Arial", 12))
 		self.theme_text_edit.setPlaceholderText("主题")
+		self.theme_text_edit.setFont(font)
 		self.theme_text_edit.setFixedHeight(50)
 		layout.addWidget(self.theme_text_edit)
 
@@ -26,27 +29,69 @@ class Schedule(QWidget):
 		self.text_edit = QPlainTextEdit()
 		self.text_edit.setFont(QFont("Arial", 12))
 		self.text_edit.setPlaceholderText("内容")
+		self.text_edit.setFont(font)
 		layout.addWidget(self.text_edit)
-  
+
+		# 截止、提醒时间选择框
+		deadline_and_reminder_label_layout = QHBoxLayout()
+		layout.addLayout(deadline_and_reminder_label_layout)
 		# 截止时间选择框
+		deadline_layout = QVBoxLayout()
 		self.deadline_label = QLabel("截止时间:")
-		layout.addWidget(self.deadline_label)
+		self.deadline_label.setFont(font)
+		deadline_layout.addWidget(self.deadline_label)
 
 		self.deadline_edit = QDateTimeEdit()
+		self.deadline_edit.setFont(font)
 		self.deadline_edit.setDisplayFormat("yyyy-MM-dd HH:mm")
 		self.deadline_edit.setDateTime(QDateTime.currentDateTime())
-		self.deadline_edit.setCalendarPopup(True)
-		layout.addWidget(self.deadline_edit)
+		self.deadline_edit.setCalendarPopup(True)  # 在点击时弹出日历
+		calendar = self.deadline_edit.calendarWidget()  # 获取日历控件（QCalendarWidget）
+		calendar.setStyleSheet("""
+						            Calendar QAbstractItemView:enabled {     /*禁用选中高亮效果*/
+						                selection-background-color: transparent;  /* 透明背景 */
+						                selection-color: palette(text);        /* 使用正常文本颜色 */
+						            }
+						            QCalendarWidget QAbstractItemView {   /*消除边框*/
+						                border: none;
+						                outline: 0;
+						                selection-background-color: transparent;
+						            }
+						            QCalendarWidget QAbstractItemView:item:hover {  /*鼠标悬停*/
+						                background-color: #d0d0d0;
+						            }
+						        """)  # 设置日历样式
+		deadline_layout.addWidget(self.deadline_edit)
+		deadline_and_reminder_label_layout.addLayout(deadline_layout)
 
 		# 提醒时间选择框
+		reminder_layout = QVBoxLayout()
 		self.reminder_label = QLabel("提醒时间:")
-		layout.addWidget(self.reminder_label)
+		self.reminder_label.setFont(font)
+		reminder_layout.addWidget(self.reminder_label)
 
 		self.reminder_edit = QDateTimeEdit()
+		self.reminder_edit.setFont(font)
 		self.reminder_edit.setDisplayFormat("yyyy-MM-dd HH:mm")
 		self.reminder_edit.setDateTime(QDateTime.currentDateTime())
 		self.reminder_edit.setCalendarPopup(True)
-		layout.addWidget(self.reminder_edit)
+		calendar = self.reminder_edit.calendarWidget()  # 获取日历控件（QCalendarWidget）
+		calendar.setStyleSheet("""
+				            Calendar QAbstractItemView:enabled {     /*禁用选中高亮效果*/
+				                selection-background-color: transparent;  /* 透明背景 */
+				                selection-color: palette(text);        /* 使用正常文本颜色 */
+				            }
+				            QCalendarWidget QAbstractItemView {   /*消除边框*/
+				                border: none;
+				                outline: 0;
+				                selection-background-color: transparent;
+				            }
+				            QCalendarWidget QAbstractItemView:item:hover {  /*鼠标悬停*/
+				                background-color: #d0d0d0;
+				            }
+				        """)  # 设置日历样式
+		reminder_layout.addWidget(self.reminder_edit)
+		deadline_and_reminder_label_layout.addLayout(reminder_layout)
 
 		# 创建按钮
 		button_layout = QHBoxLayout()
@@ -76,7 +121,7 @@ class Schedule(QWidget):
 									background-color: #e0e0e0;
 								}
 							""")
-
+			btn.setFont(font)
 			button_layout.addWidget(btn)
 
 		# 状态栏
@@ -91,7 +136,8 @@ class Schedule(QWidget):
 		self.standard_date = date
 		self.date = self.standard_date.toString("yyyy-MM-dd").split('-')
 		log.info(f"收到日期信息{self.date[0]}年{self.date[1]}月{self.date[2]}日")
-		self.date_label.setText(f"{self.date[0]}年{self.date[1]}月{self.date[2]}日")
+		self.deadline_edit.setDate(QDate(int(self.date[0]), int(self.date[1]), int(self.date[2])))
+		self.reminder_edit.setDate(QDate(int(self.date[0]), int(self.date[1]), int(self.date[2])))
 
 	def create_new_event(self):
 		'''
@@ -119,8 +165,9 @@ class Schedule(QWidget):
 		Emitter.instance().send_signal_to_schedule_notice(theme, content, notify_time)
 		if theme and content and deadline and reminder:
 			# 这里可以添加保存事件的逻辑
-			QMessageBox.information(self, "成功", f"主题: {theme}\n内容: {content}\n截止时间: {deadline}\n提醒时间: {reminder}")
-			# TODO 保存到后端数据库
+			QMessageBox.information(self, "成功",
+									f"主题: {theme}\n内容: {content}\n截止时间: {deadline}\n提醒时间: {reminder}")
+		# TODO 保存到后端数据库
 		else:
 			QMessageBox.warning(self, "警告", "请填写所有信息")
 
@@ -128,6 +175,7 @@ class Schedule(QWidget):
 	def load_created_event(self):
 		# TODO:从后端接收内容;弹出搜索框？
 		pass
+
 	def get_selected_times(self):
 		"""返回用户选择的截止时间和提醒时间"""
 		deadline = self.deadline_edit.dateTime().toString("yyyy-MM-dd HH:mm")
