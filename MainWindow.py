@@ -116,12 +116,11 @@ class MainWindow(QMainWindow):
 		# 创建日历界面
 		self.main_window_calendar = Calendar()
 		self.main_window_calendar.setGridVisible(False)
-		self.main_window_calendar.setFixedSize(int((self.width - 230) * 0.9), int(self.height * 0.85))
 		self.main_window_calendar.clicked.connect(
 			lambda date: self.navigate_to("Schedule", self.main_stack, date))  # 点击日历时跳转到 schedule
-		main_window_layout.addWidget(self.main_window_calendar, alignment=Qt.AlignmentFlag.AlignCenter)
+		main_window_layout.addWidget(self.main_window_calendar)
 
-		self.add_page(self.main_stack, self.main_window, "Calendar")  # main_window 是日历，故名为calendar
+		self.add_page(self.main_stack, self.main_window, "Calendar")  # main_window是日历，故名为calendar
 
 	def setup_create_event_window(self):
 		"""
