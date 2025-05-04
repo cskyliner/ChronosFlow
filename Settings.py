@@ -135,7 +135,7 @@ class SettingsPage(QWidget):
                 with open(config_path, 'r', encoding='utf-8') as f:
                     settings = json.load(f)
                     self.storage_path_edit.setText(settings.get('storage_path', ''))
-                    self.theme_combo.setCurrentText(settings.get('theme', '浅色'))
+                    self.theme_combo.setCurrentText(settings.get('theme', '系统默认'))
                     
                     # 加载通知设置
                     self.notify_checkbox.setChecked(settings.get('notifications_enabled', True))
