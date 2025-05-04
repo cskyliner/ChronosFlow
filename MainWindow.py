@@ -53,35 +53,10 @@ class MainWindow(QMainWindow):
 		# 通过名称记录页面，使用字典双向映射
 		self.main_stack_map = {}  # 名称→索引
 
-		# 按钮，控制侧边栏显示、隐藏
-		self.sidebar_btn = QPushButton("<")
-		self.sidebar_btn.setStyleSheet("""
-						            QPushButton {
-						                padding: 8px;
-						                background-color: transparent;
-						                border: 1px solid #ccc;
-						                border-radius: 4px;
-						            }
-						            QPushButton:hover {
-						                background-color: #e0e0e0;
-						            }
-						        """)
-		self.sidebar_btn.clicked.connect(self.toggle_sidebar)
-		# 返回按钮，回到calendar
-		self.return_btn = QPushButton("✕")
-		self.return_btn.setMinimumSize(20, 20)
-		self.return_btn.setStyleSheet("""
-								            QPushButton {
-								                padding: 8px;
-								                background-color: transparent;
-								                border: 1px solid #ccc;
-								                border-radius: 4px;
-								            }
-								            QPushButton:hover {
-								                background-color: #e0e0e0;
-								            }
-								        """)
-		self.return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
+		# 字体
+		self.button_font = QFont()
+		self.button_font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
+		self.button_font.setPointSize(18)
 
 		# 设置 main_stack各页面的内容
 		self.setup_main_window()  # 日历窗口（主界面）
@@ -112,16 +87,36 @@ class MainWindow(QMainWindow):
 		"""
 		self.main_window = QWidget()
 		main_window_layout = QVBoxLayout()  # 内容区域布局
+		main_window_layout.setSpacing(0)  # 设置相邻控件间距为0
 		main_window_layout.setContentsMargins(20, 5, 20, 20)
 		self.main_window.setLayout(main_window_layout)
 
 		# 添加'<'按钮
-		main_window_layout.addWidget(self.sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
+		sidebar_btn = QPushButton("<")
+		sidebar_btn.setStyleSheet("""
+				                QPushButton {
+				                    background-color: transparent;
+				                    border: none;
+				                    padding: 0;
+		    						margin: 0;
+				                    qproperty-alignment: 'AlignCenter';
+				                    color: #a0a0a0;
+				                }
+				                QPushButton:hover {
+				                    color: #07C160;
+				                }
+				                QPushButton:pressed {
+									color: #05974C;
+								}
+				            """)
+		sidebar_btn.setFont(self.button_font)
+		sidebar_btn.clicked.connect(partial(self.toggle_sidebar,btn=sidebar_btn))
+		main_window_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
 
 		# 创建日历界面
 		self.main_window_calendar = Calendar()
 		self.main_window_calendar.setGridVisible(False)
-		self.main_window_calendar.setFixedSize(int((self.width - 230) * 0.9), int(self.height * 0.8))
+		self.main_window_calendar.setFixedSize(int((self.width - 230) * 0.9), int(self.height * 0.85))
 		self.main_window_calendar.clicked.connect(
 			lambda date: self.navigate_to("Schedule", self.main_stack, date))  # 点击日历时跳转到 schedule
 		main_window_layout.addWidget(self.main_window_calendar, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -134,15 +129,57 @@ class MainWindow(QMainWindow):
 		"""
 		self.create_event_window = QWidget()
 		schedule_layout = QVBoxLayout()  # 内容区域布局
+		schedule_layout.setSpacing(0)
 		schedule_layout.setContentsMargins(20, 5, 20, 20)
 		self.create_event_window.setLayout(schedule_layout)
 
-		# btn_layout.setContentsMargins(0, 0, 0, 0)  # 移除边距
-		# btn_layout.addWidget(self.sidebar_btn)  # 添加<按钮
-		# btn_layout.addStretch()
-		# TODO:不显示
-		schedule_layout.addWidget(self.return_btn, alignment=Qt.AlignmentFlag.AlignLeft)  # 添加✕按钮
+		btn_layout = QHBoxLayout()
+		btn_layout.setContentsMargins(0, 0, 0, 0)  # 移除边距
+		schedule_layout.addLayout(btn_layout)
 
+		sidebar_btn = QPushButton("<")
+		sidebar_btn.setStyleSheet("""
+								QPushButton {
+								background-color: transparent;
+								border: none;
+								padding: 0;
+								margin: 0;
+								qproperty-alignment: 'AlignCenter';
+								color: #a0a0a0;
+								}
+								QPushButton:hover {
+								color: #07C160;
+								}
+								QPushButton:pressed {
+								color: #05974C;
+								}
+								""")
+		sidebar_btn.setFont(self.button_font)
+		sidebar_btn.clicked.connect(partial(self.toggle_sidebar,btn=sidebar_btn))
+
+		# 返回按钮，回到calendar
+		return_btn = QPushButton("✕")
+		return_btn.setStyleSheet("""
+						        QPushButton {
+						        background-color: transparent;
+						        border: none;
+						        padding: 0;
+				    			margin: 0;
+						        qproperty-alignment: 'AlignCenter';
+						        color: #a0a0a0;
+						        }
+						        QPushButton:hover {
+								color: rgb(235,51,36);
+								}
+								QPushButton:pressed {
+								color: rgb(189,41,29);
+								}
+						        """)
+		return_btn.setFont(self.button_font)
+		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
+
+		btn_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
+		btn_layout.addWidget(return_btn, alignment=Qt.AlignmentFlag.AlignRight)
 		# 创建Schedule
 		self.schedule = Schedule()
 		schedule_layout.addWidget(self.schedule)
@@ -152,10 +189,57 @@ class MainWindow(QMainWindow):
 		"""创建设置栏"""
 		self.setting_window = QWidget()
 		setting_layout = QVBoxLayout()  # 内容区域布局
+		setting_layout.setSpacing(0)
 		setting_layout.setContentsMargins(20, 5, 20, 20)
 		self.setting_window.setLayout(setting_layout)
 
-		setting_layout.addWidget(self.return_btn, alignment=Qt.AlignmentFlag.AlignLeft)
+		btn_layout = QHBoxLayout()
+		btn_layout.setContentsMargins(0, 0, 0, 0)  # 移除边距
+		setting_layout.addLayout(btn_layout)
+
+		sidebar_btn = QPushButton("<")
+		sidebar_btn.setStyleSheet("""
+								QPushButton {
+								background-color: transparent;
+								border: none;
+								padding: 0;
+								margin: 0;
+								qproperty-alignment: 'AlignCenter';
+								color: #a0a0a0;
+								}
+								QPushButton:hover {
+								color: #07C160;
+								}
+								QPushButton:pressed {
+								color: #05974C;
+								}
+						            """)
+		sidebar_btn.setFont(self.button_font)
+		sidebar_btn.clicked.connect(partial(self.toggle_sidebar,btn=sidebar_btn))
+
+		# 返回按钮，回到calendar
+		return_btn = QPushButton("✕")
+		return_btn.setStyleSheet("""
+				                QPushButton {
+				                    background-color: transparent;
+				                    border: none;
+				                    padding: 0;
+		    						margin: 0;
+				                    qproperty-alignment: 'AlignCenter';
+				                    color: #a0a0a0;
+				                }
+				                QPushButton:hover {
+								color: rgb(235,51,36);
+								}
+								QPushButton:pressed {
+								color: rgb(189,41,29);
+								}
+				            """)
+		return_btn.setFont(self.button_font)
+		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
+
+		btn_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
+		btn_layout.addWidget(return_btn, alignment=Qt.AlignmentFlag.AlignRight)
 
 		self.setting = SettingsPage()
 		setting_layout.addWidget(self.setting)
@@ -165,11 +249,57 @@ class MainWindow(QMainWindow):
 		"""日程展示窗口"""
 		self.upcoming_window = QWidget()
 		layout = QVBoxLayout()  # 内容区域布局
+		layout.setSpacing(0)
 		layout.setContentsMargins(20, 5, 20, 20)
 		self.upcoming_window.setLayout(layout)
 
-		# TODO:不显示
-		layout.addWidget(self.return_btn, alignment=Qt.AlignmentFlag.AlignLeft)
+		btn_layout = QHBoxLayout()
+		btn_layout.setContentsMargins(0, 0, 0, 0)  # 移除边距
+		layout.addLayout(btn_layout)
+
+		sidebar_btn = QPushButton("<")
+		sidebar_btn.setStyleSheet("""
+								QPushButton {
+								background-color: transparent;
+								border: none;
+								padding: 0;
+								margin: 0;
+								qproperty-alignment: 'AlignCenter';
+								color: #a0a0a0;
+								}
+								QPushButton:hover {
+								color: #07C160;
+								}
+								QPushButton:pressed {
+								color: #05974C;
+								}
+								""")
+		sidebar_btn.setFont(self.button_font)
+		sidebar_btn.clicked.connect(partial(self.toggle_sidebar,btn=sidebar_btn))
+
+		# 返回按钮，回到calendar
+		return_btn = QPushButton("✕")
+		return_btn.setStyleSheet("""
+								 QPushButton {
+								background-color: transparent;
+								border: none;
+								padding: 0;
+								margin: 0;
+								qproperty-alignment: 'AlignCenter';
+								color: #a0a0a0;
+								}
+								QPushButton:hover {
+								color: rgb(235,51,36);
+								}
+								QPushButton:pressed {
+								color: rgb(189,41,29);
+								}
+								""")
+		return_btn.setFont(self.button_font)
+		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
+
+		btn_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
+		btn_layout.addWidget(return_btn, alignment=Qt.AlignmentFlag.AlignRight)
 
 		# 连接信号TODO:具体讯息(哈希依据）
 
@@ -206,7 +336,7 @@ class MainWindow(QMainWindow):
 		self.animations["sidebar"].setDuration(300)
 		self.animations["sidebar"].setEasingCurve(QEasingCurve.Type.InOutQuad)
 
-	def toggle_sidebar(self) -> None:
+	def toggle_sidebar(self,btn) -> None:
 		'''
 		处理sidebar的变化
 		'''
@@ -215,11 +345,11 @@ class MainWindow(QMainWindow):
 		if self.sidebar_visible:
 			self.animations["sidebar"].setStartValue(0)
 			self.animations["sidebar"].setEndValue(230)
-			self.sidebar_btn.setText("<")
+			btn.setText("<")
 		else:
 			self.animations["sidebar"].setStartValue(230)
 			self.animations["sidebar"].setEndValue(0)
-			self.sidebar_btn.setText(">")
+			btn.setText(">")
 
 		self.animations["sidebar"].start()
 
@@ -291,7 +421,6 @@ class MainWindow(QMainWindow):
 			self.notice_system.notify_to_floating_window.connect(self.floating_window.notification_received)
 			# 连接悬浮窗
 			self.floating_window.exit_requested.connect(self.quit_application)
-			self.floating_window.show_main_requested.connect(self.show_main_window)	
+			self.floating_window.show_main_requested.connect(self.show_main_window)
 
 		self.floating_window.show()
-
