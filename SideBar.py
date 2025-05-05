@@ -41,11 +41,11 @@ class SideBar(QFrame):
                 qproperty-alignment: 'AlignCenter';
             }
             QPushButton:hover {
-                background-color: #d0d0d0;
+                background-color: palette(midlight);
                 border-radius: 4px;
             }
             QPushButton:pressed {
-				background-color: #e0e0e0;
+				background-color: palette(mid);
 			}
 		""")
 		btn.setFixedSize(40, 40)
@@ -69,11 +69,11 @@ class SideBar(QFrame):
                     qproperty-alignment: 'AlignCenter';
                 }
                 QPushButton:hover {
-                    background-color: #d0d0d0;
+                    background-color: palette(midlight); /*轻微高亮*/
                     border-radius: 4px;
                 }
                 QPushButton:pressed {
-					background-color: #e0e0e0;
+					background-color: palette(mid);
 				}
             """)
 			btn.setFont(button_font)
@@ -86,3 +86,4 @@ class SideBar(QFrame):
 	# 获取文本框内容 TODO:后端
 	def get_text(self):
 		Emitter.instance().send_search_signal(self.search_edit.text())
+		self.search_edit.clear()

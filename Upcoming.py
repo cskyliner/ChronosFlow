@@ -2,22 +2,22 @@ from common import *
 from Emitter import Emitter
 from functools import partial
 
+logger = logging.getLogger("Upcoming")
+
 
 class CustomListItem(QWidget):
 	"""一条日程"""
 
-	def __init__(self, theme, is_even_row, parent=None):
-		""":param is_even: 判断奇偶，斑马线效果"""
+	def __init__(self, theme, parent=None):
 		super().__init__(parent)
 		self.setAttribute(Qt.WA_StyledBackground, True)
-		base_color = "#f8f8f8" if is_even_row else "#ffffff"
 		self.setStyleSheet(f"""
 		            CustomListItem {{
-		                background-color: {base_color};
+		                background-color: transparent;
 		                border-radius: 4px;
 		            }}
 		            CustomListItem:hover {{
-		                background-color: #e0e0e0;
+		                background-color: palette(midlight); /*轻微高亮*/
 		            }}
 		        """)
 
@@ -54,7 +54,7 @@ class CustomListItem(QWidget):
 		                    border: none;
 		                    padding: 25px;
 		                    qproperty-alignment: 'AlignCenter';
-		                    color: #a0a0a0;
+		                    color: palette(mid); /*中等颜色*/
 		                }
 		                QPushButton:hover {
 		                    color: #07C160;
@@ -88,15 +88,43 @@ class Upcoming(QListWidget):
 		super().__init__(parent)
 		self.setSelectionMode(QListWidget.NoSelection)  # 禁用选中高亮
 
-		# TODO:触底时接连获取
-		for i in range(10):
-			custom_widget = CustomListItem(self.get_theme(), (i % 2 == 0))  # 暂时的写法
-			item = QListWidgetItem()
-			item.setSizeHint(custom_widget.sizeHint())  # 设置合适的大小
-			self.addItem(item)
-			self.setItemWidget(item, custom_widget)
+		self.themes = []  # 临时写法，存贮从后端得到的数据TODO:不一定要用列表，要看后端传入哪些信息
+		self.loading_finished = False  # 是否加载完成
 
-	def get_theme(self):
-		"""从后端获取主题"""
-		# TODO
-		return "theme"
+		self.get_data()
+		self.load_more_data()
+
+		self.verticalScrollBar().valueChanged.connect(self.check_scroll)  # 检测是否滚动到底部
+
+	def check_scroll(self):
+		"""检查是否滚动到底部"""
+		if self.verticalScrollBar().value() == self.verticalScrollBar().maximum():
+			self.show_loading_label()
+
+	def show_loading_label(self):
+		item = QListWidgetItem("Loading……")
+		item.setTextAlignment(Qt.AlignCenter)
+		self.addItem(item)
+		QTimer.singleShot(1000, self.load_more_data)
+		self.get_data()  # 同时向后端请求数据TODO:必须保证在上一行设定时间内完成,否则会在load_more_data中报错;也可以设计成load_more_data先挂起，加载完成之后发信号？
+
+	def get_data(self):
+		"""从后端加载数据"""# TODO:从后端获取10个;以下为临时写法
+		self.themes = [f"theme{i}" for i in range(10)]
+		self.loading_finished = True
+
+	def load_more_data(self):
+		"""将数据添加到self"""
+		if self.count() > 0:
+			self.takeItem(self.count() - 1)  # 删除loading
+
+		if self.loading_finished:
+			for theme in self.themes:
+				custom_widget = CustomListItem(f"{theme}")
+				item = QListWidgetItem()
+				item.setSizeHint(custom_widget.sizeHint())  # 设置合适的大小
+				self.addItem(item)
+				self.setItemWidget(item, custom_widget)
+			self.loading_finished = False
+		else:
+			logger.error("数据加载未完成！")

@@ -19,6 +19,6 @@ class Calendar(QCalendarWidget):
 		                selection-background-color: transparent;
 		            }
 		            QCalendarWidget QAbstractItemView:item:hover {  /*鼠标悬停*/
-		                background-color: #d0d0d0;
+		                background-color: palette(midlight);
 		            }
 		        """)
