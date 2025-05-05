@@ -1,6 +1,6 @@
 from PySide6.QtCore import Signal, QObject
 from common import *
-
+from Event import BaseEvent
 log = logging.getLogger(__name__)
 
 
@@ -17,6 +17,7 @@ class Emitter(QObject):
 	storage_path_signal: Signal = Signal(object)  # 发送存储路径的信号
 	search_all_event_signal: Signal = Signal(object)  # 向后端发送搜索全局事件的信号
 	search_some_columns_event_signal: Signal = Signal(object)  # 向后端发送搜索部分列的事件
+	backend_data_to_frontend_signal: Signal = Signal(object)  # 向前端发送后端数据的信号
 	signal_to_schedule_notice: Signal = Signal(str, str, QDateTime, str)  # 向Notice中的schedule_notice函数发送信号
 	from_upcoming_to_create_event_signal: Signal = Signal(str,str) #从upcoming跳转到create_event
 
@@ -50,8 +51,14 @@ class Emitter(QObject):
 		"""从upcoming跳转到create_event"""
 		#TODO:如何确定是哪一个日程（哈希的标准是什么）
 		self.from_upcoming_to_create_event_signal.emit(theme,date)
+	# ===转发数据函数====
+	def send_backend_data_to_frontend_signal(self, data:tuple[BaseEvent]):
+		"""向前端发送后端数据的信号，回传的是tuple[BaseEvent]"""
+		log.info(f"send backend data to frontend signal，数据为{data}")
+		self.backend_data_to_frontend_signal.emit(data)
 
 	# ===对接后端信号函数，发送信号第一个参数为命令====
+	
 	def send_storage_path(self, path):
 		"""发送存储路径"""
 		log.info(f"send storage path signal，存储路径为{path}")
@@ -75,6 +82,15 @@ class Emitter(QObject):
 		"""
 		log.info(f"send search all event signal，搜索关键字为{keyword}")
 		out = ("search_all", keyword)
+		self.search_all_event_signal.emit(out)
+
+	def send_search_time_event_signal(self, start_time:str, end_time:str):
+		"""
+		向后端发送搜索时间范围的事件
+		start_time和end_time为时间范围，字符串元组
+		"""
+		log.info(f"send search time event signal，搜索时间范围为{start_time}到{end_time}")
+		out = ("search_time", start_time, end_time)
 		self.search_all_event_signal.emit(out)
 
 	def send_search_some_columns_event_signal(self, columns: tuple[str], keyword: tuple[str]):
