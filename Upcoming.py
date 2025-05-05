@@ -10,14 +10,13 @@ class CustomListItem(QWidget):
 		""":param is_even: 判断奇偶，斑马线效果"""
 		super().__init__(parent)
 		self.setAttribute(Qt.WA_StyledBackground, True)
-		base_color = "#f8f8f8" if is_even_row else "#ffffff"
 		self.setStyleSheet(f"""
 		            CustomListItem {{
-		                background-color: {base_color};
+		                background-color: transparent;
 		                border-radius: 4px;
 		            }}
 		            CustomListItem:hover {{
-		                background-color: #e0e0e0;
+		                background-color: palette(midlight); /*轻微高亮*/
 		            }}
 		        """)
 
@@ -54,7 +53,7 @@ class CustomListItem(QWidget):
 		                    border: none;
 		                    padding: 25px;
 		                    qproperty-alignment: 'AlignCenter';
-		                    color: #a0a0a0;
+		                    color: palette(mid); /*中等颜色*/
 		                }
 		                QPushButton:hover {
 		                    color: #07C160;

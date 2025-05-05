@@ -69,7 +69,7 @@ class SideBar(QFrame):
                     qproperty-alignment: 'AlignCenter';
                 }
                 QPushButton:hover {
-                    background-color: #d0d0d0;
+                    background-color: palette(midlight); /*轻微高亮*/
                     border-radius: 4px;
                 }
                 QPushButton:pressed {
