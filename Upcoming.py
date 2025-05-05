@@ -89,7 +89,6 @@ class Upcoming(QListWidget):
 		self.setSelectionMode(QListWidget.NoSelection)  # 禁用选中高亮
 
 		self.themes = []  # 临时写法，存贮从后端得到的数据TODO:不一定要用列表，要看后端传入哪些信息
-		self.loading_finished = False  # 是否加载完成
 
 		self.get_data()
 		self.load_more_data()
@@ -105,26 +104,22 @@ class Upcoming(QListWidget):
 		item = QListWidgetItem("Loading……")
 		item.setTextAlignment(Qt.AlignCenter)
 		self.addItem(item)
-		QTimer.singleShot(1000, self.load_more_data)
 		self.get_data()  # 同时向后端请求数据TODO:必须保证在上一行设定时间内完成,否则会在load_more_data中报错;也可以设计成load_more_data先挂起，加载完成之后发信号？
 
 	def get_data(self):
-		"""从后端加载数据"""# TODO:从后端获取10个;以下为临时写法
+		"""从后端加载数据"""
+		# TODO:从后端获取10个;以下为临时写法
 		self.themes = [f"theme{i}" for i in range(10)]
-		self.loading_finished = True
+		self.load_more_data()
 
 	def load_more_data(self):
 		"""将数据添加到self"""
 		if self.count() > 0:
 			self.takeItem(self.count() - 1)  # 删除loading
 
-		if self.loading_finished:
-			for theme in self.themes:
-				custom_widget = CustomListItem(f"{theme}")
-				item = QListWidgetItem()
-				item.setSizeHint(custom_widget.sizeHint())  # 设置合适的大小
-				self.addItem(item)
-				self.setItemWidget(item, custom_widget)
-			self.loading_finished = False
-		else:
-			logger.error("数据加载未完成！")
+		for theme in self.themes:
+			custom_widget = CustomListItem(f"{theme}")
+			item = QListWidgetItem()
+			item.setSizeHint(custom_widget.sizeHint())  # 设置合适的大小
+			self.addItem(item)
+			self.setItemWidget(item, custom_widget)
