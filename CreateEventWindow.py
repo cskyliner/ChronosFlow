@@ -108,7 +108,8 @@ class Schedule(QWidget):
 			btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
-                    border: none;
+                    border: 1px solid #d0d0d0;
+                	border-radius: 4px;
                     padding: 25px;
                     qproperty-alignment: 'AlignCenter';
                 }
