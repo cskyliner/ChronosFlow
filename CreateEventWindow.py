@@ -48,19 +48,19 @@ class Schedule(QWidget):
 		self.deadline_edit.setCalendarPopup(True)  # 在点击时弹出日历
 		calendar = self.deadline_edit.calendarWidget()  # 获取日历控件（QCalendarWidget）
 		calendar.setStyleSheet("""
-						            Calendar QAbstractItemView:enabled {     /*禁用选中高亮效果*/
-						                selection-background-color: transparent;  /* 透明背景 */
-						                selection-color: palette(text);        /* 使用正常文本颜色 */
-						            }
-						            QCalendarWidget QAbstractItemView {   /*消除边框*/
-						                border: none;
-						                outline: 0;
-						                selection-background-color: transparent;
-						            }
-						            QCalendarWidget QAbstractItemView:item:hover {  /*鼠标悬停*/
-						                background-color: #d0d0d0;
-						            }
-						        """)  # 设置日历样式
+					Calendar QAbstractItemView:enabled {     /*禁用选中高亮效果*/
+		            	selection-background-color: transparent;  /* 透明背景 */
+		            	selection-color: palette(text);        /* 使用正常文本颜色 */
+		            }
+		            QCalendarWidget QAbstractItemView {   /*消除边框*/
+		                border: none;
+		                outline: 0;
+		                selection-background-color: transparent;
+		            }
+		            QCalendarWidget QAbstractItemView:item:hover {  /*鼠标悬停*/
+		                background-color: palette(midlight);
+		            }
+					""")  # 设置日历样式
 		deadline_layout.addWidget(self.deadline_edit)
 		deadline_and_reminder_label_layout.addLayout(deadline_layout)
 
@@ -77,19 +77,19 @@ class Schedule(QWidget):
 		self.reminder_edit.setCalendarPopup(True)
 		calendar = self.reminder_edit.calendarWidget()  # 获取日历控件（QCalendarWidget）
 		calendar.setStyleSheet("""
-				            Calendar QAbstractItemView:enabled {     /*禁用选中高亮效果*/
-				                selection-background-color: transparent;  /* 透明背景 */
-				                selection-color: palette(text);        /* 使用正常文本颜色 */
-				            }
-				            QCalendarWidget QAbstractItemView {   /*消除边框*/
-				                border: none;
-				                outline: 0;
-				                selection-background-color: transparent;
-				            }
-				            QCalendarWidget QAbstractItemView:item:hover {  /*鼠标悬停*/
-				                background-color: #d0d0d0;
-				            }
-				        """)  # 设置日历样式
+				    Calendar QAbstractItemView:enabled {     /*禁用选中高亮效果*/
+		                selection-background-color: transparent;  /* 透明背景 */
+		                selection-color: palette(text);        /* 使用正常文本颜色 */
+		            }
+		            QCalendarWidget QAbstractItemView {   /*消除边框*/
+		                border: none;
+		                outline: 0;
+		                selection-background-color: transparent;
+		            }
+		            QCalendarWidget QAbstractItemView:item:hover {  /*鼠标悬停*/
+		                background-color: palette(midlight);
+		            }
+				    """)  # 设置日历样式
 		reminder_layout.addWidget(self.reminder_edit)
 		deadline_and_reminder_label_layout.addLayout(reminder_layout)
 
@@ -106,20 +106,19 @@ class Schedule(QWidget):
 				btn.clicked.connect(self.load_created_event)
 
 			btn.setStyleSheet("""
-								QPushButton {
-					                background-color: transparent;
-					                border: 1px solid #d0d0d0;
-					                border-radius: 4px;
-					                padding: 25px;
-					                qproperty-alignment: 'AlignCenter';
-					            }
-					            QPushButton:hover {
-					                background-color: #d0d0d0;
-					                border-radius: 4px;
-					            }
-					            QPushButton:pressed {
-									background-color: #e0e0e0;
-								}
+                QPushButton {
+                    background-color: transparent;
+                    border: none;
+                    padding: 25px;
+                    qproperty-alignment: 'AlignCenter';
+                }
+                QPushButton:hover {
+                    background-color: palette(midlight); /*轻微高亮*/
+                    border-radius: 4px;
+                }
+                QPushButton:pressed {
+					background-color: palette(mid);
+				}
 							""")
 			btn.setFont(font)
 			button_layout.addWidget(btn)

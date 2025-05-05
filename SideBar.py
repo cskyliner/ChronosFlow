@@ -41,11 +41,11 @@ class SideBar(QFrame):
                 qproperty-alignment: 'AlignCenter';
             }
             QPushButton:hover {
-                background-color: #d0d0d0;
+                background-color: palette(midlight);
                 border-radius: 4px;
             }
             QPushButton:pressed {
-				background-color: #e0e0e0;
+				background-color: palette(mid);
 			}
 		""")
 		btn.setFixedSize(40, 40)
@@ -73,7 +73,7 @@ class SideBar(QFrame):
                     border-radius: 4px;
                 }
                 QPushButton:pressed {
-					background-color: #e0e0e0;
+					background-color: palette(mid);
 				}
             """)
 			btn.setFont(button_font)
