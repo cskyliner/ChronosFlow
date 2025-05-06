@@ -58,11 +58,11 @@ class MainWindow(QMainWindow):
 		self.button_font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
 		self.button_font.setPointSize(18)
 
-		# 设置 main_stack各页面的内容
+		# 设置 main_stack各页面的内容，注意初始化顺序
 		self.setup_main_window()  # 日历窗口（主界面）
 		self.setup_create_event_window()  # 日程填写窗口
-		self.setup_upcoming_window()  # 日程展示窗口
 		self.setup_setting_window()  # 设置界面
+		self.setup_upcoming_window()  # 日程展示窗口
 
 		# 初始化通知系统
 		self.notice_system = Notice()
@@ -380,7 +380,7 @@ class MainWindow(QMainWindow):
 
 	def quit_application(self):
 		"""退出程序"""
-		print("quit_application 方法被调用")
+		log.info("quit_application 方法被调用")
 		self.tray.shutdown()
 		if not self.floating_window is None:
 			self.floating_window.close()
@@ -388,7 +388,7 @@ class MainWindow(QMainWindow):
 
 	def closeEvent(self, event):
 		"""重写关闭事件"""
-		print("closeEvent 方法被调用")
+		log.info("closeEvent 方法被调用")
 		self.hide()
 		event.ignore()
 
