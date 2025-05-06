@@ -67,7 +67,7 @@ class CustomListItem(QWidget):
 		self.theme_display_button.clicked.connect(
 			partial(Emitter.instance().send_page_change_signal, name="Schedule"))
 		self.theme_display_button.clicked.connect(
-			self.send_message)  # TODO:传递具体信息（哈希依据），以便跳转到相应的CreateEvent界面；如何将该信息传递给CreateEvent界面
+			self.send_message)  # TODO:传递对应id，以便跳转到相应的CreateEvent界面；如何将该信息传递给CreateEvent界面
 
 		layout.addWidget(self.theme_display_button)
 
@@ -86,7 +86,7 @@ class Upcoming(QListWidget):
 		super().__init__(parent)
 		self.setSelectionMode(QListWidget.NoSelection)  # 禁用选中高亮
 
-		self.events:list[BaseEvent] = []  		# 临时写法，存贮从后端得到的数据TODO:不一定要用列表，要看后端传入哪些信息
+		self.events:list[BaseEvent] = []  		# 存贮从后端得到的数据
 		self.loading = False  					# 是否正在加载
 		self.no_more_events = False				# 是否显示全部数据
 		self.event_num = 0 						# 记录当前个数，传给后端提取数据
@@ -112,10 +112,10 @@ class Upcoming(QListWidget):
 		self.loading_item = QListWidgetItem("Loading……")
 		self.loading_item.setTextAlignment(Qt.AlignCenter)
 		self.addItem(self.loading_item)
-		# self.get_data()  # 同时向后端请求数据TODO:必须保证在上一行设定时间内完成,否则会在load_more_data中报错;也可以设计成load_more_data先挂起，加载完成之后发信号？
+		# self.get_data()
 
 	def get_data(self,data:tuple[BaseEvent]=None):
-		"""从后端加载数据"""# TODO:从后端获取10个;以下为临时写法
+		"""从后端加载数据"""
 		if data is not None and len(data) > 0:
 			log.info(f"接收数据成功，共接收 {len(data)} 条数据：\n" + 
          "\n".join(f"- {event.title} @ {event.datetime}" for event in data))
