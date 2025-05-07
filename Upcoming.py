@@ -1,23 +1,23 @@
 from common import *
 from Emitter import Emitter
 from functools import partial
+from Event import BaseEvent
+log = logging.getLogger("Upcoming")
 
 
 class CustomListItem(QWidget):
 	"""一条日程"""
 
-	def __init__(self, theme, is_even_row, parent=None):
-		""":param is_even: 判断奇偶，斑马线效果"""
+	def __init__(self, theme, parent=None):
 		super().__init__(parent)
 		self.setAttribute(Qt.WA_StyledBackground, True)
-		base_color = "#f8f8f8" if is_even_row else "#ffffff"
 		self.setStyleSheet(f"""
 		            CustomListItem {{
-		                background-color: {base_color};
+		                background-color: transparent;
 		                border-radius: 4px;
 		            }}
 		            CustomListItem:hover {{
-		                background-color: #e0e0e0;
+		                background-color: palette(midlight); /*轻微高亮*/
 		            }}
 		        """)
 
@@ -54,7 +54,7 @@ class CustomListItem(QWidget):
 		                    border: none;
 		                    padding: 25px;
 		                    qproperty-alignment: 'AlignCenter';
-		                    color: #a0a0a0;
+		                    color: palette(mid); /*中等颜色*/
 		                }
 		                QPushButton:hover {
 		                    color: #07C160;
@@ -78,25 +78,76 @@ class CustomListItem(QWidget):
 	def send_message(self):
 		pass
 
-
 class Upcoming(QListWidget):
 	"""
 	容纳多个SingleUpcoming，有滚动等功能
 	"""
-
 	def __init__(self, parent=None):
 		super().__init__(parent)
 		self.setSelectionMode(QListWidget.NoSelection)  # 禁用选中高亮
 
-		# TODO:触底时接连获取
-		for i in range(10):
-			custom_widget = CustomListItem(self.get_theme(), (i % 2 == 0))  # 暂时的写法
+		self.events:list[BaseEvent] = []  		# 临时写法，存贮从后端得到的数据TODO:不一定要用列表，要看后端传入哪些信息
+		self.loading = False  					# 是否正在加载
+		self.no_more_events = False				# 是否显示全部数据
+		self.event_num = 0 						# 记录当前个数，传给后端提取数据
+		self.page_num = 10 						# 每页显示的事件数
+		self.loading_item = None				# 加载标签
+		self.load_more_data()
+
+		self.verticalScrollBar().valueChanged.connect(self.check_scroll)  # 检测是否滚动到底部
+
+	def check_scroll(self):
+		"""检查是否滚动到底部"""
+		if self.verticalScrollBar().value() == self.verticalScrollBar().maximum():
+			if not self.loading and not self.no_more_events:
+				self.load_more_data()
+			elif self.loading:
+				log.info("正在加载数据，请稍等……")
+			elif self.no_more_events:
+				log.info("没有更多数据了，停止加载……")
+			else:
+				log.error("未知错误，无法加载数据")
+
+	def show_loading_label(self):
+		self.loading_item = QListWidgetItem("Loading……")
+		self.loading_item.setTextAlignment(Qt.AlignCenter)
+		self.addItem(self.loading_item)
+		# self.get_data()  # 同时向后端请求数据TODO:必须保证在上一行设定时间内完成,否则会在load_more_data中报错;也可以设计成load_more_data先挂起，加载完成之后发信号？
+
+	def get_data(self,data:tuple[BaseEvent]=None):
+		"""从后端加载数据"""# TODO:从后端获取10个;以下为临时写法
+		if data is not None and len(data) > 0:
+			log.info(f"接收数据成功，共接收 {len(data)} 条数据：\n" + 
+         "\n".join(f"- {event.title} @ {event.datetime}" for event in data))
+			self.events.extend(data)
+			self.event_num += len(data)
+		else:
+			log.info("接受数据为空，无更多数据")
+			# 数据加载完毕
+			self.no_more_events = True
+		# 删除加载标签
+		if hasattr(self, "loading_item"):
+			self.takeItem(self.row(self.loading_item))
+			del self.loading_item
+
+	def load_more_data(self):
+		"""将数据添加到self"""
+		# 连接接收信号
+		Emitter.instance().backend_data_to_frontend_signal.connect(self.get_data)
+		# 显示加载标签
+		self.show_loading_label()
+		# 发送请求信号
+		Emitter.instance().request_update_upcoming_event_signal(self.event_num, self.page_num)
+		# 断开接收信号连接
+		Emitter.instance().backend_data_to_frontend_signal.disconnect(self.get_data)
+		# 停止加载
+		self.loading = False
+		if self.no_more_events:
+			log.info("没有更多数据了，停止加载……")
+			return
+		for event in self.events:
+			custom_widget = CustomListItem(f"{event.title}")
 			item = QListWidgetItem()
 			item.setSizeHint(custom_widget.sizeHint())  # 设置合适的大小
 			self.addItem(item)
 			self.setItemWidget(item, custom_widget)
-
-	def get_theme(self):
-		"""从后端获取主题"""
-		# TODO
-		return "theme"

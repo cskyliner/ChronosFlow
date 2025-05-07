@@ -1,6 +1,5 @@
 from PySide6.QtCore import Signal, QObject
 from common import *
-
 log = logging.getLogger(__name__)
 
 
@@ -16,7 +15,10 @@ class Emitter(QObject):
 	search_signal: Signal = Signal(str)  # 发送sidebar搜索文本框的信息
 	storage_path_signal: Signal = Signal(object)  # 发送存储路径的信号
 	search_all_event_signal: Signal = Signal(object)  # 向后端发送搜索全局事件的信号
-	search_some_columns_event_signal: Signal = Signal(object)  # 向后端发送搜索部分列的事件
+	search_some_columns_event_signal: Signal = Signal(object)  # 向后端发送搜索部分列事件的信号
+	update_upcoming_event_signal:Signal = Signal(object)  # 向后端发送更新upcoming的信号
+	search_time_event_signal: Signal = Signal(object)  # 向后端发送搜索时间范围内事件的信号
+	backend_data_to_frontend_signal: Signal = Signal(object)  # 向前端发送后端数据的信号
 	signal_to_schedule_notice: Signal = Signal(str, str, QDateTime, str)  # 向Notice中的schedule_notice函数发送信号
 	from_upcoming_to_create_event_signal: Signal = Signal(str,str) #从upcoming跳转到create_event
 
@@ -51,12 +53,21 @@ class Emitter(QObject):
 		#TODO:如何确定是哪一个日程（哈希的标准是什么）
 		self.from_upcoming_to_create_event_signal.emit(theme,date)
 
+	# ===转发数据函数====
+
+	def send_backend_data_to_frontend_signal(self, data):
+		"""向前端发送后端数据的信号，回传的是tuple[BaseEvent]"""
+		log.info(f"发送后端数据到前端信号")
+		self.backend_data_to_frontend_signal.emit(data)
+
 	# ===对接后端信号函数，发送信号第一个参数为命令====
+	
 	def send_storage_path(self, path):
 		"""发送存储路径"""
 		log.info(f"send storage path signal，存储路径为{path}")
 		out = ("storage_path", path)
 		self.storage_path_signal.emit(out)
+
 	def send_create_event_signal(self, name, *args):
 		"""
 		name为event类型如 DDL
@@ -68,19 +79,38 @@ class Emitter(QObject):
 		out = ("create_event", name, True, *args)
 		self.create_event_signal.emit(out)
 
-	def send_search_all_event_signal(self, keyword: tuple[str]):
+	# ===向后端发送请求（回传数据）===
+
+	def request_search_all_event_signal(self, keyword: tuple[str]):
 		"""
-		向后端发送搜索全局事件的信号
+		向后端发送搜索全局事件的请求
 		keyword为搜索关键字，字符串元组
 		"""
-		log.info(f"send search all event signal，搜索关键字为{keyword}")
+		log.info(f"request search all event，搜索关键字为{keyword}")
 		out = ("search_all", keyword)
 		self.search_all_event_signal.emit(out)
 
-	def send_search_some_columns_event_signal(self, columns: tuple[str], keyword: tuple[str]):
+	def request_update_upcoming_event_signal(self,start_pos:int, event_num:int):
 		"""
-		向后端发送搜索部分列的事件
+		向后端发送更新upcoming的请求
 		"""
-		log.info(f"send search some columns event signal，搜索列为{columns}，关键字为{keyword}")
-		out = ("search_some_columns", columns, keyword)
+		log.info(f"request update upcoming event，参数为start_pos:{start_pos}，event_num:{event_num}")
+		out = ("update_upcoming", (start_pos,event_num))
+		self.update_upcoming_event_signal.emit(out)
+
+	def request_search_time_event_signal(self, start_time:str, end_time:str):
+		"""
+		向后端发送搜索时间范围内事件的请求
+		start_time和end_time为时间范围，字符串元组
+		"""
+		log.info(f"request search time event，搜索时间范围为{start_time}到{end_time}")
+		out = ("search_time", (start_time, end_time))
+		self.search_some_columns_event_signal.emit(out)
+
+	def request_search_some_columns_event_signal(self, columns: tuple[str], keyword: tuple[str]):
+		"""
+		向后端发送搜索部分列中事件的请求
+		"""
+		log.info(f"request search some columns event，搜索列为{columns}，关键字为{keyword}")
+		out = ("search_some_columns", (columns, keyword))
 		self.search_some_columns_event_signal.emit(out)
