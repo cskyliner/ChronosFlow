@@ -96,6 +96,7 @@ class Upcoming(QListWidget):
 
 		self.verticalScrollBar().valueChanged.connect(self.check_scroll)  # 检测是否滚动到底部
 
+		Emitter.instance().refresh_upcoming_signal.connect(self.refresh_upcoming_page)
 	def check_scroll(self):
 		"""检查是否滚动到底部"""
 		if self.verticalScrollBar().value() == self.verticalScrollBar().maximum():
@@ -147,6 +148,12 @@ class Upcoming(QListWidget):
 			return
 		for event in self.events:
 			custom_widget = CustomListItem(f"{event.title}")
+			item = QListWidgetItem()
+			item.setSizeHint(custom_widget.sizeHint())  # 设置合适的大小
+			self.addItem(item)
+			self.setItemWidget(item, custom_widget)
+	def refresh_upcoming_page(self, title):
+			custom_widget = CustomListItem(f"{title}")
 			item = QListWidgetItem()
 			item.setSizeHint(custom_widget.sizeHint())  # 设置合适的大小
 			self.addItem(item)
