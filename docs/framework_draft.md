@@ -23,6 +23,8 @@
   - [SideBar](#siderbar)
   - [common](#common)
   - [SignalConnect](#signalconnect)
+  - [Tray](#tray)
+  - [FloatingWindow](#floatingwindow)
 - [页面设计](#页面设计)
 - [性能优化](#性能优化)
 
@@ -152,11 +154,11 @@ recieve_signal(object)
 接受输入的元组，提取第一项表示前端命令，后面代表相应参数
 TODO:回传给前端数据
 ## Notice:
-TODO:
-QSystemTrayIcon（Qt 托盘通知）任务栏：
-处理UI设计，通知管理，菜单弹出设计\
-plyer.notification（通用桌面通知）：
-任务临近提醒，窗口弹出，后端对接
+TODO：任务栏：UI设计\
+后端对接\
+已完成：
+通知类
+保存通知信息，连接系统时间，按时发送信号给托盘和悬浮窗
 ## MainWindow: 
 主窗口类\
 存储多个主窗口样式
@@ -166,24 +168,27 @@ TODO：支持多种主题样式
 日历显示类\
 月分级为主要窗口
 使用Qt自带QCalendarWidget组件实现了以月单位的日历，左键单击后到专门的添加日程页面\
-TODO： 日，周，年的处理。（拖拽实现多选）。 日历中快速添加日程，和创建/修改日程窗口连接。
-“联动操作”，点击月分级中的日方块，跳转到日窗口之类的人性化快捷操作。支持基本的右键添加操作菜单
+TODO： 日，周，年的处理。 日历中快速添加日程，和创建/修改日程窗口连接。
+“联动操作”，点击月分级中的日方块，跳转到日窗口之类的人性化快捷操作。支持基本的右键添加操作菜单。展示出每日的日程安排\
 ## CreateEventWindow（Schedule）：
 有Schedule类，创建/修改日程窗口\
- TODO：添加调整当前日期具体时间的功能
+ TODO：对其他事件类型的支持
+ DDL类基本实现:\
 通过save_text向后端发送路径、日期、主题、内容，TODO:通过load_text加载内容\
 和Event类实现前后端对接\
 实现了对接后端创建DDL事件 
-TODO:选择创建多种事件
 ## Emitter：
 用于发送信号，不同信号用不同的函数发射\
 **统一实例化**：
 为了便于信号发射接收的统一，设置单独实例化
 ，每次调用emitter时候，只需要```Emitter.instance().函数名.connect/emit()```就可以了，**是否有必要多次实例化有待讨论**\
+其中已经将下述信号封装成函数，可以直接调用函数传入指定创建参数即可，无需手动输入命令\
  send_dynamic_signal发射**元组**\
  send_create_event发射**元组(object)**，第一项为"create_event"表示**命令**，后续为创建event参数\
  send_search_all_event发射**元组(object)**，第一项为"search_all"表示**命令**，后续为搜索关键词tuple[str]\
- send_search_columns_event发射**元组(object)**，第一项为"search_columns"表示**命令**，后续为搜索列名tuple[str]+搜索关键词tuple[str]\
+ send_search_columns_event发射**元组(object)**，第一项为"search_columns"表示**命令**，后续为制指定搜索列名tuple[str]+搜索关键词tuple[str]\
+ update_upcoming_event发射**元组(object)**，第一项为"update_upcoming"表示**命令**，后续为更新upcoming参数（start_pos:[int], event_num:[int]）表示当前更新到哪个位置，需要获取多少事件\
+ search_time_event发射**元组(object)**，第一项为"search_time"表示**命令**，后续为搜索时间参数（start_time:[str], end_time:[str]）表示起止时间\
  其余前端窗口信号格式均为若干个纯字符串
 ## CreateDailyWindow：
 TODO:创建日记窗口：\
@@ -196,18 +201,35 @@ TODO:设置窗口\
 具体类别：
 本地存储地址设置
 通知设置
+已完成：
+设置保存本地存储地址设置
+通知方式自定义(仅显示)
+音量调节(仅显示)
+背景颜色(仅显示)
 ## SiderBar:
 侧边栏类\
 实现多种功能切换,提供搜索栏入口\
 要想再向sidebar中添加新按钮，只需在存储按钮名字的元组中添加新页面的名字，即可创建好一个向MainWindow发射的新信号,接下来只需要在MainWindow中创建对应页面即可
 ## Upcoming:
 即将到来的日程：
-按照时间轴排序，同时支持拖拽快速修改日程
+TODO:点击按钮快速修改日程，maybe可以将同一日期的日程合并在一个时间框下，可以通过拖拽来修改时间\
+按照时间轴排序，与后端连接
 ## common:
 打包导入的库，避免每次import大量库，直接
 ```from common import *```即可
 ## SignalConnect:
 初始化前后端连接
+## Tray
+托盘类\
+实现系统托盘，程序初始化会在系统任务栏产生一个图标
+通过右键图标能够回到主页面，显示悬浮窗，以及彻底退出应用
+同时接受消息并形成系统通知
+
+## FloatingWindow
+悬浮窗类\
+最小化主窗口会产生悬浮窗，通过悬浮窗按钮能够
+回到主页面，隐藏悬浮窗，彻底退出应用
+消息通知也会显示在悬浮窗上
 
 ...
 
