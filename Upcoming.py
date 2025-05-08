@@ -121,8 +121,8 @@ class Upcoming(QListWidget):
 				log.error("未知错误，无法加载数据")
 
 	def show_current_order_to_backend(self):
-		"""在Upcoming中顺序改变时显示在log中"""
-		# TODO：通知后端
+		"""在Upcoming中顺序改变时显示在log中，并通知后端"""
+		# TODO：通知后端：移动的event的日期改变
 		log.info("Upcoming顺序改变")
 
 	def show_loading_label(self):
@@ -170,6 +170,7 @@ class Upcoming(QListWidget):
 			return
 
 		for event in self.events:
+			#将每条的日期与上一条的比较，如果不一样，就更新self.list_item_date，并add_date_label
 			new_list_item_date = [self.event.datetime[:4], self.event.datetime[5:7], self.event.datetime[8:10]]
 			if self.list_item_date != new_list_item_date:
 				self.list_item_date = new_list_item_date

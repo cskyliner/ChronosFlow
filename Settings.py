@@ -1,5 +1,6 @@
 from common import *
 from Emitter import Emitter
+from datetime import datetime
 log = logging.getLogger(__name__)
 class SettingsPage(QWidget):
     """设置页面"""

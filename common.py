@@ -11,6 +11,6 @@ import os
 import json
 import tkinter as tk
 from tkinter import filedialog
-from datetime import datetime
+
 import platform
 import time
