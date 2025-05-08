@@ -1,4 +1,3 @@
-from PySide6.QtCore import Signal, QObject
 from common import *
 log = logging.getLogger(__name__)
 

@@ -97,13 +97,15 @@ class Upcoming(QListWidget):
 		            }
 		        """)
 
-		self.events: list[BaseEvent] = []  # 存贮从后端得到的数据
+		self.events: list[BaseEvent] = []  # 存贮所有从后端得到的数据，用于储存id
+		self.events_used_to_update: tuple[BaseEvent] = tuple()  # 储存这次需要更新的至多10个数据
 		self.loading = False  # 是否正在加载
 		self.no_more_events = False  # 是否显示全部数据
 		self.event_num = 0  # 记录当前个数，传给后端提取数据
 		self.page_num = 10  # 每页显示的事件数
 		self.loading_item = None  # 加载标签
-		self.list_item_date = ['0000','00','00']  # 事件日期，用于self.add_date_label ; 格式：[0]年，[1]月，[2]日 TODO:每次关闭Upcoming时清零？
+		self.list_item_date = ['0000', '00',
+							   '00']  # 事件日期，用于self.add_date_label ; 格式：[0]年，[1]月，[2]日 TODO:每次关闭Upcoming时清零？
 		self.load_more_data()
 
 		self.verticalScrollBar().valueChanged.connect(self.check_scroll)  # 检测是否滚动到底部
@@ -132,9 +134,12 @@ class Upcoming(QListWidget):
 
 	def add_date_label(self):
 		"""在所有同一天的日程前加上日期"""
-		# TODO:当天日程全被移走后，能否自动消失？
+		font = QFont()
+		font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
+		font.setPointSize(12)
 		self.date_item = QListWidgetItem(
 			f"{self.list_item_date[0]}年{self.list_item_date[1]}月{self.list_item_date[2]}日")
+		self.date_item.setFont(font)
 		self.addItem(self.date_item)
 
 	def get_data(self, data: tuple[BaseEvent] = None):
@@ -143,6 +148,7 @@ class Upcoming(QListWidget):
 			log.info(f"接收数据成功，共接收 {len(data)} 条数据：\n" +
 					 "\n".join(f"- {event.title} @ {event.datetime}" for event in data))
 			self.events.extend(data)
+			self.events_used_to_update = data
 			self.event_num += len(data)
 		else:
 			log.info("接受数据为空，无更多数据")
@@ -169,9 +175,9 @@ class Upcoming(QListWidget):
 			log.info("没有更多数据了，停止加载……")
 			return
 
-		for event in self.events:
-			#将每条的日期与上一条的比较，如果不一样，就更新self.list_item_date，并add_date_label
-			new_list_item_date = [self.event.datetime[:4], self.event.datetime[5:7], self.event.datetime[8:10]]
+		for event in self.events_used_to_update:
+			# 将每条的日期与上一条的比较，如果不一样，就更新self.list_item_date，并add_date_label
+			new_list_item_date = [event.datetime[:4], event.datetime[5:7], event.datetime[8:10]]
 			if self.list_item_date != new_list_item_date:
 				self.list_item_date = new_list_item_date
 				self.add_date_label()
