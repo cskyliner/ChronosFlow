@@ -2,6 +2,7 @@ from common import *
 from Emitter import Emitter
 from functools import partial
 from Event import BaseEvent
+
 log = logging.getLogger("Upcoming")
 
 
@@ -11,14 +12,14 @@ class CustomListItem(QWidget):
 	def __init__(self, theme, parent=None):
 		super().__init__(parent)
 		self.setAttribute(Qt.WA_StyledBackground, True)
-		self.setStyleSheet(f"""
-		            CustomListItem {{
+		self.setStyleSheet("""
+		            CustomListItem {
 		                background-color: transparent;
 		                border-radius: 4px;
-		            }}
-		            CustomListItem:hover {{
+		            }
+		            CustomListItem:hover {
 		                background-color: palette(midlight); /*轻微高亮*/
-		            }}
+		            }
 		        """)
 
 		# 设置消息布局
@@ -78,20 +79,30 @@ class CustomListItem(QWidget):
 	def send_message(self):
 		pass
 
+
 class Upcoming(QListWidget):
 	"""
 	容纳多个SingleUpcoming，有滚动等功能
 	"""
+
 	def __init__(self, parent=None):
 		super().__init__(parent)
-		self.setSelectionMode(QListWidget.NoSelection)  # 禁用选中高亮
+		self.setDragDropMode(QListWidget.InternalMove)  # 允许内部拖动重排
+		self.setDefaultDropAction(Qt.MoveAction)  # 设置默认动作为移动而非复制
+		self.setSelectionMode(QListWidget.SingleSelection)  # 一次只能选择列表中的一个项目
+		self.model().rowsMoved.connect(self.show_current_order_to_backend)  # 将顺序改变加入日志，并通知后端
+		self.setStyleSheet("""
+		            QListWidget::item:selected {
+		                background-color: palette(midlight); /*选中后的颜色*/
+		            }
+		        """)
 
-		self.events:list[BaseEvent] = []  		# 存贮从后端得到的数据
-		self.loading = False  					# 是否正在加载
-		self.no_more_events = False				# 是否显示全部数据
-		self.event_num = 0 						# 记录当前个数，传给后端提取数据
-		self.page_num = 10 						# 每页显示的事件数
-		self.loading_item = None				# 加载标签
+		self.events: list[BaseEvent] = []  # 存贮从后端得到的数据
+		self.loading = False  # 是否正在加载
+		self.no_more_events = False  # 是否显示全部数据
+		self.event_num = 0  # 记录当前个数，传给后端提取数据
+		self.page_num = 10  # 每页显示的事件数
+		self.loading_item = None  # 加载标签
 		self.load_more_data()
 
 		self.verticalScrollBar().valueChanged.connect(self.check_scroll)  # 检测是否滚动到底部
@@ -108,17 +119,23 @@ class Upcoming(QListWidget):
 			else:
 				log.error("未知错误，无法加载数据")
 
+	def show_current_order_to_backend(self):
+		"""在Upcoming中顺序改变时显示在log中"""
+		#TODO：通知后端
+		log.info("Upcoming顺序改变")
+
 	def show_loading_label(self):
 		self.loading_item = QListWidgetItem("Loading……")
 		self.loading_item.setTextAlignment(Qt.AlignCenter)
 		self.addItem(self.loading_item)
-		# self.get_data()
 
-	def get_data(self,data:tuple[BaseEvent]=None):
+	# self.get_data()
+
+	def get_data(self, data: tuple[BaseEvent] = None):
 		"""从后端加载数据"""
 		if data is not None and len(data) > 0:
-			log.info(f"接收数据成功，共接收 {len(data)} 条数据：\n" + 
-         "\n".join(f"- {event.title} @ {event.datetime}" for event in data))
+			log.info(f"接收数据成功，共接收 {len(data)} 条数据：\n" +
+					 "\n".join(f"- {event.title} @ {event.datetime}" for event in data))
 			self.events.extend(data)
 			self.event_num += len(data)
 		else:
@@ -129,6 +146,10 @@ class Upcoming(QListWidget):
 		if hasattr(self, "loading_item"):
 			self.takeItem(self.row(self.loading_item))
 			del self.loading_item
+
+	def add_date_label(self):
+		"""在所有同一天的日程前加上日期"""
+		#TODO
 
 	def load_more_data(self):
 		"""将数据添加到self"""

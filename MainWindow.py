@@ -300,8 +300,6 @@ class MainWindow(QMainWindow):
 		btn_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
 		btn_layout.addWidget(return_btn, alignment=Qt.AlignmentFlag.AlignRight)
 
-		# 连接信号TODO:具体讯息(哈希依据）
-
 		self.upcoming = Upcoming()
 		layout.addWidget(self.upcoming)
 		self.add_page(self.main_stack, self.upcoming_window, "Upcoming")
