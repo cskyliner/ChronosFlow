@@ -53,7 +53,7 @@ class CustomListItem(QWidget):
 		                QPushButton {
 		                    background-color: transparent;
 		                    border: none;
-		                    padding: 25px;
+		                    padding: 10px;
 		                    qproperty-alignment: 'AlignCenter';
 		                    color: palette(mid); /*中等颜色*/
 		                }
@@ -91,11 +91,15 @@ class Upcoming(QListWidget):
 		self.setDefaultDropAction(Qt.MoveAction)  # 设置默认动作为移动而非复制
 		self.setSelectionMode(QListWidget.SingleSelection)  # 一次只能选择列表中的一个项目
 		self.model().rowsMoved.connect(self.show_current_order_to_backend)  # 将顺序改变加入日志，并通知后端
-		self.setStyleSheet("""
-		            QListWidget::item:selected {
-		                background-color: palette(midlight); /*选中后的颜色*/
-		            }
-		        """)
+
+		palette = self.palette()
+		self.setStyleSheet(f"""
+		    QListWidget::item:selected {{
+		        background: transparent;
+		        color: {palette.text().color().name()};
+		        border: none;
+		    }}
+		""")
 
 		self.events: list[BaseEvent] = []  # 存贮所有从后端得到的数据，用于储存id
 		self.events_used_to_update: tuple[BaseEvent] = tuple()  # 储存这次需要更新的至多10个数据
@@ -104,8 +108,7 @@ class Upcoming(QListWidget):
 		self.event_num = 0  # 记录当前个数，传给后端提取数据
 		self.page_num = 10  # 每页显示的事件数
 		self.loading_item = None  # 加载标签
-		self.list_item_date = ['0000', '00',
-							   '00']  # 事件日期，用于self.add_date_label ; 格式：[0]年，[1]月，[2]日 TODO:每次关闭Upcoming时清零？
+		self.list_item_date = ['0000', '00', '00']  # 事件日期，用于self.add_date_label
 		self.load_more_data()
 
 		self.verticalScrollBar().valueChanged.connect(self.check_scroll)  # 检测是否滚动到底部
@@ -140,7 +143,7 @@ class Upcoming(QListWidget):
 		font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
 		font.setPointSize(12)
 		self.date_item = QListWidgetItem(
-			f"{self.list_item_date[0]}年{self.list_item_date[1]}月{self.list_item_date[2]}日")
+			f"\n{self.list_item_date[0]}年{self.list_item_date[1]}月{self.list_item_date[2]}日")
 		self.date_item.setFont(font)
 		self.addItem(self.date_item)
 
@@ -179,10 +182,10 @@ class Upcoming(QListWidget):
 
 		for event in self.events_used_to_update:
 			# 将每条的日期与上一条的比较，如果不一样，就更新self.list_item_date，并add_date_label
-			new_list_item_date = [event.datetime[:4], event.datetime[5:7], event.datetime[8:10]]
+			new_list_item_date = [event.advance_time[:4], event.advance_time[5:7], event.advance_time[8:10]]
 			if self.list_item_date != new_list_item_date:
 				self.list_item_date = new_list_item_date
-				self.add_date_label()
+				self.add_date_label()  # TODO:需要改：新建日程后可能乱序
 			custom_widget = CustomListItem(f"{event.title}")
 			item = QListWidgetItem()
 			item.setSizeHint(custom_widget.sizeHint())  # 设置合适的大小
