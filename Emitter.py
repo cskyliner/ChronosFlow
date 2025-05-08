@@ -21,7 +21,7 @@ class Emitter(QObject):
 	backend_data_to_frontend_signal: Signal = Signal(object)  # 向前端发送后端数据的信号
 	signal_to_schedule_notice: Signal = Signal(str, str, QDateTime, str)  # 向Notice中的schedule_notice函数发送信号
 	from_upcoming_to_create_event_signal: Signal = Signal(str,str) #从upcoming跳转到create_event
-
+	refresh_upcoming_signal: Signal = Signal(str)
 	@staticmethod
 	def instance() -> "Emitter":
 		if Emitter._instance is None:
@@ -32,6 +32,8 @@ class Emitter(QObject):
 		super().__init__()
 
 	# ===转发信号函数====
+	def send_refresh_upcoming_signal(self,title):
+		self.refresh_upcoming_signal.emit(title)
 	def send_page_change_signal(self, name):
 		"""向 main_stack发送改变页面的信号"""
 		self.page_change_signal.emit(name)
