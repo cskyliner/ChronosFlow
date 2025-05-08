@@ -103,6 +103,7 @@ class Upcoming(QListWidget):
 		self.event_num = 0  # 记录当前个数，传给后端提取数据
 		self.page_num = 10  # 每页显示的事件数
 		self.loading_item = None  # 加载标签
+		self.list_item_date = ['0000','00','00']  # 事件日期，用于self.add_date_label ; 格式：[0]年，[1]月，[2]日 TODO:每次关闭Upcoming时清零？
 		self.load_more_data()
 
 		self.verticalScrollBar().valueChanged.connect(self.check_scroll)  # 检测是否滚动到底部
@@ -121,7 +122,7 @@ class Upcoming(QListWidget):
 
 	def show_current_order_to_backend(self):
 		"""在Upcoming中顺序改变时显示在log中"""
-		#TODO：通知后端
+		# TODO：通知后端
 		log.info("Upcoming顺序改变")
 
 	def show_loading_label(self):
@@ -129,7 +130,12 @@ class Upcoming(QListWidget):
 		self.loading_item.setTextAlignment(Qt.AlignCenter)
 		self.addItem(self.loading_item)
 
-	# self.get_data()
+	def add_date_label(self):
+		"""在所有同一天的日程前加上日期"""
+		# TODO:当天日程全被移走后，能否自动消失？
+		self.date_item = QListWidgetItem(
+			f"{self.list_item_date[0]}年{self.list_item_date[1]}月{self.list_item_date[2]}日")
+		self.addItem(self.date_item)
 
 	def get_data(self, data: tuple[BaseEvent] = None):
 		"""从后端加载数据"""
@@ -147,10 +153,6 @@ class Upcoming(QListWidget):
 			self.takeItem(self.row(self.loading_item))
 			del self.loading_item
 
-	def add_date_label(self):
-		"""在所有同一天的日程前加上日期"""
-		#TODO
-
 	def load_more_data(self):
 		"""将数据添加到self"""
 		# 连接接收信号
@@ -166,7 +168,12 @@ class Upcoming(QListWidget):
 		if self.no_more_events:
 			log.info("没有更多数据了，停止加载……")
 			return
+
 		for event in self.events:
+			new_list_item_date = [self.event.datetime[:4], self.event.datetime[5:7], self.event.datetime[8:10]]
+			if self.list_item_date != new_list_item_date:
+				self.list_item_date = new_list_item_date
+				self.add_date_label()
 			custom_widget = CustomListItem(f"{event.title}")
 			item = QListWidgetItem()
 			item.setSizeHint(custom_widget.sizeHint())  # 设置合适的大小
