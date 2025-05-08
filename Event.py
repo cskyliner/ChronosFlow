@@ -184,6 +184,7 @@ def recieve_signal(recieve_data: tuple) -> None:
 		args = recieve_data[3:]  # 事件参数
 		EventFactory.create(event_type, add, *args)
 		log.info(f"接收{recieve_data[0]}信号成功，创建事件{event_type}，参数为{args}")
+		Emitter.instance().send_refresh_upcoming_signal(args[0])
 	# sent_signal("search_all", result)
 	elif recieve_data[0] == "storage_path":
 		global DB_PATH,conn,cursor # 全局变量
