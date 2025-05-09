@@ -5,6 +5,126 @@ from Event import BaseEvent
 log = logging.getLogger("Upcoming")
 
 
+class DeleteButton(QPushButton):
+    def __init__(self, parent=None):
+        super().__init__("🗑", parent)  # 使用垃圾桶emoji
+        self.setStyleSheet("""
+            QPushButton {
+                background-color: rgba(255, 80, 80, 0.1);  /* 半透明红色背景 */
+                border: 1px solid rgba(255, 80, 80, 0.3);
+                border-radius: 8px;
+                min-width: 48px;
+                min-height: 48px;
+                padding: 0;
+                padding-top: -6px;  /* 关键对齐参数 */
+                color: #FF5050;
+                font-size: 24px;
+                font-weight: 500;
+                qproperty-alignment: AlignCenter;
+                transition: all 0.2s ease-out;
+            }
+            QPushButton:hover {
+                background-color: rgba(255, 80, 80, 0.15);
+                border: 1px solid rgba(255, 80, 80, 0.5);
+                color: #E03C3C;
+                font-size: 26px;
+            }
+            QPushButton:pressed {
+                background-color: rgba(224, 60, 60, 0.2);
+                border: 1px solid rgba(224, 60, 60, 0.7);
+                color: #C03030;
+                padding-top: 2px;
+            }
+        """)
+        self.setToolTip("删除")
+        self.setCursor(Qt.PointingHandCursor)
+        self.setFixedSize(40, 40)
+        
+        # 红色阴影效果
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(8)
+        shadow.setColor(QColor(255, 80, 80, 60))
+        shadow.setOffset(0, 2)
+        self.setGraphicsEffect(shadow)
+        
+class EyeButton(QPushButton):
+	"""单例眼睛按钮"""
+	_instance = None
+	@staticmethod
+	def instance() -> "EyeButton":
+		if EyeButton._instance is None:
+			EyeButton._instance = EyeButton()
+		return EyeButton._instance
+	def __init__(self, parent=None):
+		super().__init__("👁️", parent)
+		self.setStyleSheet("""
+			QPushButton {
+				background-color: transparent;
+				border: none;
+				padding: 10px 15px;  /* 更紧凑的点击区域 */
+				font-size: 24px;     /* 放大图标 */
+				qproperty-iconSize: 24px;  /* 如果使用 setIcon() */
+				color: #555;        /* 中性灰色 */
+				border-radius: 4px; /* 圆角悬停背景 */
+			}
+			QPushButton:hover {
+				color: #07C160;     /* 绿色悬停 */
+				background-color: rgba(7, 193, 96, 0.1); /* 浅绿色背景 */
+			}
+			QPushButton:pressed {
+				color: #05974C;
+				background-color: rgba(5, 151, 76, 0.2); /* 按压加深 */
+			}
+		""")
+		self.setToolTip("查看")  # 增加提示文本
+		self.setCursor(Qt.PointingHandCursor)  # 手型光标
+  
+class AddButton(QPushButton):
+	_instance = None
+	@staticmethod
+	def instance() -> "AddButton":
+		if AddButton._instance is None:
+			AddButton._instance = AddButton()
+		return AddButton._instance
+	def __init__(self, parent = None):
+		super().__init__("+", parent)
+		self.setStyleSheet("""
+			QPushButton {
+				background-color: rgba(7, 193, 96, 0.1);  /* 半透明绿色背景 */
+				border: 1px solid rgba(7, 193, 96, 0.3);
+				border-radius: 8px;                       /* 圆角 */
+				min-width: 48px;
+				min-height: 48px;
+				padding: 0;
+				color: #07C160;
+				font-size: 24px;
+				font-weight: 500;
+				qproperty-alignment: AlignCenter;
+				transition: all 0.2s ease-out;           /* CSS过渡动画 */
+			}
+			QPushButton:hover {
+				background-color: rgba(7, 193, 96, 0.15);
+				border: 1px solid rgba(7, 193, 96, 0.5);
+				color: #05974C;
+				font-size: 26px;                         /* 轻微放大 */
+			}
+			QPushButton:pressed {
+				background-color: rgba(5, 151, 76, 0.2);
+				border: 1px solid rgba(5, 151, 76, 0.7);
+				color: #047245;
+				padding-top: 2px;                        /* 按压下沉效果 */
+			}
+		""")
+		self.setToolTip("添加")
+		self.setCursor(Qt.PointingHandCursor)
+		self.setFixedSize(40, 40)  # 放大按钮本身
+		# 添加图标动画效果 
+		self.setGraphicsEffect(QGraphicsDropShadowEffect(
+		blurRadius=8, 
+		color=QColor(7, 193, 96, 60),
+		offset=QPointF(0, 2)
+		))
+
 class CustomListItem(QWidget):
 	"""一条日程"""
 
@@ -12,14 +132,14 @@ class CustomListItem(QWidget):
 		super().__init__(parent)
 		self.setAttribute(Qt.WA_StyledBackground, True)
 		self.setStyleSheet(f"""
-		            CustomListItem {{
-		                background-color: transparent;
-		                border-radius: 4px;
-		            }}
-		            CustomListItem:hover {{
-		                background-color: palette(midlight); /*轻微高亮*/
-		            }}
-		        """)
+					CustomListItem {{
+						background-color: transparent;
+						border-radius: 4px;
+					}}
+					CustomListItem:hover {{
+						background-color: palette(midlight); /*轻微高亮*/
+					}}
+				""")
 
 		# 设置消息布局
 		layout = QHBoxLayout(self)
@@ -46,30 +166,21 @@ class CustomListItem(QWidget):
 		spacer = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
 		layout.addItem(spacer)
 
+		self.view_schedule_button = EyeButton()
+		#self.view_schedule_button.clicked.connect() TODO: 跳转到之前的日程记录页面,需要补充函数访问后端数据
+		#self.delete_button.clicked.connect() TODO: 需要补充函数删除这个日程对应的后端数据(前端消失我之后再写)
+		self.delete_button = DeleteButton()
 		# 右侧为event，是一个按钮，只显示+，在点击后会跳转到Schedule页面，显示详细内容 TODO：跳转
-		self.theme_display_button = QPushButton("+")
-		self.theme_display_button.setStyleSheet("""
-		                QPushButton {
-		                    background-color: transparent;
-		                    border: none;
-		                    padding: 25px;
-		                    qproperty-alignment: 'AlignCenter';
-		                    color: palette(mid); /*中等颜色*/
-		                }
-		                QPushButton:hover {
-		                    color: #07C160;
-		                }
-		                QPushButton:pressed {
-							color: #05974C;
-						}
-		            """)
-		self.theme_display_button.setFont(font1)
-		self.theme_display_button.clicked.connect(
+		self.add_schedule_button = AddButton.instance()
+		self.add_schedule_button.setFont(font1)
+		self.add_schedule_button.clicked.connect(
 			partial(Emitter.instance().send_page_change_signal, name="Schedule"))
-		self.theme_display_button.clicked.connect(
+		self.add_schedule_button.clicked.connect(
 			self.send_message)  # TODO:传递具体信息（哈希依据），以便跳转到相应的CreateEvent界面；如何将该信息传递给CreateEvent界面
-
-		layout.addWidget(self.theme_display_button)
+		self.setLayout(layout)
+		layout.addWidget(self.view_schedule_button)
+		layout.addWidget(self.delete_button)
+		#layout.addWidget(self.add_schedule_button)
 
 	def this_is_finished(self):
 		# TODO:通知后端
@@ -100,6 +211,7 @@ class Upcoming(QListWidget):
 	def check_scroll(self):
 		"""检查是否滚动到底部"""
 		if self.verticalScrollBar().value() == self.verticalScrollBar().maximum():
+			log.info("检查滚动!")
 			if not self.loading and not self.no_more_events:
 				self.load_more_data()
 			elif self.loading:
@@ -119,7 +231,7 @@ class Upcoming(QListWidget):
 		"""从后端加载数据"""# TODO:从后端获取10个;以下为临时写法
 		if data is not None and len(data) > 0:
 			log.info(f"接收数据成功，共接收 {len(data)} 条数据：\n" + 
-         "\n".join(f"- {event.title} @ {event.datetime}" for event in data))
+		 "\n".join(f"- {event.title} @ {event.datetime}" for event in data))
 			self.events.extend(data)
 			self.event_num += len(data)
 		else:
@@ -149,12 +261,31 @@ class Upcoming(QListWidget):
 		for event in self.events:
 			custom_widget = CustomListItem(f"{event.title}")
 			item = QListWidgetItem()
-			item.setSizeHint(custom_widget.sizeHint())  # 设置合适的大小
+			item.setSizeHint(QSize(custom_widget.sizeHint().width(), 80))  # 设置合适的大小
 			self.addItem(item)
 			self.setItemWidget(item, custom_widget)
+
+		#添加日程按钮
+		# 特别加大最后一项的视觉权重，引导用户点击添加
+		item = QListWidgetItem()
+		#item.setSizeHint(custom_widget.sizeHint())
+		#item.setSizeHint(QSize(custom_widget.sizeHint().width(), 60))  # 高度设为60像素
+		add_schedule_widget = QWidget()
+		layout = QHBoxLayout()
+		layout.setContentsMargins(15, 15, 15, 15)  # 边距：左、上、右、下
+		layout.addStretch()
+
+		layout.addWidget(AddButton.instance())
+		add_schedule_widget.setLayout(layout)
+		item.setSizeHint(QSize(add_schedule_widget.sizeHint().width(), 100))
+		self.addItem(item)
+		self.setItemWidget(item, add_schedule_widget)
+
 	def refresh_upcoming_page(self, title):
 			custom_widget = CustomListItem(f"{title}")
 			item = QListWidgetItem()
-			item.setSizeHint(custom_widget.sizeHint())  # 设置合适的大小
-			self.addItem(item)
+			item.setSizeHint(QSize(custom_widget.sizeHint().width(), 80))  # 设置合适的大小
+			total_items = self.count()  # 获取当前总项数
+			insert_position = max(0, total_items - 1)  # 计算倒数第二的位置（防止越界）
+			self.insertItem(insert_position, item)
 			self.setItemWidget(item, custom_widget)
