@@ -193,6 +193,7 @@ class Upcoming(QListWidget):
 			self.setItemWidget(item, custom_widget)
 
 	def refresh_upcoming_page(self, title):
+		#TODO
 		custom_widget = CustomListItem(f"{title}")
 		item = QListWidgetItem()
 		item.setSizeHint(custom_widget.sizeHint())  # 设置合适的大小
