@@ -301,6 +301,7 @@ class MainWindow(QMainWindow):
 		btn_layout.addWidget(return_btn, alignment=Qt.AlignmentFlag.AlignRight)
 
 		self.upcoming = Upcoming()
+		Emitter.instance().refresh_upcoming_signal.connect(partial(self.upcoming.load_more_data))
 		layout.addWidget(self.upcoming)
 		self.add_page(self.main_stack, self.upcoming_window, "Upcoming")
 
@@ -320,6 +321,8 @@ class MainWindow(QMainWindow):
 				# Emitter.instance().dynamic_signal.connect(self.schedule.receive_signal)
 				# Emitter.instance().send_dynamic_signal(date)
 				self.schedule.receive_date(date)
+			if name=='Upcoming':
+				Emitter.instance().send_refresh_upcoming_signal()
 			stack.setCurrentIndex(self.main_stack_map[name])
 			log.info(f"跳转到{name}页面，日期为{date.toString() if date else date}")
 		else:

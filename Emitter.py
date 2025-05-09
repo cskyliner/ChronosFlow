@@ -1,4 +1,5 @@
 from common import *
+
 log = logging.getLogger(__name__)
 
 
@@ -15,12 +16,13 @@ class Emitter(QObject):
 	storage_path_signal: Signal = Signal(object)  # 发送存储路径的信号
 	search_all_event_signal: Signal = Signal(object)  # 向后端发送搜索全局事件的信号
 	search_some_columns_event_signal: Signal = Signal(object)  # 向后端发送搜索部分列事件的信号
-	update_upcoming_event_signal:Signal = Signal(object)  # 向后端发送更新upcoming的信号
+	update_upcoming_event_signal: Signal = Signal(object)  # 向后端发送更新upcoming的信号
 	search_time_event_signal: Signal = Signal(object)  # 向后端发送搜索时间范围内事件的信号
 	backend_data_to_frontend_signal: Signal = Signal(object)  # 向前端发送后端数据的信号
 	signal_to_schedule_notice: Signal = Signal(str, str, QDateTime, str)  # 向Notice中的schedule_notice函数发送信号
-	from_upcoming_to_create_event_signal: Signal = Signal(str,str) #从upcoming跳转到create_event
-	refresh_upcoming_signal: Signal = Signal(str)
+	from_upcoming_to_create_event_signal: Signal = Signal(str, str)  # 从upcoming跳转到create_event
+	refresh_upcoming_signal: Signal = Signal()  # 在切换到Upcoming时更新
+
 	@staticmethod
 	def instance() -> "Emitter":
 		if Emitter._instance is None:
@@ -31,8 +33,9 @@ class Emitter(QObject):
 		super().__init__()
 
 	# ===转发信号函数====
-	def send_refresh_upcoming_signal(self,title):
-		self.refresh_upcoming_signal.emit(title)
+	def send_refresh_upcoming_signal(self):
+		self.refresh_upcoming_signal.emit()
+
 	def send_page_change_signal(self, name):
 		"""向 main_stack发送改变页面的信号"""
 		self.page_change_signal.emit(name)
@@ -49,10 +52,10 @@ class Emitter(QObject):
 		"""向Notice中的schedule_notice函数发送信号"""
 		self.signal_to_schedule_notice.emit(title, content, notify_time, color)
 
-	def send_from_upcoming_to_create_event_signal(self,theme,date):
+	def send_from_upcoming_to_create_event_signal(self, theme, date):
 		"""从upcoming跳转到create_event"""
-		#TODO:如何确定是哪一个日程（哈希的标准是什么）
-		self.from_upcoming_to_create_event_signal.emit(theme,date)
+		# TODO:如何确定是哪一个日程（哈希的标准是什么）
+		self.from_upcoming_to_create_event_signal.emit(theme, date)
 
 	# ===转发数据函数====
 
@@ -62,7 +65,7 @@ class Emitter(QObject):
 		self.backend_data_to_frontend_signal.emit(data)
 
 	# ===对接后端信号函数，发送信号第一个参数为命令====
-	
+
 	def send_storage_path(self, path):
 		"""发送存储路径"""
 		log.info(f"send storage path signal，存储路径为{path}")
@@ -91,15 +94,15 @@ class Emitter(QObject):
 		out = ("search_all", keyword)
 		self.search_all_event_signal.emit(out)
 
-	def request_update_upcoming_event_signal(self,start_pos:int, event_num:int):
+	def request_update_upcoming_event_signal(self, start_pos: int, event_num: int):
 		"""
 		向后端发送更新upcoming的请求
 		"""
 		log.info(f"request update upcoming event，参数为start_pos:{start_pos}，event_num:{event_num}")
-		out = ("update_upcoming", (start_pos,event_num))
+		out = ("update_upcoming", (start_pos, event_num))
 		self.update_upcoming_event_signal.emit(out)
 
-	def request_search_time_event_signal(self, start_time:str, end_time:str):
+	def request_search_time_event_signal(self, start_time: str, end_time: str):
 		"""
 		向后端发送搜索时间范围内事件的请求
 		start_time和end_time为时间范围，字符串元组
