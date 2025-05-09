@@ -264,6 +264,7 @@ class Upcoming(QListWidget):
 			item.setSizeHint(QSize(custom_widget.sizeHint().width(), 80))  # 设置合适的大小
 			self.addItem(item)
 			self.setItemWidget(item, custom_widget)
+
 		#添加日程按钮
 		# 特别加大最后一项的视觉权重，引导用户点击添加
 		item = QListWidgetItem()
