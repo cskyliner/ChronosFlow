@@ -281,8 +281,8 @@ class Upcoming(QListWidget):
 		font = QFont()
 		font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
 		font.setPointSize(12)
-		tmp_date=date[:10]
-		tmp_date = tmp_date.split('-')
+		date = date[:10]
+		tmp_date = date.split('-')
 		date_item = QListWidgetItem(f"\n{tmp_date[0]}年{int(tmp_date[1])}月{int(tmp_date[2])}日")
 		date_item.setFont(font)
 		# 寻找插入位置（第一个比自身日期大的日期）
@@ -315,16 +315,19 @@ class Upcoming(QListWidget):
 			self.takeItem(self.row(self.loading_item))
 			del self.loading_item
 
-	def add_one_item(self,event):
-		# 将每条的日期和已有的日期比较，如果日期已有，插入到这一日期标签的下面；如果没有，新建日期标签
+	def add_one_item(self, event):
+		"""
+		将每条的日期和已有的日期比较，如果日期已有，插入到这一日期标签的下面；如果没有，新建日期标签
+		self.index_of_data_label的形式为event.datetime[:10],仅有年月日
+		"""
 		custom_widget = CustomListItem(f"{event.title}")
 		item = QListWidgetItem()
 		item.setSizeHint(QSize(custom_widget.sizeHint().width(), 80))  # 设置合适的大小
 		# 如果没有对应日期的标签，就加上
-		if not event.datetime in self.index_of_data_label:
+		if not event.datetime[:10] in self.index_of_data_label:
 			self.add_date_label(event.datetime)
 
-		self.insertItem(self.index_of_data_label[event.datetime].row() + 1, item)
+		self.insertItem(self.index_of_data_label[event.datetime[:10]].row() + 1, item)
 		self.setItemWidget(item, custom_widget)
 
 	def load_more_data(self):
