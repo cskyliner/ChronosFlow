@@ -20,11 +20,9 @@ class MainWindow(QMainWindow):
 		self.setWindowTitle("todolist")
 
 		# 获取屏幕尺寸，设置主窗口位置
-		screen_geometry = app.primaryScreen().availableGeometry()
-		window_x = screen_geometry.width() // 2 - width // 2
-		window_y = screen_geometry.height() // 2 - height // 2
 		self.resize(width, height)
-		self.move(window_x, window_y)
+		screen_geometry = app.primaryScreen().availableGeometry()
+		self.move(screen_geometry.width() // 2 - width // 2, screen_geometry.height() // 2 - height // 2)
 
 		# 动画管理集
 		self.animations: dict[str, QPropertyAnimation] = {}
