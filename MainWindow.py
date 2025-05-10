@@ -15,13 +15,16 @@ log = logging.getLogger(__name__)
 
 class MainWindow(QMainWindow):
 
-	def __init__(self, width=800, height=600, show_x=100, show_y=100):
+	def __init__(self, app, width=800, height=600):
 		super().__init__()
-		# 尺寸
-		self.width = width
-		self.height = height
 		self.setWindowTitle("todolist")
-		self.setGeometry(show_x, show_y, width, height)
+
+		# 获取屏幕尺寸，设置主窗口位置
+		screen_geometry = app.primaryScreen().availableGeometry()
+		window_x = screen_geometry.width() // 2 - width // 2
+		window_y = screen_geometry.height() // 2 - height // 2
+		self.resize(width, height)
+		self.move(window_x, window_y)
 
 		# 动画管理集
 		self.animations: dict[str, QPropertyAnimation] = {}
