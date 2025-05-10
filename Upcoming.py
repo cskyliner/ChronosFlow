@@ -84,14 +84,8 @@ class EyeButton(QPushButton):
 		self.setCursor(Qt.PointingHandCursor)  # 手型光标
 
 
-class AddButton(QPushButton):
-	_instance = None
-
-	@staticmethod
-	def instance() -> "AddButton":
-		if AddButton._instance is None:
-			AddButton._instance = AddButton()
-		return AddButton._instance
+class FloatingButton(QPushButton):
+	"""悬浮按钮"""
 
 	def __init__(self, parent=None):
 		super().__init__("+", parent)
@@ -125,12 +119,34 @@ class AddButton(QPushButton):
 		self.setToolTip("添加")
 		self.setCursor(Qt.PointingHandCursor)
 		self.setFixedSize(40, 40)  # 放大按钮本身
-		# 添加图标动画效果 
-		self.setGraphicsEffect(QGraphicsDropShadowEffect(
-			blurRadius=8,
-			color=QColor(7, 193, 96, 60),
-			offset=QPointF(0, 2)
-		))
+		# 添加图标动画效果
+		self.setGraphicsEffect(
+			QGraphicsDropShadowEffect(blurRadius=8, color=QColor(7, 193, 96, 60), offset=QPointF(0, 2)))
+
+		# 设置相对位置参数（百分比或固定偏移量）
+		self.relative_position = (0.94, 0.9)  # (水平位置比例, 垂直位置比例)
+		# 监听父控件resize事件
+		if parent:
+			parent.installEventFilter(self)
+
+	def update_position(self):
+		"""根据父控件大小更新位置"""
+		if self.parent():
+			parent_rect = self.parent().rect()
+			x = int(parent_rect.width() * self.relative_position[0] - self.width())
+			y = int(parent_rect.height() * self.relative_position[1] - self.height())
+			self.move(x, y)
+
+	def eventFilter(self, obj, event):
+		"""监听父控件resize事件"""
+		if obj == self.parent() and event.type() == QEvent.Resize:
+			self.update_position()
+		return super().eventFilter(obj, event)
+
+	def showEvent(self, event):
+		"""初始显示时定位"""
+		self.update_position()
+		super().showEvent(event)
 
 
 class CustomListItem(QWidget):
@@ -180,12 +196,14 @@ class CustomListItem(QWidget):
 		# self.delete_button.clicked.connect() TODO: 需要补充函数删除这个日程对应的后端数据(前端消失我之后再写)
 		self.delete_button = DeleteButton()
 		# 右侧为event，是一个按钮，只显示+，在点击后会跳转到Schedule页面，显示详细内容 TODO：跳转
+		"""
 		self.add_schedule_button = AddButton.instance()
 		self.add_schedule_button.setFont(font1)
 		self.add_schedule_button.clicked.connect(
 			partial(Emitter.instance().send_page_change_signal, name="Schedule"))
 		self.add_schedule_button.clicked.connect(
-			self.send_message)  # TODO:传递具体信息（哈希依据），以便跳转到相应的CreateEvent界面；如何将该信息传递给CreateEvent界面
+			self.send_message)  # TODO:传递id，跳转到相应的CreateEvent界面；如何将该信息传递给CreateEvent界面
+		"""
 		self.setLayout(layout)
 		layout.addWidget(self.view_schedule_button)
 		layout.addWidget(self.delete_button)
@@ -348,21 +366,3 @@ class Upcoming(QListWidget):
 
 		for event in self.events_used_to_update:
 			self.add_one_item(event)
-
-		"""
-		# 添加日程按钮
-		# 特别加大最后一项的视觉权重，引导用户点击添加
-		item = QListWidgetItem()
-		# item.setSizeHint(custom_widget.sizeHint())
-		# item.setSizeHint(QSize(custom_widget.sizeHint().width(), 60))  # 高度设为60像素
-		add_schedule_widget = QWidget()
-		layout = QHBoxLayout()
-		layout.setContentsMargins(15, 15, 15, 15)  # 边距：左、上、右、下
-		layout.addStretch()
-
-		layout.addWidget(AddButton.instance())
-		add_schedule_widget.setLayout(layout)
-		item.setSizeHint(QSize(add_schedule_widget.sizeHint().width(), 100))
-		self.addItem(item)
-		self.setItemWidget(item, add_schedule_widget)
-		"""

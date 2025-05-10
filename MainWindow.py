@@ -8,7 +8,7 @@ from Settings import SettingsPage
 from Tray import Tray
 from FloatingWindow import FloatingWindow
 from Notice import Notice
-from Upcoming import Upcoming
+from Upcoming import Upcoming, FloatingButton
 
 log = logging.getLogger(__name__)
 
@@ -110,7 +110,7 @@ class MainWindow(QMainWindow):
 								}
 				            """)
 		sidebar_btn.setFont(self.button_font)
-		sidebar_btn.clicked.connect(partial(self.toggle_sidebar,btn=sidebar_btn))
+		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 		main_window_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
 
 		# 创建日历界面
@@ -154,7 +154,7 @@ class MainWindow(QMainWindow):
 								}
 								""")
 		sidebar_btn.setFont(self.button_font)
-		sidebar_btn.clicked.connect(partial(self.toggle_sidebar,btn=sidebar_btn))
+		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 返回按钮，回到calendar
 		return_btn = QPushButton("✕")
@@ -214,7 +214,7 @@ class MainWindow(QMainWindow):
 								}
 						            """)
 		sidebar_btn.setFont(self.button_font)
-		sidebar_btn.clicked.connect(partial(self.toggle_sidebar,btn=sidebar_btn))
+		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 返回按钮，回到calendar
 		return_btn = QPushButton("✕")
@@ -274,7 +274,7 @@ class MainWindow(QMainWindow):
 								}
 								""")
 		sidebar_btn.setFont(self.button_font)
-		sidebar_btn.clicked.connect(partial(self.toggle_sidebar,btn=sidebar_btn))
+		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 返回按钮，回到calendar
 		return_btn = QPushButton("✕")
@@ -305,6 +305,12 @@ class MainWindow(QMainWindow):
 		layout.addWidget(self.upcoming)
 		self.add_page(self.main_stack, self.upcoming_window, "Upcoming")
 
+		# 创建悬浮按钮
+		float_btn = FloatingButton(self.upcoming_window)
+		float_btn.move(50, 50)  # 初始位置
+		float_btn.raise_()  # 确保在最上层
+		float_btn.clicked.connect(partial(self.navigate_to, "Schedule", self.main_stack))
+
 	def add_page(self, stack: QStackedWidget, widget: QWidget, name: str):
 		'''
 		向 stack 中添加页面
@@ -321,7 +327,7 @@ class MainWindow(QMainWindow):
 				# Emitter.instance().dynamic_signal.connect(self.schedule.receive_signal)
 				# Emitter.instance().send_dynamic_signal(date)
 				self.schedule.receive_date(date)
-			if name=='Upcoming':
+			if name == 'Upcoming':
 				Emitter.instance().send_refresh_upcoming_signal()
 			stack.setCurrentIndex(self.main_stack_map[name])
 			log.info(f"跳转到{name}页面，日期为{date.toString() if date else date}")
@@ -336,7 +342,7 @@ class MainWindow(QMainWindow):
 		self.animations["sidebar"].setDuration(300)
 		self.animations["sidebar"].setEasingCurve(QEasingCurve.Type.InOutQuad)
 
-	def toggle_sidebar(self,btn) -> None:
+	def toggle_sidebar(self, btn) -> None:
 		'''
 		处理sidebar的变化
 		'''
