@@ -2,6 +2,7 @@ from common import *
 import os
 import sqlite3
 from Emitter import Emitter
+
 log = logging.getLogger(__name__)
 # ===默认连接数据库（应该不会启用）===
 DB_PATH = None
@@ -103,7 +104,7 @@ class DDLEvent(BaseEvent):
 
 	def __init__(self, title: str, datetime: str, notes: str, advance_time: str, importance: str, done: bool = False):
 		super().__init__(title)
-		self.datetime = datetime
+		self.datetime = datetime  # 格式："yyyy-MM-dd HH:mm"
 		self.notes = notes
 		self.advance_time = advance_time
 		self.importance = importance
@@ -184,10 +185,9 @@ def recieve_signal(recieve_data: tuple) -> None:
 		args = recieve_data[3:]  # 事件参数
 		EventFactory.create(event_type, add, *args)
 		log.info(f"接收{recieve_data[0]}信号成功，创建事件{event_type}，参数为{args}")
-		Emitter.instance().send_refresh_upcoming_signal(args[0])
 	# sent_signal("search_all", result)
 	elif recieve_data[0] == "storage_path":
-		global DB_PATH,conn,cursor # 全局变量
+		global DB_PATH, conn, cursor  # 全局变量
 		path = recieve_data[1]
 		log.info(f"path = {os.path.abspath(path)}")
 		# 检查路径是否存在且可写
@@ -209,7 +209,7 @@ def recieve_signal(recieve_data: tuple) -> None:
 				None,
 				"错误",
 				"连接数据库失败，请检查存储路径是否正确",
-            )
+			)
 	else:
 		log.error(f"接收信号失败，未知信号类型{recieve_data[0]}，参数为{recieve_data[1:]}")
 
@@ -237,6 +237,7 @@ def request_signal(recieve_data: tuple) -> None:
 		log.error(f"接收信号失败，未知信号类型{signal_name}，参数为{recieve_data}")
 	# 发送结果给回调函数
 	Emitter.instance().send_backend_data_to_frontend_signal(result)
+
 
 def search_all(keyword: tuple[str]) -> list[BaseEvent]:
 	"""
@@ -291,7 +292,8 @@ def search_time(start_time: str, end_time: str) -> list[BaseEvent]:
 			result.append(event)
 	return result
 
-def get_data_time_order(table_name:str, start_pos:int, event_num:int)->tuple[BaseEvent]:
+
+def get_data_time_order(table_name: str, start_pos: int, event_num: int) -> tuple[BaseEvent]:
 	'''
 	从指定数据库中按时间顺序获取数据，从start_pos开始，取num个返回
 	'''
