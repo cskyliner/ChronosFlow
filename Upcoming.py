@@ -21,8 +21,7 @@ class DeleteButton(QPushButton):
                 color: #FF5050;
                 font-size: 24px;
                 font-weight: 500;
-                qproperty-alignment: AlignCenter;
-                transition: all 0.2s ease-out;
+                text-align: center;
             }
             QPushButton:hover {
                 background-color: rgba(255, 80, 80, 0.15);
@@ -100,8 +99,8 @@ class FloatingButton(QPushButton):
 				color: #07C160;
 				font-size: 24px;
 				font-weight: 500;
-				qproperty-alignment: AlignCenter;
-				transition: all 0.2s ease-out;           /* CSS过渡动画 */
+				text-align: center;
+				
 			}
 			QPushButton:hover {
 				background-color: rgba(7, 193, 96, 0.15);
@@ -257,7 +256,7 @@ class Upcoming(QListWidget):
 		self.load_more_data()
 		self.verticalScrollBar().valueChanged.connect(self.check_scroll)  # 检测是否滚动到底部
 
-		Emitter.instance().refresh_upcoming_signal.connect(self.refresh_upcoming_page)
+		#Emitter.instance().refresh_upcoming_signal.connect(self.refresh_upcoming_page)
 	def check_scroll(self):
 		"""检查是否滚动到底部"""
 		if self.verticalScrollBar().value() == self.verticalScrollBar().maximum():
@@ -299,6 +298,7 @@ class Upcoming(QListWidget):
 			if key > date:
 				find = True
 				record = key
+				break
 		if find:
 			self.insertItem(self.index_of_data_label[record].row(), date_item)
 		else:

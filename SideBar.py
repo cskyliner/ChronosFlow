@@ -38,7 +38,7 @@ class SideBar(QFrame):
                 border: 1px solid #d0d0d0;
                 border-radius: 4px;
                 padding: 25px;
-                qproperty-alignment: 'AlignCenter';
+                text-align: center;
             }
             QPushButton:hover {
                 background-color: palette(midlight);
@@ -66,7 +66,7 @@ class SideBar(QFrame):
                     background-color: transparent;
                     border: none;
                     padding: 25px;
-                    qproperty-alignment: 'AlignCenter';
+                    text-align: center;
                 }
                 QPushButton:hover {
                     background-color: palette(midlight); /*轻微高亮*/
