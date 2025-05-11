@@ -27,6 +27,6 @@ if __name__ == "__main__":
 	init_platform_style(app)
 	app.setWindowIcon(QIcon("pic/todolist.png"))
 	connect_event_signal()  # 连接前后端信号
-	main_window = MainWindow(1000, 600, 140, 100)
+	main_window = MainWindow(app, 1000, 600)
 	main_window.show()
 	app.exec()

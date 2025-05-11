@@ -170,9 +170,9 @@ class CustomListItem(QWidget):
 		layout = QHBoxLayout(self)
 		layout.setContentsMargins(5, 2, 5, 2)  # 边距：左、上、右、下
 
-		# 左侧为是否完成的复选框 TODO:打勾后发信号
+		# 是否完成的复选框
 		self.finish_checkbox = QCheckBox()
-		self.finish_checkbox.toggled.connect(partial(self.this_is_finished))
+		self.finish_checkbox.toggled.connect(partial(self.this_one_is_finished))
 		layout.addWidget(self.finish_checkbox)
 
 		# 字体
@@ -195,27 +195,16 @@ class CustomListItem(QWidget):
 		# self.view_schedule_button.clicked.connect() TODO: 跳转到之前的日程记录页面,需要补充函数访问后端数据
 		# self.delete_button.clicked.connect() TODO: 需要补充函数删除这个日程对应的后端数据(前端消失我之后再写)
 		self.delete_button = DeleteButton()
-		# 右侧为event，是一个按钮，只显示+，在点击后会跳转到Schedule页面，显示详细内容 TODO：跳转
-		"""
-		self.add_schedule_button = AddButton.instance()
-		self.add_schedule_button.setFont(font1)
-		self.add_schedule_button.clicked.connect(
-			partial(Emitter.instance().send_page_change_signal, name="Schedule"))
-		self.add_schedule_button.clicked.connect(
-			self.send_message)  # TODO:传递id，跳转到相应的CreateEvent界面；如何将该信息传递给CreateEvent界面
-		"""
+
 		self.setLayout(layout)
 		layout.addWidget(self.view_schedule_button)
 		layout.addWidget(self.delete_button)
 
-	# layout.addWidget(self.add_schedule_button)
-
-	def this_is_finished(self):
-		# TODO:通知后端
+	def this_one_is_finished(self):
+		"""打勾后发信号"""
+		# TODO
 		pass
 
-	def send_message(self):
-		pass
 
 
 class Upcoming(QListWidget):
