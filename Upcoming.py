@@ -21,8 +21,7 @@ class DeleteButton(QPushButton):
                 color: #FF5050;
                 font-size: 24px;
                 font-weight: 500;
-                qproperty-alignment: AlignCenter;
-                transition: all 0.2s ease-out;
+                text-align: center;
             }
             QPushButton:hover {
                 background-color: rgba(255, 80, 80, 0.15);
@@ -100,8 +99,7 @@ class FloatingButton(QPushButton):
 				color: #07C160;
 				font-size: 24px;
 				font-weight: 500;
-				qproperty-alignment: AlignCenter;
-				transition: all 0.2s ease-out;           /* CSS过渡动画 */
+				text-align: center;				
 			}
 			QPushButton:hover {
 				background-color: rgba(7, 193, 96, 0.15);
