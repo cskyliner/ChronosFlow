@@ -111,7 +111,7 @@ class Schedule(QWidget):
                     border: 1px solid #d0d0d0;
                 	border-radius: 4px;
                     padding: 25px;
-                    qproperty-alignment: 'AlignCenter';
+                    text-align: center;
                 }
                 QPushButton:hover {
                     background-color: palette(midlight); /*轻微高亮*/
@@ -152,6 +152,7 @@ class Schedule(QWidget):
 		deadline = self.deadline_edit.dateTime().toString("yyyy-MM-dd HH:mm")
 		reminder = self.reminder_edit.dateTime().toString("yyyy-MM-dd HH:mm")
 		notify_time = self.reminder_edit.dateTime()
+		log.info(f"notify_time是{notify_time}")
 		"""
 		time = QTime(int(self.datetime[0]), int(self.datetime[1]))
 		datetime = QDateTime(self.standard_date, time)

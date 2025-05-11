@@ -100,7 +100,7 @@ class MainWindow(QMainWindow):
 				                    border: none;
 				                    padding: 0;
 		    						margin: 0;
-				                    qproperty-alignment: 'AlignCenter';
+				                    text-align: center;
 				                    color: #a0a0a0;
 				                }
 				                QPushButton:hover {
@@ -144,7 +144,7 @@ class MainWindow(QMainWindow):
 								border: none;
 								padding: 0;
 								margin: 0;
-								qproperty-alignment: 'AlignCenter';
+								text-align: center;
 								color: #a0a0a0;
 								}
 								QPushButton:hover {
@@ -165,7 +165,7 @@ class MainWindow(QMainWindow):
 						        border: none;
 						        padding: 0;
 				    			margin: 0;
-						        qproperty-alignment: 'AlignCenter';
+						        text-align: center;
 						        color: #a0a0a0;
 						        }
 						        QPushButton:hover {
@@ -204,7 +204,7 @@ class MainWindow(QMainWindow):
 								border: none;
 								padding: 0;
 								margin: 0;
-								qproperty-alignment: 'AlignCenter';
+								text-align: center;
 								color: #a0a0a0;
 								}
 								QPushButton:hover {
@@ -225,7 +225,7 @@ class MainWindow(QMainWindow):
 				                    border: none;
 				                    padding: 0;
 		    						margin: 0;
-				                    qproperty-alignment: 'AlignCenter';
+				                    text-align: center;
 				                    color: #a0a0a0;
 				                }
 				                QPushButton:hover {
@@ -264,7 +264,7 @@ class MainWindow(QMainWindow):
 								border: none;
 								padding: 0;
 								margin: 0;
-								qproperty-alignment: 'AlignCenter';
+								text-align: center;
 								color: #a0a0a0;
 								}
 								QPushButton:hover {
@@ -285,7 +285,7 @@ class MainWindow(QMainWindow):
 								border: none;
 								padding: 0;
 								margin: 0;
-								qproperty-alignment: 'AlignCenter';
+								text-align: center;
 								color: #a0a0a0;
 								}
 								QPushButton:hover {
