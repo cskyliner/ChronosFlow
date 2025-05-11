@@ -195,6 +195,7 @@ class CustomListItem(QWidget):
 		# self.view_schedule_button.clicked.connect() TODO: 跳转到之前的日程记录页面,需要补充函数访问后端数据
 		# self.delete_button.clicked.connect() TODO: 需要补充函数删除这个日程对应的后端数据(前端消失我之后再写)
 		self.delete_button = DeleteButton()
+
 		self.setLayout(layout)
 		layout.addWidget(self.view_schedule_button)
 		layout.addWidget(self.delete_button)
@@ -203,6 +204,7 @@ class CustomListItem(QWidget):
 		"""打勾后发信号"""
 		# TODO
 		pass
+
 
 
 class Upcoming(QListWidget):
