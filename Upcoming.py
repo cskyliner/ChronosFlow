@@ -159,7 +159,7 @@ class CustomListItem(QWidget):
 		self.setStyleSheet("""
 		            CustomListItem {
 		                background-color: transparent;
-		                border-radius: 4px;
+		                border-radius: 15px;
 		            }
 		            CustomListItem:hover {
 		                background-color: palette(midlight); /*轻微高亮*/
@@ -217,13 +217,11 @@ class Upcoming(QListWidget):
 		self.setSelectionMode(QListWidget.SingleSelection)  # 一次只能选择列表中的一个项目
 		self.model().rowsMoved.connect(self.show_current_order_to_backend)  # 将顺序改变加入日志，并通知后端
 
-		palette = self.palette()
-		self.setStyleSheet(f"""
-		    QListWidget::item:selected {{
+		self.setStyleSheet("""
+		    QListWidget::item:selected {
 		        background: transparent;
-		        color: {palette.text().color().name()};
 		        border: none;
-		    }}
+		    }
 		""")
 
 		self.events: list[BaseEvent] = []  # 存贮所有从后端得到的数据，用于储存id
@@ -241,8 +239,8 @@ class Upcoming(QListWidget):
 		font.setPointSize(12)
 		today = QDate.currentDate()
 		tomorrow = today.addDays(1)
-		today_date_item = QListWidgetItem("今天")
-		tomorrow_date_item = QListWidgetItem("\n明天")
+		today_date_item = QListWidgetItem("今天\n————————")
+		tomorrow_date_item = QListWidgetItem("\n明天\n————————")
 		today_date_item.setFont(font)
 		self.addItem(today_date_item)
 		tomorrow_date_item.setFont(font)
@@ -288,7 +286,7 @@ class Upcoming(QListWidget):
 		font.setPointSize(12)
 		date = date[:10]
 		tmp_date = date.split('-')
-		date_item = QListWidgetItem(f"\n{tmp_date[0]}年{int(tmp_date[1])}月{int(tmp_date[2])}日")
+		date_item = QListWidgetItem(f"\n{tmp_date[0]}年{int(tmp_date[1])}月{int(tmp_date[2])}日\n————————")
 		date_item.setFont(font)
 		# 寻找插入位置（第一个比自身日期大的日期）
 		find = False
