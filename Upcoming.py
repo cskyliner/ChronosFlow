@@ -212,10 +212,10 @@ class Upcoming(QListWidget):
 
 	def __init__(self, parent=None):
 		super().__init__(parent)
-		self.setDragDropMode(QListWidget.InternalMove)  # 允许内部拖动重排
-		self.setDefaultDropAction(Qt.MoveAction)  # 设置默认动作为移动而非复制
-		self.setSelectionMode(QListWidget.SingleSelection)  # 一次只能选择列表中的一个项目
-		self.model().rowsMoved.connect(self.show_current_order_to_backend)  # 将顺序改变加入日志，并通知后端
+		#self.setDragDropMode(QListWidget.InternalMove)  # 允许内部拖动重排
+		#self.setDefaultDropAction(Qt.MoveAction)  # 设置默认动作为移动而非复制
+		#self.setSelectionMode(QListWidget.SingleSelection)  # 一次只能选择列表中的一个项目
+		#self.model().rowsMoved.connect(self.show_current_order_to_backend)  # 将顺序改变加入日志，并通知后端
 
 		self.setStyleSheet("""
 		    QListWidget::item:selected {
@@ -233,23 +233,6 @@ class Upcoming(QListWidget):
 		self.page_num = 10  # 每页显示的事件数
 		self.loading_item = None  # 加载标签
 
-		# 添加今天、明天两个标签
-		font = QFont()
-		font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
-		font.setPointSize(12)
-		today = QDate.currentDate()
-		tomorrow = today.addDays(1)
-		today_date_item = QListWidgetItem("今天\n————————")
-		tomorrow_date_item = QListWidgetItem("\n明天\n————————")
-		today_date_item.setFont(font)
-		self.addItem(today_date_item)
-		tomorrow_date_item.setFont(font)
-		self.addItem(tomorrow_date_item)
-		self.index_of_data_label[today.toString("yyyy-MM-dd")] = QPersistentModelIndex(
-			self.indexFromItem(today_date_item))
-		self.index_of_data_label[tomorrow.toString("yyyy-MM-dd")] = QPersistentModelIndex(
-			self.indexFromItem(tomorrow_date_item))
-
 		self.load_more_data()
 		self.verticalScrollBar().valueChanged.connect(self.check_scroll)  # 检测是否滚动到底部
 
@@ -266,10 +249,10 @@ class Upcoming(QListWidget):
 			else:
 				log.error("未知错误，无法加载数据")
 
-	def show_current_order_to_backend(self):
-		"""在Upcoming中顺序改变时显示在log中，并通知后端"""
+	#def show_current_order_to_backend(self):
+	#	"""在Upcoming中顺序改变时显示在log中，并通知后端"""
 		# TODO：通知后端：移动的event的日期改变
-		log.info("Upcoming顺序改变")
+	#	log.info("Upcoming顺序改变")
 
 	def show_loading_label(self):
 		self.loading_item = QListWidgetItem("Loading……")
@@ -284,16 +267,28 @@ class Upcoming(QListWidget):
 		font = QFont()
 		font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
 		font.setPointSize(12)
+
+		today = QDate.currentDate()
+		tomorrow = today.addDays(1).toString("yyyy-MM-dd")
+		today = today.toString("yyyy-MM-dd")
+
 		date = date[:10]
-		tmp_date = date.split('-')
-		date_item = QListWidgetItem(f"\n{tmp_date[0]}年{int(tmp_date[1])}月{int(tmp_date[2])}日\n————————")
+		if date==today:
+			date_item = QListWidgetItem('\n今天\n————————')
+		elif date==tomorrow:
+			date_item=QListWidgetItem('\n明天\n————————')
+		else:
+			tmp_date = date.split('-')
+			date_item = QListWidgetItem(f"\n{tmp_date[0]}年{int(tmp_date[1])}月{int(tmp_date[2])}日\n————————")
 		date_item.setFont(font)
+
 		# 寻找插入位置（第一个比自身日期大的日期）
 		find = False
 		for key in self.index_of_data_label.keys():
 			if key > date:
 				find = True
 				record = key
+				break
 		if find:
 			self.insertItem(self.index_of_data_label[record].row(), date_item)
 		else:
