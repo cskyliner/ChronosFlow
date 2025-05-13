@@ -156,7 +156,7 @@ class CustomListItem(QWidget):
 
 		self.setStyleSheet("""
 		            CustomListItem {
-		                background-color: transparent;
+		                background-color: palette(light);
 		                border-radius: 15px;
 		            }
 		            CustomListItem:hover {
@@ -177,8 +177,6 @@ class CustomListItem(QWidget):
 		font = QFont()
 		font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
 		font.setPointSize(13)
-		font1 = QFont()  # 用于‘+’的字体
-		font1.setPointSize(18)
 
 		# 展示主题的标签
 		self.theme_display_label = QLabel(f"{theme}")
@@ -219,8 +217,14 @@ class Upcoming(QListWidget):
 		    QListWidget::item:selected {
 		        background: transparent;
 		        border: none;
+		        color: palette(text)
 		    }
-		""")
+		    QListWidget { background: transparent; }
+		    QListWidget::item {
+        			/* 控制行间距（相邻项的间隔） */
+        			margin: 5px;  
+        	}
+			""")
 
 		self.events: list[BaseEvent] = []  # 存贮所有从后端得到的数据，用于储存id
 		self.events_used_to_update: tuple[BaseEvent] = tuple()  # 储存这次需要更新的至多10个数据
@@ -314,7 +318,7 @@ class Upcoming(QListWidget):
 	def add_one_item(self, event):
 		"""
 		将每条的日期和已有的日期比较，如果日期已有，插入到这一日期标签的下面；如果没有，新建日期标签
-		self.index_of_data_label的形式为event.datetime[:10],仅有年月日
+		self.index_of_data_label的key的形式为event.datetime[:10],仅有年月日
 		"""
 		custom_widget = CustomListItem(f"{event.title}")
 		item = QListWidgetItem()
