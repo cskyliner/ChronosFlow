@@ -20,6 +20,7 @@ class Emitter(QObject):
 	search_some_columns_event_signal: Signal = Signal(object)  				# 向后端发送搜索部分列事件的信号
 	search_time_event_signal: Signal = Signal(object)  						# 向后端发送搜索时间范围内事件的信号
 	backend_data_to_frontend_signal: Signal = Signal(object) 			 	# 向前端发送后端数据的信号
+	notice_signal: Signal = Signal(object)  								# 向通知栏发送最新数据
 	signal_to_schedule_notice: Signal = Signal(str, str, QDateTime, str)  	# 向Notice中的schedule_notice函数发送信号
 	from_upcoming_to_create_event_signal: Signal = Signal(str, str)  		# 从upcoming跳转到create_event
 	refresh_upcoming_signal: Signal = Signal()								# 在切换到Upcoming时更新
@@ -64,6 +65,11 @@ class Emitter(QObject):
 		"""向前端发送后端数据的信号，回传的是tuple[BaseEvent]"""
 		log.info(f"发送后端数据到前端信号")
 		self.backend_data_to_frontend_signal.emit(data)
+
+	def send_notice_signal(self, data):
+		"""向通知栏发送最新数据，回传数据为ddlevent"""
+		log.info(f"向通知栏发送最新数据{data}")
+		self.notice_signal.emit(data)
 
 	# ===对接后端信号函数，发送信号第一个参数为命令====
 

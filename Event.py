@@ -8,6 +8,7 @@ log = logging.getLogger(__name__)
 DB_PATH = None
 conn = None
 cursor = None
+latest_ddlevent = None
 # ===数据名对应数据类型===
 TYPE_MAP = {
 	"title": "TEXT",
@@ -99,10 +100,10 @@ class BaseEvent:
 class DDLEvent(BaseEvent):
 	"""
 	DDL类
-	输入：标题，截止时间，具体内容，提前提醒时间，重要程度，是否完成，
+	输入：标题，截止时间，具体内容，提前提醒时间，重要程度，是否完成或过期（0为未完成，1为完成，2为过期）
 	"""
 
-	def __init__(self, title: str, datetime: str, notes: str, advance_time: str, importance: str, done: bool = False):
+	def __init__(self, title: str, datetime: str, notes: str, advance_time: str, importance: str, done: int = 0):
 		super().__init__(title)
 		self.datetime = datetime  # 格式："yyyy-MM-dd HH:mm"
 		self.notes = notes
@@ -158,6 +159,7 @@ class EventFactory:
 		:param *args:参数
 		:return: BaseEvent 事件类
 		"""
+		global latest_ddlevent
 		if event_type not in cls.registry:
 			raise Exception(f"event_type {event_type} not supported")
 		event_cls = cls.registry[event_type]
@@ -166,6 +168,17 @@ class EventFactory:
 			log.info(f"create new event in {n_event.table_name()} table successfully")
 			if add is True:
 				n_event.add_event()
+				if n_event.table_name() == "ddlevents":
+					if latest_ddlevent is None:
+						log.info("没有最新的DDL事件，添加新事件")
+						latest_ddlevent = n_event
+						Emitter.instance().send_notice_signal(n_event)
+					elif n_event.datetime < latest_ddlevent.datetime:
+						log.info("添加新事件比最新事件更早，更新最新事件")
+						latest_ddlevent = n_event
+						Emitter.instance().send_notice_signal(n_event)
+					else:
+						log.info("添加新事件比最新事件更晚，不更新最新事件")
 				log.info(f"add event {n_event.title} to {n_event.table_name()} table successfully")
 			return n_event
 		except TypeError as e:
@@ -231,6 +244,22 @@ def request_signal(recieve_data: tuple) -> None:
 	# 发送结果给回调函数
 	Emitter.instance().send_backend_data_to_frontend_signal(result)
 
+def get_latest_ddlevent() -> DDLEvent:
+	"""
+	获取最新的ddlevent
+	"""
+	global latest_ddlevent
+	cursor.execute("SELECT * FROM ddlevents ORDER BY datetime DESC LIMIT 1 WHERE done = 0")
+	row = cursor.fetchone()
+	if row is None:
+		log.info("没有找到任何未来的DDL事件")
+		return None
+	paras = row[1:]
+	event = EventFactory.create("DDL", False, *paras)
+	event.id = row[0]
+	log.info(f"获取最新的DDL事件成功，事件为{event.title}")
+	latest_ddlevent = event
+	return event
 
 def search_all(keyword: tuple[str]) -> list[BaseEvent]:
 	"""
