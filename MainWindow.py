@@ -46,6 +46,15 @@ class MainWindow(QMainWindow):
 
 		# 主窗口（设计为堆叠窗口，有多个界面）
 		self.main_stack = QStackedWidget()
+		#TODO:背景添加
+		#self.main_stack.setStyleSheet("""
+    	#QStackedWidget {
+        #	background-image: url("地址");  /* 图片路径 */
+        #	background-position: center;    /* 居中 */
+        #	background-repeat: no-repeat;   /* 不重复 */
+        #	background-size: contain;       /* 保持比例 */
+    	#}
+    	#""")
 		self.main_layout.addWidget(self.main_stack)
 
 		# 连接sidebar的信号
