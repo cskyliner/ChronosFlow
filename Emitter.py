@@ -9,19 +9,20 @@ class Emitter(QObject):
 	通用信号发射器
 	'''
 	_instance = None  # 唯一实例
-	dynamic_signal: Signal = Signal(object)  # 可接收任意参数
-	page_change_signal: Signal = Signal(str)  # 向 main_stack发送改变页面的信号
-	create_event_signal: Signal = Signal(object)  # 发送创建事件的信号
-	search_signal: Signal = Signal(str)  # 发送sidebar搜索文本框的信息
-	storage_path_signal: Signal = Signal(object)  # 发送存储路径的信号
-	search_all_event_signal: Signal = Signal(object)  # 向后端发送搜索全局事件的信号
-	search_some_columns_event_signal: Signal = Signal(object)  # 向后端发送搜索部分列事件的信号
-	update_upcoming_event_signal: Signal = Signal(object)  # 向后端发送更新upcoming的信号
-	search_time_event_signal: Signal = Signal(object)  # 向后端发送搜索时间范围内事件的信号
-	backend_data_to_frontend_signal: Signal = Signal(object)  # 向前端发送后端数据的信号
-	signal_to_schedule_notice: Signal = Signal(str, str, QDateTime, str)  # 向Notice中的schedule_notice函数发送信号
-	from_upcoming_to_create_event_signal: Signal = Signal(str, str)  # 从upcoming跳转到create_event
-	refresh_upcoming_signal: Signal = Signal()  # 在切换到Upcoming时更新
+	dynamic_signal: Signal = Signal(object)  								# 可接收任意参数
+	page_change_signal: Signal = Signal(str)  								# 向 main_stack发送改变页面的信号
+	create_event_signal: Signal = Signal(object)  							# 发送创建事件的信号
+	search_signal: Signal = Signal(str)  									# 发送sidebar搜索文本框的信息
+	storage_path_signal: Signal = Signal(object) 							# 发送存储路径的信号
+	update_upcoming_event_signal: Signal = Signal(object)  					# 向后端发送更新upcoming的信号
+	delete_event_signal: Signal = Signal(object)  							# 发送删除事件的信号
+	search_all_event_signal: Signal = Signal(object)  						# 向后端发送搜索全局事件的信号
+	search_some_columns_event_signal: Signal = Signal(object)  				# 向后端发送搜索部分列事件的信号
+	search_time_event_signal: Signal = Signal(object)  						# 向后端发送搜索时间范围内事件的信号
+	backend_data_to_frontend_signal: Signal = Signal(object) 			 	# 向前端发送后端数据的信号
+	signal_to_schedule_notice: Signal = Signal(str, str, QDateTime, str)  	# 向Notice中的schedule_notice函数发送信号
+	from_upcoming_to_create_event_signal: Signal = Signal(str, str)  		# 从upcoming跳转到create_event
+	refresh_upcoming_signal: Signal = Signal()								# 在切换到Upcoming时更新
 
 	@staticmethod
 	def instance() -> "Emitter":
@@ -82,6 +83,16 @@ class Emitter(QObject):
 		log.info(f"send create event signal，事件类型为{name}，参数为{args}")
 		out = ("create_event", name, True, *args)
 		self.create_event_signal.emit(out)
+	
+	def send_delelte_event_signal(self, event_id: int,event_type: str):
+		"""
+		发送删除事件的信号
+		event_id为事件ID
+		event_type为事件类型
+		"""
+		log.info(f"send delete event signal，事件ID为{event_id}，事件类型为{event_type}")
+		out = ("delete_event", event_id, event_type)
+		self.delete_event_signal.emit(out)
 
 	# ===向后端发送请求（回传数据）===
 
