@@ -9,6 +9,7 @@ from Tray import Tray
 from FloatingWindow import FloatingWindow
 from Notice import Notice
 from Upcoming import Upcoming, FloatingButton
+from Event import BaseEvent, DDLEvent
 
 log = logging.getLogger(__name__)
 
@@ -18,6 +19,7 @@ class MainWindow(QMainWindow):
 	def __init__(self, app, width=800, height=600):
 		super().__init__()
 		self.setWindowTitle("todolist")
+		#self.main_window_calendar = None
 
 		# 获取屏幕尺寸，设置主窗口位置
 		self.resize(width, height)
@@ -74,6 +76,8 @@ class MainWindow(QMainWindow):
 		self.setup_setting_window()  # 设置界面
 		self.setup_upcoming_window()  # 日程展示窗口
 
+		self.load_event_in_calendar(self.upcoming.events)
+  
 		# 初始化通知系统
 		self.notice_system = Notice()
 		# 用于在通知时自动显示悬浮窗
@@ -309,7 +313,7 @@ class MainWindow(QMainWindow):
 
 		btn_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
 		btn_layout.addWidget(return_btn, alignment=Qt.AlignmentFlag.AlignRight)
-
+		
 		self.upcoming = Upcoming()
 		Emitter.instance().refresh_upcoming_signal.connect(partial(self.upcoming.load_more_data))
 		layout.addWidget(self.upcoming)
@@ -436,3 +440,16 @@ class MainWindow(QMainWindow):
 		# 连接悬浮窗
 		self.floating_window.exit_requested.connect(self.quit_application)
 		self.floating_window.show_main_requested.connect(self.show_main_window)
+
+	def load_event_in_calendar(self, events:list[DDLEvent]):
+		format_string = "yyyy-MM-dd HH:mm"
+		for event in events:
+			date_time = QDateTime.fromString(event.datetime, format_string)
+
+			if date_time.isValid():
+				qdate = date_time.date()
+				self.main_window_calendar.add_schedule(qdate, event)
+			else:
+				# 处理错误，例如使用默认日期
+				qdate = QDate.currentDate()
+				log.info(f"解析失败，使用当前日期: {qdate.toString()}")

@@ -1,7 +1,7 @@
 from common import *
 from Emitter import Emitter
 from functools import partial
-from Event import BaseEvent
+from Event import BaseEvent, DDLEvent
 
 log = logging.getLogger("Upcoming")
 
@@ -226,8 +226,8 @@ class Upcoming(QListWidget):
         	}
 			""")
 
-		self.events: list[BaseEvent] = []  # 存贮所有从后端得到的数据，用于储存id
-		self.events_used_to_update: tuple[BaseEvent] = tuple()  # 储存这次需要更新的至多10个数据
+		self.events: list[DDLEvent] = []  # 存贮所有从后端得到的数据，用于储存id
+		self.events_used_to_update: tuple[DDLEvent] = tuple()  # 储存这次需要更新的至多10个数据
 		self.index_of_data_label = dict()  # 储存显示日期的项的位置
 		self.loading = False  # 是否正在加载
 		self.no_more_events = False  # 是否显示全部数据
@@ -237,6 +237,7 @@ class Upcoming(QListWidget):
 
 		self.load_more_data()
 		self.verticalScrollBar().valueChanged.connect(self.check_scroll)  # 检测是否滚动到底部
+		log.info(f"共{self.event_num }条日程")
 
 	def check_scroll(self):
 		"""检查是否滚动到底部"""
@@ -298,7 +299,7 @@ class Upcoming(QListWidget):
 		self.index_of_data_label[date] = QPersistentModelIndex(self.indexFromItem(date_item))
 		self.index_of_data_label = dict(sorted(self.index_of_data_label.items()))  # 保证日期标签按升序排列，仅支持python3.7及以上
 
-	def get_data(self, data: tuple[BaseEvent] = None):
+	def get_data(self, data: tuple[DDLEvent] = None):
 		"""从后端加载数据"""
 		if data is not None and len(data) > 0:
 			log.info(f"接收数据成功，共接收 {len(data)} 条数据：\n" +
