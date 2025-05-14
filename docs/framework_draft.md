@@ -133,102 +133,101 @@ Clock则为长期打卡任务，实现重复提醒操作
 ...
 # 文件及class功能设计
 ## main：
-主文件，项目入口\
+feat:主文件，项目入口\
 实现了主窗口的创建\
 实现了信号连接即SignalConnect\
 实现了读取logging配置\
 实现了检测系统类型\
 ## Event: 
-事件日程基类，连接前后端\
-也许可以根据事件类型划分子类：
-*Task（短期日程）*，*Activity（公共活动）*,*Clocks（长期打卡）*,*DDL（截止日期）*...\
-函数接口：\
-创建事件
-EventFactory.create(事件类型，事件标题)\
-增删改事件:
-event.add_event(),event.delete_event(),event.modify_event()\
-搜索事件：
-search_all(keywords:str)(全局搜索)
-对接前端：
-recieve_signal(object)
-接受输入的元组，提取第一项表示前端命令，后面代表相应参数
-TODO:回传给前端数据
+feat:事件日程基类，连接前后端\
+根据事件类型划分子类：
+*Activity（公共活动）*,*Clocks（长期打卡）*,*DDL（截止日期）*...\
+**子类参数**：
+```python
+class DDLEvent(BaseEvent):
+	"""
+	DDL类
+	输入：标题，截止时间，具体内容，提前提醒时间，重要程度，是否完成或过期（0为未完成，1为完成）
+	"""
+	def __init__(self, title: str, datetime: str, notes: str, advance_time: str, importance: str, done: int = 0):
+		super().__init__(title)
+		self.datetime = datetime  # 格式："yyyy-MM-dd HH:mm"
+		self.notes = notes
+		self.advance_time = advance_time
+		self.importance = importance
+		self.done = done
+class ActivityEvent(BaseEvent):
+  """
+  活动类
+  输入：标题，开始时间，结束时间，具体内容，提前提醒时间，重要程度，是否完成或过期（0为未完成，1为完成）
+  """
+  def __init__(self, title: str, start_time: str, end_time: str, notes: str, advance_time: str, importance: str, done: int = 0):
+    super().__init__(title)
+    self.start_time = start_time  # 格式："yyyy-MM-dd HH:mm"
+    self.end_time = end_time
+    self.notes = notes
+    self.advance_time = advance_time
+    self.importance = importance
+    self.done = done
+```
+TODO:对重复的处理，新类型的支持
 ## Notice:
-TODO：任务栏：UI设计\
-后端对接\
-已完成：
-通知类
-保存通知信息，连接系统时间，按时发送信号给托盘和悬浮窗
+feat:通知和任务栏浮窗\
+已完成：\
+保存通知信息，连接系统时间，按时发送信号给托盘和悬浮窗\
+TODO：任务栏UI设计的Mac适配,后端对接\
 ## MainWindow: 
-主窗口类\
-存储多个主窗口样式
-包含一个侧边栏
+feat:主窗口类\
+存储多个主窗口样式，包含一个侧边栏\
 TODO：支持多种主题样式
 ## Calendar:
-日历显示类\
-月分级为主要窗口
-使用Qt自带QCalendarWidget组件实现了以月单位的日历，左键单击后到专门的添加日程页面\
-TODO： 日，周，年的处理。 日历中快速添加日程，和创建/修改日程窗口连接。
-“联动操作”，点击月分级中的日方块，跳转到日窗口之类的人性化快捷操作。支持基本的右键添加操作菜单。展示出每日的日程安排\
+feat:日历显示类\
+月分级为主要窗口，使用Qt自带QCalendarWidget组件实现了以月单位的日历\
+TODO：“联动操作”，左键单击月分级中的日方块后到专门的添加日程页面，展示出每日的日程安排（此处或许可以复用Upcoming）。日、周、年的处理。日历中快速添加日程和创建。修改日程窗口连接。支持基本的右键添加操作菜单。\
+Try:尝试通过自己构建万年历实现界面自定义优化
 ## CreateEventWindow（Schedule）：
-有Schedule类，创建/修改日程窗口\
- TODO：对其他事件类型的支持
- DDL类基本实现:\
-通过save_text向后端发送路径、日期、主题、内容，TODO:通过load_text加载内容\
-和Event类实现前后端对接\
-实现了对接后端创建DDL事件 
+feat:有Schedule类，创建/修改日程窗口\
+DDL类基本实现：通过save_text向后端发送路径、日期、主题、内容\
+TODO:通过load_text加载已有事件内容，和Event类实现前后端对接，实现了对接后端创建DDL事件，对其他事件类型的支持（此处**务必**和后端做好对接）。
 ## Emitter：
-用于发送信号，不同信号用不同的函数发射\
+feat:用于统一发送信号，进行前后端对接\
 **统一实例化**：
 为了便于信号发射接收的统一，设置单独实例化
 ，每次调用emitter时候，只需要```Emitter.instance().函数名.connect/emit()```就可以了，**是否有必要多次实例化有待讨论**\
-其中已经将下述信号封装成函数，可以直接调用函数传入指定创建参数即可，无需手动输入命令\
- send_dynamic_signal发射**元组**\
- send_create_event发射**元组(object)**，第一项为"create_event"表示**命令**，后续为创建event参数\
- send_search_all_event发射**元组(object)**，第一项为"search_all"表示**命令**，后续为搜索关键词tuple[str]\
- send_search_columns_event发射**元组(object)**，第一项为"search_columns"表示**命令**，后续为制指定搜索列名tuple[str]+搜索关键词tuple[str]\
- update_upcoming_event发射**元组(object)**，第一项为"update_upcoming"表示**命令**，后续为更新upcoming参数（start_pos:[int], event_num:[int]）表示当前更新到哪个位置，需要获取多少事件\
- search_time_event发射**元组(object)**，第一项为"search_time"表示**命令**，后续为搜索时间参数（start_time:[str], end_time:[str]）表示起止时间\
- 其余前端窗口信号格式均为若干个纯字符串
+具体信号见Emiiter.py
 ## CreateDailyWindow：
+feat:记录日记，实现markdown渲染\
 TODO:创建日记窗口：\
-记录日记，实现markdown渲染
 ## FindWindow：
-TODO:检索结果
-未来实现和upcoming实现代码复用
+feat:搜索窗口\
+在主窗口中实现折叠窗口\
+TODO:检索结果和upcoming实现代码复用
 ## Settings:
-TODO:设置窗口\
-具体类别：
-本地存储地址设置
-通知设置
+feat:设置窗口\
+具体类别：\
+本地存储地址设置,通知设置\
 已完成：
-设置保存本地存储地址设置
-通知方式自定义(仅显示)
-音量调节(仅显示)
-背景颜色(仅显示)
+设置保存,本地存储地址设置\
+TODO:通知方式自定义(仅显示),音量调节(仅显示),背景颜色(仅显示)
 ## SiderBar:
-侧边栏类\
-实现多种功能切换,提供搜索栏入口\
+feat:侧边栏类,实现多种功能切换\
 要想再向sidebar中添加新按钮，只需在存储按钮名字的元组中添加新页面的名字，即可创建好一个向MainWindow发射的新信号,接下来只需要在MainWindow中创建对应页面即可
 ## Upcoming:
-即将到来的日程：
-TODO:点击按钮快速修改日程，maybe可以将同一日期的日程合并在一个时间框下，可以通过拖拽来修改时间\
+feat:即将到来的日程\
+同一日期的日程合并在一个时间框下\
+TODO:点击“眼睛”按钮快速修改日程(跳转到Schedule)，m可以通过拖拽来修改时间\
 按照时间轴排序，与后端连接
 ## common:
-打包导入的库，避免每次import大量库，直接
+feat:打包导入的库，避免每次import大量库，直接
 ```from common import *```即可
 ## SignalConnect:
-初始化前后端连接
+feat:初始化Emiiter和Event中参数连接
 ## Tray
-托盘类\
-实现系统托盘，程序初始化会在系统任务栏产生一个图标
-通过右键图标能够回到主页面，显示悬浮窗，以及彻底退出应用
-同时接受消息并形成系统通知
-
+feat:托盘类\
+实现系统托盘，程序初始化会在系统任务栏产生一个图标,通过右键图标能够回到主页面，显示悬浮窗，以及彻底退出应用,同时接受消息并形成系统通知
 ## FloatingWindow
-悬浮窗类\
-最小化主窗口会产生悬浮窗，通过悬浮窗按钮能够
-回到主页面，隐藏悬浮窗，彻底退出应用
+feat:悬浮窗类\
+最小化主窗口会产生悬浮窗，通过悬浮窗按钮能够回到主页面，隐藏悬浮窗，彻底退出应用
 消息通知也会显示在悬浮窗上
 
 ...
