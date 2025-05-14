@@ -165,21 +165,22 @@ class EventFactory:
 		event_cls = cls.registry[event_type]
 		try:
 			n_event: BaseEvent = event_cls(*args)
-			log.info(f"create new event in {n_event.table_name()} table successfully")
 			if add is True:
 				n_event.add_event()
 				if n_event.table_name() == "ddlevents":
+					now_time = QDateTime.currentDateTime()
+					now_time = now_time.toString("yyyy-MM-dd HH:mm")
 					if latest_ddlevent is None:
 						log.info("没有最新的DDL事件，添加新事件")
 						latest_ddlevent = n_event
 						Emitter.instance().send_notice_signal(n_event)
-					elif n_event.datetime < latest_ddlevent.datetime:
+					elif now_time < n_event.datetime < latest_ddlevent.datetime:
 						log.info("添加新事件比最新事件更早，更新最新事件")
 						latest_ddlevent = n_event
 						Emitter.instance().send_notice_signal(n_event)
 					else:
-						log.info("添加新事件比最新事件更晚，不更新最新事件")
-				log.info(f"add event {n_event.title} to {n_event.table_name()} table successfully")
+						log.info("添加新事件比最新事件更晚或已经经过，不更新最新事件")
+					log.info(f"add event {n_event.title} to {n_event.table_name()} table successfully")
 			return n_event
 		except TypeError as e:
 			log.error(f"创建event失败，创建使用参数为{args}，Error:{e}")
@@ -239,17 +240,23 @@ def request_signal(recieve_data: tuple) -> None:
 		raise NotImplementedError("时间范围搜索功能尚未实现")
 	elif signal_name == "search_some_columns":
 		raise NotImplementedError("部分列搜索功能尚未实现")
+	elif signal_name == "latest_event":
+		now_time = recieve_data[1][0]
+		result = get_latest_ddlevent(now_time)
+		Emitter.instance().send_notice_signal((result,))
+		return
 	else:
 		log.error(f"接收信号失败，未知信号类型{signal_name}，参数为{recieve_data}")
 	# 发送结果给回调函数
 	Emitter.instance().send_backend_data_to_frontend_signal(result)
 
-def get_latest_ddlevent() -> DDLEvent:
+def get_latest_ddlevent(now_time:str) -> DDLEvent:
 	"""
-	获取最新的ddlevent
+	获取最新的ddlevent，其 advance_time 不早于 now_time
 	"""
 	global latest_ddlevent
-	cursor.execute("SELECT * FROM ddlevents ORDER BY datetime DESC LIMIT 1 WHERE done = 0")
+	cursor.execute("SELECT * FROM ddlevents WHERE advance_time > ? ORDER BY advance_time DESC LIMIT 1",
+        			(now_time,))
 	row = cursor.fetchone()
 	if row is None:
 		log.info("没有找到任何未来的DDL事件")

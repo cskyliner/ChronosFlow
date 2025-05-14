@@ -11,19 +11,20 @@ class Emitter(QObject):
 	_instance = None  # 唯一实例
 	dynamic_signal: Signal = Signal(object)  								# 可接收任意参数
 	page_change_signal: Signal = Signal(str)  								# 向 main_stack发送改变页面的信号
+	signal_to_schedule_notice: Signal = Signal(str, str, QDateTime, str)  	# 向Notice中的schedule_notice函数发送信号
+	from_upcoming_to_create_event_signal: Signal = Signal(str, str)  		# 从upcoming跳转到create_event
+	refresh_upcoming_signal: Signal = Signal()								# 在切换到Upcoming时更新
 	create_event_signal: Signal = Signal(object)  							# 发送创建事件的信号
 	search_signal: Signal = Signal(str)  									# 发送sidebar搜索文本框的信息
 	storage_path_signal: Signal = Signal(object) 							# 发送存储路径的信号
-	update_upcoming_event_signal: Signal = Signal(object)  					# 向后端发送更新upcoming的信号
+	update_upcoming_event_signal: Signal = Signal(object)  					# 向后端发送更新upcoming的回调信号
 	delete_event_signal: Signal = Signal(object)  							# 发送删除事件的信号
 	search_all_event_signal: Signal = Signal(object)  						# 向后端发送搜索全局事件的信号
 	search_some_columns_event_signal: Signal = Signal(object)  				# 向后端发送搜索部分列事件的信号
 	search_time_event_signal: Signal = Signal(object)  						# 向后端发送搜索时间范围内事件的信号
 	backend_data_to_frontend_signal: Signal = Signal(object) 			 	# 向前端发送后端数据的信号
 	notice_signal: Signal = Signal(object)  								# 向通知栏发送最新数据
-	signal_to_schedule_notice: Signal = Signal(str, str, QDateTime, str)  	# 向Notice中的schedule_notice函数发送信号
-	from_upcoming_to_create_event_signal: Signal = Signal(str, str)  		# 从upcoming跳转到create_event
-	refresh_upcoming_signal: Signal = Signal()								# 在切换到Upcoming时更新
+	latest_event_signal_signal: Signal = Signal(object)						# 处理前端通知更新最新数据
 
 	@staticmethod
 	def instance() -> "Emitter":
@@ -100,7 +101,7 @@ class Emitter(QObject):
 		out = ("delete_event", event_id, event_type)
 		self.delete_event_signal.emit(out)
 
-	# ===向后端发送请求（回传数据）===
+	# ===向后端发送请求（回传数据），回调信号===
 
 	def request_search_all_event_signal(self, keyword: tuple[str]):
 		"""
@@ -135,3 +136,12 @@ class Emitter(QObject):
 		log.info(f"request search some columns event，搜索列为{columns}，关键字为{keyword}")
 		out = ("search_some_columns", (columns, keyword))
 		self.search_some_columns_event_signal.emit(out)
+
+	def request_latest_event_signal(self, now_time: QDateTime):
+		"""
+		向后发送需要更新最新的事件
+		"""
+		formatted_time = now_time.toString("yyyy-MM-dd HH:mm")
+		log.info(f"request latest event，当前时间为{formatted_time}")
+		out = ("latest_event", formatted_time)
+		self.latest_event_signal_signal.emit(out)
