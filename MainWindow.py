@@ -19,7 +19,7 @@ class MainWindow(QMainWindow):
 	def __init__(self, app, width=800, height=600):
 		super().__init__()
 		self.setWindowTitle("todolist")
-		#self.main_window_calendar = None
+		# self.main_window_calendar = None
 
 		# 获取屏幕尺寸，设置主窗口位置
 		self.resize(width, height)
@@ -44,19 +44,19 @@ class MainWindow(QMainWindow):
 		self.sidebar.setMaximumWidth(230)  # 设置初始宽度为230
 		self.main_layout.addWidget(self.sidebar)
 		self.sidebar_visible = True  # 初始化侧边栏状态
-		self.setup_animation()
+		self.setup_sidebar_animation()
 
 		# 主窗口（设计为堆叠窗口，有多个界面）
 		self.main_stack = QStackedWidget()
-		#TODO:背景添加
-		#self.main_stack.setStyleSheet("""
-    	#QStackedWidget {
-        #	background-image: url("地址");  /* 图片路径 */
-        #	background-position: center;    /* 居中 */
-        #	background-repeat: no-repeat;   /* 不重复 */
-        #	background-size: contain;       /* 保持比例 */
-    	#}
-    	#""")
+		# TODO:背景添加
+		# self.main_stack.setStyleSheet("""
+		# QStackedWidget {
+		#	background-image: url("地址");  /* 图片路径 */
+		#	background-position: center;    /* 居中 */
+		#	background-repeat: no-repeat;   /* 不重复 */
+		#	background-size: contain;       /* 保持比例 */
+		# }
+		# """)
 		self.main_layout.addWidget(self.main_stack)
 
 		# 连接sidebar的信号
@@ -77,7 +77,7 @@ class MainWindow(QMainWindow):
 		self.setup_upcoming_window()  # 日程展示窗口
 
 		self.load_event_in_calendar(self.upcoming.events)
-  
+
 		# 初始化通知系统
 		self.notice_system = Notice()
 		# 用于在通知时自动显示悬浮窗
@@ -105,6 +105,7 @@ class MainWindow(QMainWindow):
 		main_window_layout.setContentsMargins(20, 5, 20, 20)
 		self.main_window.setLayout(main_window_layout)
 
+		upper_layout=QHBoxLayout()
 		# 添加'<'按钮
 		sidebar_btn = QPushButton("<")
 		sidebar_btn.setStyleSheet("""
@@ -127,14 +128,24 @@ class MainWindow(QMainWindow):
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 		main_window_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
 
+		middle_layout=QHBoxLayout()
 		# 创建日历界面
 		self.main_window_calendar = Calendar()
 		self.main_window_calendar.setGridVisible(False)
 		self.main_window_calendar.clicked.connect(
 			lambda date: self.navigate_to("Schedule", self.main_stack, date))  # 点击日历时跳转到 schedule
-		main_window_layout.addWidget(self.main_window_calendar)
+		# 右侧搜索栏
+		self.search_column = QListWidget(self)
+		self.search_column.setMaximumWidth(0)
+		self.main_layout.addWidget(self.search_column)
+		self.search_column_visible = False
+		self.setup_search_column_animation()
 
-		self.add_page(self.main_stack, self.main_window, "Calendar")  # main_window是日历，故名为calendar
+		middle_layout.addWidget(self.main_window_calendar)
+		middle_layout.addWidget(self.search_column)
+		main_window_layout.addLayout(middle_layout)
+
+		self.add_page(self.main_stack, self.main_window, "Calendar")  # main_window是日历，故名为Calendar
 
 	def setup_create_event_window(self):
 		"""
@@ -313,7 +324,7 @@ class MainWindow(QMainWindow):
 
 		btn_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
 		btn_layout.addWidget(return_btn, alignment=Qt.AlignmentFlag.AlignRight)
-		
+
 		self.upcoming = Upcoming()
 		Emitter.instance().refresh_upcoming_signal.connect(partial(self.upcoming.load_more_data))
 		layout.addWidget(self.upcoming)
@@ -348,18 +359,33 @@ class MainWindow(QMainWindow):
 		else:
 			raise RuntimeError(f"错误：未知页面 {name}")
 
-	def setup_animation(self) -> None:
-		'''
-		侧边栏展开动画设置
-		'''
+	def setup_search_column_animation(self) -> None:
+		"""搜索结果栏展开动画设置"""
+		self.animations["search_column"] = QPropertyAnimation(self.search_column, b"maximumWidth")
+		self.animations["search_column"].setDuration(300)
+		self.animations["search_column"].setEasingCurve(QEasingCurve.Type.InOutQuad)
+
+	def toggle_search_column(self):
+		"""处理search_column的变化TODO:调用"""
+		self.search_column_visible=not self.search_column_visible
+
+		if self.search_column_visible:
+			self.animations["search_column"].setStartValue(0)
+			self.animations["search_column"].setEndValue(230)
+		else:
+			self.animations["search_column"].setStartValue(230)
+			self.animations["search_column"].setEndValue(0)
+
+		self.animations["search_column"].start()
+
+	def setup_sidebar_animation(self) -> None:
+		"""侧边栏展开动画设置"""
 		self.animations["sidebar"] = QPropertyAnimation(self.sidebar, b"maximumWidth")
 		self.animations["sidebar"].setDuration(300)
 		self.animations["sidebar"].setEasingCurve(QEasingCurve.Type.InOutQuad)
 
 	def toggle_sidebar(self, btn) -> None:
-		'''
-		处理sidebar的变化
-		'''
+		"""处理sidebar的变化"""
 		self.sidebar_visible = not self.sidebar_visible
 
 		if self.sidebar_visible:
@@ -441,7 +467,7 @@ class MainWindow(QMainWindow):
 		self.floating_window.exit_requested.connect(self.quit_application)
 		self.floating_window.show_main_requested.connect(self.show_main_window)
 
-	def load_event_in_calendar(self, events:list[DDLEvent]):
+	def load_event_in_calendar(self, events: list[DDLEvent]):
 		format_string = "yyyy-MM-dd HH:mm"
 		for event in events:
 			date_time = QDateTime.fromString(event.datetime, format_string)
