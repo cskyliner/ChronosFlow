@@ -354,6 +354,5 @@ class Upcoming(QListWidget):
 		if self.no_more_events:
 			log.info("没有更多数据了，停止加载……")
 			return
-
 		for event in self.events_used_to_update:
 			self.add_one_item(event)

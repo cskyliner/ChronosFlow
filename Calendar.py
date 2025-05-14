@@ -4,8 +4,13 @@ class CalendarDelegate(QStyledItemDelegate):
 	def __init__(self, calendar=None, parent=None):
 		super().__init__(parent)
 		self.calendar = calendar
-		self.base_font = QFont("Microsoft YaHei", 9)
-		self.date_font = QFont("Microsoft YaHei", 10, QFont.Bold)  # 日期字体
+		self.base_font = QFont()
+		self.base_font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
+		self.base_font.setPointSize(12)
+		self.date_font = QFont()  # 日期字体
+		self.date_font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
+		self.date_font.setBold(True)
+		self.date_font.setPointSize(14)
 		self.font_metrics = QFontMetrics(self.base_font)
 		self.date_font_metrics = QFontMetrics(self.date_font)
 		
