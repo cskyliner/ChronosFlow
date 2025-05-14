@@ -111,7 +111,7 @@ class Schedule(QWidget):
                     border: 1px solid #d0d0d0;
                 	border-radius: 4px;
                     padding: 25px;
-                    qproperty-alignment: 'AlignCenter';
+                    text-align: center;
                 }
                 QPushButton:hover {
                     background-color: palette(midlight); /*轻微高亮*/
@@ -152,6 +152,7 @@ class Schedule(QWidget):
 		deadline = self.deadline_edit.dateTime().toString("yyyy-MM-dd HH:mm")
 		reminder = self.reminder_edit.dateTime().toString("yyyy-MM-dd HH:mm")
 		notify_time = self.reminder_edit.dateTime()
+		log.info(f"notify_time是{notify_time}")
 		"""
 		time = QTime(int(self.datetime[0]), int(self.datetime[1]))
 		datetime = QDateTime(self.standard_date, time)
@@ -162,9 +163,9 @@ class Schedule(QWidget):
 		if theme and content and deadline and reminder:
 			# 这里可以添加保存事件的逻辑
 			log.info(
-			f"创建新事件，标题：{theme}, 截止时间：{deadline}, 内容：{content}, 提前提醒时间：{reminder}, 重要程度：Great"),
+				f"创建新事件，标题：{theme}, 截止时间：{deadline}, 内容：{content}, 提前提醒时间：{reminder}, 重要程度：Great"),
 			# DDL参数(标题，截止时间，具体内容，提前提醒时间，重要程度)
-			Emitter.instance().send_create_event_signal("DDL", theme, deadline,content, reminder, "Great")
+			Emitter.instance().send_create_event_signal("DDL", theme, deadline, content, reminder, "Great")
 			Emitter.instance().send_signal_to_schedule_notice(theme, content, notify_time)
 			QMessageBox.information(self, "保存成功",
 									f"主题: {theme}\n内容: {content}\n截止时间: {deadline}\n提醒时间: {reminder}")

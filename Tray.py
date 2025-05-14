@@ -1,8 +1,10 @@
 # ---------------------- 系统托盘类 ----------------------
 from common import *
+
 if sys.platform == 'darwin':
-    import pystray
+	import pystray
 from PIL import Image
+
 
 class Tray(QObject):
 	show_main = Signal()
@@ -18,7 +20,6 @@ class Tray(QObject):
 		self.notification_widgets = []
 		self._init_tray()
 		self._connect_signals()
-		
 
 	def _init_tray(self):
 		"""安全初始化托盘"""
@@ -38,7 +39,6 @@ class Tray(QObject):
 		self._create_menu()
 		self.tray.activated.connect(self._on_tray_activated)
 		self.tray.show()
-
 
 	def _init_macos_tray(self):
 		"""macOS托盘实现"""
@@ -126,6 +126,7 @@ class Tray(QObject):
 	def _connect_signals(self):
 		"""连接信号与槽"""
 		self.notification_received.connect(self.show_notification)
+
 	def _on_tray_activated(self, reason):
-		if reason == QSystemTrayIcon.Trigger: 
+		if reason == QSystemTrayIcon.Trigger:
 			self.activated_response.emit()

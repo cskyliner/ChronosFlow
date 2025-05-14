@@ -2,13 +2,14 @@ from common import *
 from Emitter import Emitter
 from functools import partial
 from Event import BaseEvent
+
 log = logging.getLogger("Upcoming")
 
 
 class DeleteButton(QPushButton):
-    def __init__(self, parent=None):
-        super().__init__("🗑", parent)  # 使用垃圾桶emoji
-        self.setStyleSheet("""
+	def __init__(self, parent=None):
+		super().__init__("🗑", parent)  # 使用垃圾桶emoji
+		self.setStyleSheet("""
             QPushButton {
                 background-color: rgba(255, 80, 80, 0.1);  /* 半透明红色背景 */
                 border: 1px solid rgba(255, 80, 80, 0.3);
@@ -20,8 +21,7 @@ class DeleteButton(QPushButton):
                 color: #FF5050;
                 font-size: 24px;
                 font-weight: 500;
-                qproperty-alignment: AlignCenter;
-                transition: all 0.2s ease-out;
+                text-align: center;
             }
             QPushButton:hover {
                 background-color: rgba(255, 80, 80, 0.15);
@@ -36,25 +36,28 @@ class DeleteButton(QPushButton):
                 padding-top: 2px;
             }
         """)
-        self.setToolTip("删除")
-        self.setCursor(Qt.PointingHandCursor)
-        self.setFixedSize(40, 40)
-        
-        # 红色阴影效果
-        shadow = QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(8)
-        shadow.setColor(QColor(255, 80, 80, 60))
-        shadow.setOffset(0, 2)
-        self.setGraphicsEffect(shadow)
-        
+		self.setToolTip("删除")
+		self.setCursor(Qt.PointingHandCursor)
+		self.setFixedSize(40, 40)
+
+		# 红色阴影效果
+		shadow = QGraphicsDropShadowEffect()
+		shadow.setBlurRadius(8)
+		shadow.setColor(QColor(255, 80, 80, 60))
+		shadow.setOffset(0, 2)
+		self.setGraphicsEffect(shadow)
+
+
 class EyeButton(QPushButton):
 	"""单例眼睛按钮"""
 	_instance = None
+
 	@staticmethod
 	def instance() -> "EyeButton":
 		if EyeButton._instance is None:
 			EyeButton._instance = EyeButton()
 		return EyeButton._instance
+
 	def __init__(self, parent=None):
 		super().__init__("👁️", parent)
 		self.setStyleSheet("""
@@ -78,15 +81,12 @@ class EyeButton(QPushButton):
 		""")
 		self.setToolTip("查看")  # 增加提示文本
 		self.setCursor(Qt.PointingHandCursor)  # 手型光标
-  
-class AddButton(QPushButton):
-	_instance = None
-	@staticmethod
-	def instance() -> "AddButton":
-		if AddButton._instance is None:
-			AddButton._instance = AddButton()
-		return AddButton._instance
-	def __init__(self, parent = None):
+
+
+class FloatingButton(QPushButton):
+	"""悬浮按钮"""
+
+	def __init__(self, parent=None):
 		super().__init__("+", parent)
 		self.setStyleSheet("""
 			QPushButton {
@@ -99,8 +99,8 @@ class AddButton(QPushButton):
 				color: #07C160;
 				font-size: 24px;
 				font-weight: 500;
-				qproperty-alignment: AlignCenter;
-				transition: all 0.2s ease-out;           /* CSS过渡动画 */
+				text-align: center;
+				
 			}
 			QPushButton:hover {
 				background-color: rgba(7, 193, 96, 0.15);
@@ -118,12 +118,35 @@ class AddButton(QPushButton):
 		self.setToolTip("添加")
 		self.setCursor(Qt.PointingHandCursor)
 		self.setFixedSize(40, 40)  # 放大按钮本身
-		# 添加图标动画效果 
-		self.setGraphicsEffect(QGraphicsDropShadowEffect(
-		blurRadius=8, 
-		color=QColor(7, 193, 96, 60),
-		offset=QPointF(0, 2)
-		))
+		# 添加图标动画效果
+		self.setGraphicsEffect(
+			QGraphicsDropShadowEffect(blurRadius=8, color=QColor(7, 193, 96, 60), offset=QPointF(0, 2)))
+
+		# 设置相对位置参数（百分比或固定偏移量）
+		self.relative_position = (0.94, 0.9)  # (水平位置比例, 垂直位置比例)
+		# 监听父控件resize事件
+		if parent:
+			parent.installEventFilter(self)
+
+	def update_position(self):
+		"""根据父控件大小更新位置"""
+		if self.parent():
+			parent_rect = self.parent().rect()
+			x = int(parent_rect.width() * self.relative_position[0] - self.width())
+			y = int(parent_rect.height() * self.relative_position[1] - self.height())
+			self.move(x, y)
+
+	def eventFilter(self, obj, event):
+		"""监听父控件resize事件"""
+		if obj == self.parent() and event.type() == QEvent.Resize:
+			self.update_position()
+		return super().eventFilter(obj, event)
+
+	def showEvent(self, event):
+		"""初始显示时定位"""
+		self.update_position()
+		super().showEvent(event)
+
 
 class CustomListItem(QWidget):
 	"""一条日程"""
@@ -131,23 +154,24 @@ class CustomListItem(QWidget):
 	def __init__(self, theme, parent=None):
 		super().__init__(parent)
 		self.setAttribute(Qt.WA_StyledBackground, True)
-		self.setStyleSheet(f"""
-					CustomListItem {{
-						background-color: transparent;
-						border-radius: 4px;
-					}}
-					CustomListItem:hover {{
-						background-color: palette(midlight); /*轻微高亮*/
-					}}
-				""")
+
+		self.setStyleSheet("""
+		            CustomListItem {
+		                background-color: transparent;
+		                border-radius: 4px;
+		            }
+		            CustomListItem:hover {
+		                background-color: palette(midlight); /*轻微高亮*/
+		            }
+		        """)
 
 		# 设置消息布局
 		layout = QHBoxLayout(self)
 		layout.setContentsMargins(5, 2, 5, 2)  # 边距：左、上、右、下
 
-		# 左侧为是否完成的复选框 TODO:打勾后发信号
+		# 是否完成的复选框
 		self.finish_checkbox = QCheckBox()
-		self.finish_checkbox.toggled.connect(partial(self.this_is_finished))
+		self.finish_checkbox.toggled.connect(partial(self.this_one_is_finished))
 		layout.addWidget(self.finish_checkbox)
 
 		# 字体
@@ -167,47 +191,72 @@ class CustomListItem(QWidget):
 		layout.addItem(spacer)
 
 		self.view_schedule_button = EyeButton()
-		#self.view_schedule_button.clicked.connect() TODO: 跳转到之前的日程记录页面,需要补充函数访问后端数据
-		#self.delete_button.clicked.connect() TODO: 需要补充函数删除这个日程对应的后端数据(前端消失我之后再写)
+		# self.view_schedule_button.clicked.connect() TODO: 跳转到之前的日程记录页面,需要补充函数访问后端数据
+		# self.delete_button.clicked.connect() TODO: 需要补充函数删除这个日程对应的后端数据(前端消失我之后再写)
 		self.delete_button = DeleteButton()
-		# 右侧为event，是一个按钮，只显示+，在点击后会跳转到Schedule页面，显示详细内容 TODO：跳转
-		self.add_schedule_button = AddButton.instance()
-		self.add_schedule_button.setFont(font1)
-		self.add_schedule_button.clicked.connect(
-			partial(Emitter.instance().send_page_change_signal, name="Schedule"))
-		self.add_schedule_button.clicked.connect(
-			self.send_message)  # TODO:传递具体信息（哈希依据），以便跳转到相应的CreateEvent界面；如何将该信息传递给CreateEvent界面
+
 		self.setLayout(layout)
 		layout.addWidget(self.view_schedule_button)
 		layout.addWidget(self.delete_button)
-		#layout.addWidget(self.add_schedule_button)
 
-	def this_is_finished(self):
-		# TODO:通知后端
+	def this_one_is_finished(self):
+		"""打勾后发信号"""
+		# TODO
 		pass
 
-	def send_message(self):
-		pass
+
 
 class Upcoming(QListWidget):
 	"""
 	容纳多个SingleUpcoming，有滚动等功能
 	"""
+
 	def __init__(self, parent=None):
 		super().__init__(parent)
-		self.setSelectionMode(QListWidget.NoSelection)  # 禁用选中高亮
+		self.setDragDropMode(QListWidget.InternalMove)  # 允许内部拖动重排
+		self.setDefaultDropAction(Qt.MoveAction)  # 设置默认动作为移动而非复制
+		self.setSelectionMode(QListWidget.SingleSelection)  # 一次只能选择列表中的一个项目
+		self.model().rowsMoved.connect(self.show_current_order_to_backend)  # 将顺序改变加入日志，并通知后端
 
-		self.events:list[BaseEvent] = []  		# 临时写法，存贮从后端得到的数据TODO:不一定要用列表，要看后端传入哪些信息
-		self.loading = False  					# 是否正在加载
-		self.no_more_events = False				# 是否显示全部数据
-		self.event_num = 0 						# 记录当前个数，传给后端提取数据
-		self.page_num = 10 						# 每页显示的事件数
-		self.loading_item = None				# 加载标签
+		palette = self.palette()
+		self.setStyleSheet(f"""
+		    QListWidget::item:selected {{
+		        background: transparent;
+		        color: {palette.text().color().name()};
+		        border: none;
+		    }}
+		""")
+
+		self.events: list[BaseEvent] = []  # 存贮所有从后端得到的数据，用于储存id
+		self.events_used_to_update: tuple[BaseEvent] = tuple()  # 储存这次需要更新的至多10个数据
+		self.index_of_data_label = dict()  # 储存显示日期的项的位置
+		self.loading = False  # 是否正在加载
+		self.no_more_events = False  # 是否显示全部数据
+		self.event_num = 0  # 记录当前个数，传给后端提取数据
+		self.page_num = 10  # 每页显示的事件数
+		self.loading_item = None  # 加载标签
+
+		# 添加今天、明天两个标签
+		font = QFont()
+		font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
+		font.setPointSize(12)
+		today = QDate.currentDate()
+		tomorrow = today.addDays(1)
+		today_date_item = QListWidgetItem("今天")
+		tomorrow_date_item = QListWidgetItem("\n明天")
+		today_date_item.setFont(font)
+		self.addItem(today_date_item)
+		tomorrow_date_item.setFont(font)
+		self.addItem(tomorrow_date_item)
+		self.index_of_data_label[today.toString("yyyy-MM-dd")] = QPersistentModelIndex(
+			self.indexFromItem(today_date_item))
+		self.index_of_data_label[tomorrow.toString("yyyy-MM-dd")] = QPersistentModelIndex(
+			self.indexFromItem(tomorrow_date_item))
+
 		self.load_more_data()
-
 		self.verticalScrollBar().valueChanged.connect(self.check_scroll)  # 检测是否滚动到底部
 
-		Emitter.instance().refresh_upcoming_signal.connect(self.refresh_upcoming_page)
+		#Emitter.instance().refresh_upcoming_signal.connect(self.refresh_upcoming_page)
 	def check_scroll(self):
 		"""检查是否滚动到底部"""
 		if self.verticalScrollBar().value() == self.verticalScrollBar().maximum():
@@ -221,18 +270,49 @@ class Upcoming(QListWidget):
 			else:
 				log.error("未知错误，无法加载数据")
 
+	def show_current_order_to_backend(self):
+		"""在Upcoming中顺序改变时显示在log中，并通知后端"""
+		# TODO：通知后端：移动的event的日期改变
+		log.info("Upcoming顺序改变")
+
 	def show_loading_label(self):
 		self.loading_item = QListWidgetItem("Loading……")
 		self.loading_item.setTextAlignment(Qt.AlignCenter)
 		self.addItem(self.loading_item)
-		# self.get_data()  # 同时向后端请求数据TODO:必须保证在上一行设定时间内完成,否则会在load_more_data中报错;也可以设计成load_more_data先挂起，加载完成之后发信号？
 
-	def get_data(self,data:tuple[BaseEvent]=None):
-		"""从后端加载数据"""# TODO:从后端获取10个;以下为临时写法
+	def add_date_label(self, date):
+		"""
+		在所有同一天的日程前加上日期
+		仅支持python3.7及以上
+		"""
+		font = QFont()
+		font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
+		font.setPointSize(12)
+		date = date[:10]
+		tmp_date = date.split('-')
+		date_item = QListWidgetItem(f"\n{tmp_date[0]}年{int(tmp_date[1])}月{int(tmp_date[2])}日")
+		date_item.setFont(font)
+		# 寻找插入位置（第一个比自身日期大的日期）
+		find = False
+		for key in self.index_of_data_label.keys():
+			if key > date:
+				find = True
+				record = key
+				break
+		if find:
+			self.insertItem(self.index_of_data_label[record].row(), date_item)
+		else:
+			self.addItem(date_item)
+		self.index_of_data_label[date] = QPersistentModelIndex(self.indexFromItem(date_item))
+		self.index_of_data_label = dict(sorted(self.index_of_data_label.items()))  # 保证日期标签按升序排列，仅支持python3.7及以上
+
+	def get_data(self, data: tuple[BaseEvent] = None):
+		"""从后端加载数据"""
 		if data is not None and len(data) > 0:
-			log.info(f"接收数据成功，共接收 {len(data)} 条数据：\n" + 
-		 "\n".join(f"- {event.title} @ {event.datetime}" for event in data))
+			log.info(f"接收数据成功，共接收 {len(data)} 条数据：\n" +
+					 "\n".join(f"- {event.title} @ {event.datetime}" for event in data))
 			self.events.extend(data)
+			self.events_used_to_update = data
 			self.event_num += len(data)
 		else:
 			log.info("接受数据为空，无更多数据")
@@ -242,6 +322,21 @@ class Upcoming(QListWidget):
 		if hasattr(self, "loading_item"):
 			self.takeItem(self.row(self.loading_item))
 			del self.loading_item
+
+	def add_one_item(self, event):
+		"""
+		将每条的日期和已有的日期比较，如果日期已有，插入到这一日期标签的下面；如果没有，新建日期标签
+		self.index_of_data_label的形式为event.datetime[:10],仅有年月日
+		"""
+		custom_widget = CustomListItem(f"{event.title}")
+		item = QListWidgetItem()
+		item.setSizeHint(QSize(custom_widget.sizeHint().width(), 80))  # 设置合适的大小
+		# 如果没有对应日期的标签，就加上
+		if not event.datetime[:10] in self.index_of_data_label:
+			self.add_date_label(event.datetime)
+
+		self.insertItem(self.index_of_data_label[event.datetime[:10]].row() + 1, item)
+		self.setItemWidget(item, custom_widget)
 
 	def load_more_data(self):
 		"""将数据添加到self"""
@@ -258,35 +353,5 @@ class Upcoming(QListWidget):
 		if self.no_more_events:
 			log.info("没有更多数据了，停止加载……")
 			return
-		for event in self.events:
-			custom_widget = CustomListItem(f"{event.title}")
-			item = QListWidgetItem()
-			item.setSizeHint(QSize(custom_widget.sizeHint().width(), 80))  # 设置合适的大小
-			self.addItem(item)
-			self.setItemWidget(item, custom_widget)
-
-		#添加日程按钮
-		# 特别加大最后一项的视觉权重，引导用户点击添加
-		item = QListWidgetItem()
-		#item.setSizeHint(custom_widget.sizeHint())
-		#item.setSizeHint(QSize(custom_widget.sizeHint().width(), 60))  # 高度设为60像素
-		add_schedule_widget = QWidget()
-		layout = QHBoxLayout()
-		layout.setContentsMargins(15, 15, 15, 15)  # 边距：左、上、右、下
-		layout.addStretch()
-
-		layout.addWidget(AddButton.instance())
-		add_schedule_widget.setLayout(layout)
-		item.setSizeHint(QSize(add_schedule_widget.sizeHint().width(), 100))
-		self.addItem(item)
-		self.setItemWidget(item, add_schedule_widget)
-
-	def refresh_upcoming_page(self, title):
-			custom_widget = CustomListItem(f"{title}")
-			item = QListWidgetItem()
-			item.setSizeHint(QSize(custom_widget.sizeHint().width(), 80))  # 设置合适的大小
-			total_items = self.count()  # 获取当前总项数
-			insert_position = max(0, total_items - 1)  # 计算倒数第二的位置（防止越界）
-			self.insertItem(insert_position, item)
-			self.setItemWidget(item, custom_widget)
-
+		for event in self.events_used_to_update:
+			self.add_one_item(event)
