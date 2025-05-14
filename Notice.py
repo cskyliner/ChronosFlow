@@ -9,7 +9,6 @@ class Notice(QObject):
 	notify_to_floating_window = Signal(str, str, str)  # 向悬浮窗发送通知信号(标题，内容，颜色代码)
 	notify_to_tray = Signal(str, str, str)  # 向托盘发送通知信号(标题，内容，颜色代码)
 	notify_show_floating_window = Signal()
-
 	def __init__(self):
 		super().__init__()
 		self.scheduled_notices = []  # 存储计划通知
