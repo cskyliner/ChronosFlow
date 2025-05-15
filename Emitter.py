@@ -91,6 +91,7 @@ class Emitter(QObject):
 		out = ("create_event", name, True, *args)
 		self.create_event_signal.emit(out)
 	
+
 	def send_delelte_event_signal(self, event_id: int,event_table_type: str):
 		"""
 		发送删除事件的信号
