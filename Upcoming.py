@@ -192,7 +192,6 @@ class CustomListItem(QWidget):
 		self.view_schedule_button = EyeButton()
 		# self.view_schedule_button.clicked.connect() TODO: 跳转到之前的日程记录页面,需要补充函数访问后端数据
 		self.delete_button = DeleteButton()
-
 		self.delete_button.clicked.connect(self.this_one_is_deleted)
 
 		self.setLayout(layout)
