@@ -244,7 +244,7 @@ class Upcoming(QListWidget):
 			log.info(f"共{self.event_num}条日程")
 			self.verticalScrollBar().valueChanged.connect(self.check_scroll)  # 检测是否滚动到底部
 		elif self.kind == 2:
-			self.load_more_data(True)
+			self.load_more_data()
 
 	def check_scroll(self):
 		"""检查是否滚动到底部"""
@@ -311,8 +311,8 @@ class Upcoming(QListWidget):
 		else:
 			log.info("接受数据为空，无更多数据")
 			# 数据加载完毕
-			if self.kind == 0:
-				self.no_more_events = True
+			self.no_more_events = True
+
 		# 删除加载标签
 		if hasattr(self, "loading_item"):
 			self.takeItem(self.row(self.loading_item))
@@ -349,9 +349,9 @@ class Upcoming(QListWidget):
 				break
 		Emitter.instance().send_delelte_event_signal(event.id, event.table_name())
 
-	def load_more_data(self, only_one_day=False):
+	def load_more_data(self):
 		"""将数据添加到self"""
-		if not only_one_day:
+		if self.kind == 0:
 			# 连接接收信号
 			Emitter.instance().backend_data_to_frontend_signal.connect(self.get_data)
 			# 显示加载标签
@@ -367,15 +367,20 @@ class Upcoming(QListWidget):
 				return
 			for event in self.events_used_to_update:
 				self.add_one_item(event)
-		else:
+		elif self.kind == 2:
 			# TODO:只获取指定日期的待办
 			pass
 
 	def load_searched_data(self, text):
 		"""search_column"""
+		if self.kind != 1:  # 仅供search_column调用
+			log.error("load_searched_data被非search_column调用！")
+			return
+
 		self.clear()
 		self.index_of_data_label.clear()
-		self.events_used_to_update=tuple()
+		self.events_used_to_update = tuple()
+		self.no_more_events = False
 		self.loading = False
 		self.event_num = 0
 		self.loading_item = None
@@ -389,7 +394,7 @@ class Upcoming(QListWidget):
 		# 断开接收信号连接
 		Emitter.instance().backend_data_to_frontend_signal.disconnect(self.get_data)
 
-		if len(self.events_used_to_update) > 0:
+		if not self.no_more_events:
 			for event in self.events_used_to_update:
 				self.add_one_item(event)
 		else:
@@ -401,6 +406,11 @@ class Upcoming(QListWidget):
 			self.addItem(item)
 
 	def refresh_upcoming(self):
+		"""用于每次切换到Upcoming时刷新"""
+		if self.kind != 0:  # 仅限Upcoming页面使用
+			log.error("refresh_upcoming被非Upcoming页面调用！")
+			return
+
 		self.clear()
 		self.index_of_data_label.clear()
 		self.events_used_to_update = tuple()

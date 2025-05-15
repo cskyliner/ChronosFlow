@@ -127,7 +127,7 @@ class MainWindow(QMainWindow):
 		sidebar_btn.setFont(self.button_font)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
-		# ===添加search文本框===
+		# 添加search文本框
 		self.search_column_btn = QPushButton("<")
 		self.search_column_btn.setStyleSheet("""
 										QPushButton {
@@ -149,7 +149,7 @@ class MainWindow(QMainWindow):
 		self.search_column_btn.clicked.connect(partial(self.toggle_search_column, btn=self.search_column_btn))
 		# 左侧文本框
 		self.search_edit = QLineEdit()
-		self.search_edit.setPlaceholderText("请输入名称或日期...")
+		self.search_edit.setPlaceholderText("搜索")
 		self.search_edit.setStyleSheet("""
 								    QLineEdit {
 						            padding: 8px;
