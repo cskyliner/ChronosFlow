@@ -71,15 +71,13 @@ class MainWindow(QMainWindow):
 		self.button_font.setPointSize(18)
 
 		# 设置 main_stack各页面的内容，注意初始化顺序
-		self.setup_main_window()  					# 日历窗口（主界面）
-		self.setup_create_event_window()  			# 日程填写窗口
-		self.setup_setting_window()  				# 设置界面
-		self.setup_upcoming_window()  				# 日程展示窗口
-
+		self.setup_main_window()  # 日历窗口（主界面）
+		self.setup_create_event_window()  # 日程填写窗口
+		self.setup_setting_window()  # 设置界面
+		self.setup_upcoming_window()  # 日程展示窗口
 
 		# TODO:更改日历加载事件逻辑，通过向后端发送时间端请求事件，不要耦合upcoming完成
 		# self.load_event_in_calendar(self.upcoming.events)
-
 		# 初始化通知系统
 		self.notice_system = Notice()
 		# 用于在通知时自动显示悬浮窗
@@ -130,6 +128,25 @@ class MainWindow(QMainWindow):
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# ===添加search文本框===
+		self.search_column_btn = QPushButton("<")
+		self.search_column_btn.setStyleSheet("""
+										QPushButton {
+										background-color: transparent;
+										border: none;
+										padding: 0;
+										margin: 0;
+										text-align: center;
+										color: #a0a0a0;
+										}
+										QPushButton:hover {
+										color: #07C160;
+										}
+										QPushButton:pressed {
+										color: #05974C;
+										}
+										""")
+		self.search_column_btn.setFont(self.button_font)
+		self.search_column_btn.clicked.connect(partial(self.toggle_search_column, btn=self.search_column_btn))
 		# 左侧文本框
 		self.search_edit = QLineEdit()
 		self.search_edit.setPlaceholderText("请输入名称或日期...")
@@ -169,6 +186,7 @@ class MainWindow(QMainWindow):
 		upper_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
 		spacer = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
 		upper_layout.addItem(spacer)
+		upper_layout.addWidget(self.search_column_btn)
 		upper_layout.addWidget(self.search_edit)
 		upper_layout.addWidget(btn)
 		main_window_layout.addLayout(upper_layout)
@@ -371,7 +389,6 @@ class MainWindow(QMainWindow):
 		btn_layout.addWidget(return_btn, alignment=Qt.AlignmentFlag.AlignRight)
 
 		self.upcoming = Upcoming()
-		Emitter.instance().refresh_upcoming_signal.connect(partial(self.upcoming.load_more_data))
 		layout.addWidget(self.upcoming)
 		self.add_page(self.main_stack, self.upcoming_window, "Upcoming")
 
@@ -397,8 +414,10 @@ class MainWindow(QMainWindow):
 				# Emitter.instance().dynamic_signal.connect(self.schedule.receive_signal)
 				# Emitter.instance().send_dynamic_signal(date)
 				self.schedule.receive_date(date)
+
 			if name == 'Upcoming':
-				Emitter.instance().send_refresh_upcoming_signal()
+				self.upcoming.refresh_upcoming()
+
 			stack.setCurrentIndex(self.main_stack_map[name])
 			log.info(f"跳转到{name}页面，日期为{date.toString() if date else date}")
 		else:
@@ -412,22 +431,26 @@ class MainWindow(QMainWindow):
 
 	def get_search_result(self):
 		"""向后端发送搜索内容"""
-		self.search_column.load_searched_data(self.search_edit.text())
-		self.search_edit.clear()
-		# TODO:收起search_column
-		if not self.search_column_visible:
-			self.toggle_search_column()
+		text = self.search_edit.text().split()
+		if len(text) > 0:
+			self.search_column.load_searched_data(tuple(text))
+			self.search_edit.clear()
 
-	def toggle_search_column(self):
+		if not self.search_column_visible:
+			self.toggle_search_column(self.search_column_btn)
+
+	def toggle_search_column(self, btn):
 		"""处理search_column的变化TODO:调用"""
 		self.search_column_visible = not self.search_column_visible
 
 		if self.search_column_visible:
 			self.animations["search_column"].setStartValue(0)
 			self.animations["search_column"].setEndValue(250)
+			btn.setText(">")
 		else:
 			self.animations["search_column"].setStartValue(250)
 			self.animations["search_column"].setEndValue(0)
+			btn.setText("<")
 
 		self.animations["search_column"].start()
 

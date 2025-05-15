@@ -230,6 +230,7 @@ class Upcoming(QListWidget):
         	}
 			""")
 
+		self.kind = kind
 		self.events_used_to_update: tuple[DDLEvent] = tuple()  # 储存这次需要更新的至多10个数据
 		self.index_of_data_label = dict()  # 储存显示日期的项的位置
 		self.loading = False  # 是否正在加载
@@ -239,11 +240,11 @@ class Upcoming(QListWidget):
 		self.loading_item = None  # 加载标签
 
 		# MainWindow的search_column不用预先加载
-		if kind == 0:
+		if self.kind == 0:
 			self.load_more_data()
 			log.info(f"共{self.event_num}条日程")
 			self.verticalScrollBar().valueChanged.connect(self.check_scroll)  # 检测是否滚动到底部
-		elif kind == 2:
+		elif self.kind == 2:
 			self.load_more_data(True)
 
 	def check_scroll(self):
@@ -311,7 +312,8 @@ class Upcoming(QListWidget):
 		else:
 			log.info("接受数据为空，无更多数据")
 			# 数据加载完毕
-			self.no_more_events = True
+			if self.kind == 0:
+				self.no_more_events = True
 		# 删除加载标签
 		if hasattr(self, "loading_item"):
 			self.takeItem(self.row(self.loading_item))
@@ -372,18 +374,23 @@ class Upcoming(QListWidget):
 
 	def load_searched_data(self, text):
 		"""search_column"""
-		# TODO：接收后端信息
-		# TODO：展示到search_column（Upcoming形式）
+		self.clear()
+		self.index_of_data_label.clear()
+		self.events_used_to_update=tuple()
+		self.loading = False
+		self.event_num = 0
+		self.loading_item = None
+		log.info(f"共{self.event_num}条日程")
 		# 连接接收信号
 		Emitter.instance().backend_data_to_frontend_signal.connect(self.get_data)
 		# 显示加载标签
 		self.show_loading_label()
 		# 发送搜索信息
-		Emitter.instance().send_search_signal(tuple(text.split()))
+		Emitter.instance().request_search_all_event_signal(text)
 		# 断开接收信号连接
 		Emitter.instance().backend_data_to_frontend_signal.disconnect(self.get_data)
 
-		if not self.no_more_events:
+		if len(self.events_used_to_update) > 0:
 			for event in self.events_used_to_update:
 				self.add_one_item(event)
 		else:
@@ -393,3 +400,14 @@ class Upcoming(QListWidget):
 			item = QListWidgetItem("没有匹配的日程")
 			item.setTextAlignment(Qt.AlignCenter)
 			self.addItem(item)
+
+	def refresh_upcoming(self):
+		self.clear()
+		self.index_of_data_label.clear()
+		self.events_used_to_update = tuple()
+		self.loading = False
+		self.no_more_events = False
+		self.event_num = 0
+		self.loading_item = None
+		self.load_more_data()
+		log.info(f"共{self.event_num}条日程")

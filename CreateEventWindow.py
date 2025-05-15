@@ -97,15 +97,9 @@ class Schedule(QWidget):
 		button_layout = QHBoxLayout()
 		layout.addLayout(button_layout)
 
-		btn_name = ("Save", "Open")
-		for i in range(len(btn_name)):
-			btn = QPushButton(btn_name[i])
-			if i == 0:
-				btn.clicked.connect(self.create_new_event)
-			elif i == 1:
-				btn.clicked.connect(self.load_created_event)
-
-			btn.setStyleSheet("""
+		btn = QPushButton("Save")
+		btn.clicked.connect(self.create_new_event)
+		btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
                     border: 1px solid #d0d0d0;
@@ -121,17 +115,17 @@ class Schedule(QWidget):
 					background-color: palette(mid);
 				}
 							""")
-			btn.setFont(font)
-			button_layout.addWidget(btn)
+		btn.setFont(font)
+		button_layout.addWidget(btn)
 
 		# 状态栏
 		self.status_label = QLabel()
 		layout.addWidget(self.status_label)
 
 	def receive_date(self, date: QDate):
-		'''
+		"""
 		接收date，并进行格式转化
-		'''
+		"""
 		# 为了方便后面数据进行储存，这里转换过程中间储存了QDate格式，但在GUI界面的显示方式仍为年月日
 		self.standard_date = date
 		self.date = self.standard_date.toString("yyyy-MM-dd").split('-')
@@ -140,11 +134,11 @@ class Schedule(QWidget):
 		self.reminder_edit.setDate(QDate(int(self.date[0]), int(self.date[1]), int(self.date[2])))
 
 	def create_new_event(self):
-		'''
+		"""
 		保存内容，暂时后端只做了DDL类 TODO:支持不同形式event的储存
 		传送内容为event类别（DDL），该类别所需参数
 		TODO:向Notice的schedule_notice发信号，重要程度的选择
-		'''
+		"""
 		theme = self.theme_text_edit.text()
 		content = self.text_edit.toPlainText()
 		self.theme_text_edit.clear()
@@ -171,11 +165,6 @@ class Schedule(QWidget):
 									f"主题: {theme}\n内容: {content}\n截止时间: {deadline}\n提醒时间: {reminder}")
 		else:
 			QMessageBox.warning(self, "警告", "请填写所有信息")
-
-	# 加载内容TODO:后端
-	def load_created_event(self):
-		# TODO:从后端接收内容;弹出搜索框？
-		pass
 
 	def get_selected_times(self):
 		"""返回用户选择的截止时间和提醒时间"""

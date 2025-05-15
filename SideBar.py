@@ -17,9 +17,17 @@ class SideBar(QFrame):
 		button_font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
 		button_font.setPointSize(15)
 
-		name_label=QLabel("Todolist")
-		name_label.setFont(button_font)
+		_font = QFont()
+		_font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
+		_font.setPointSize(20)
+		name_label=QLabel("Todolist\n————————")
+		name_label.setAlignment(Qt.AlignCenter)
+		name_label.setFont(_font)
 		layout.addWidget(name_label)
+
+		#把sidebar撑开
+		spacer = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
+		layout.addItem(spacer)
 
 		# ===添加功能按钮===
 		names = ("Calendar", "Upcoming", "Setting")
