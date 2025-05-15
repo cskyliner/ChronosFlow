@@ -52,7 +52,6 @@ class MainWindow(QMainWindow):
 
 		# 连接sidebar的信号
 		Emitter.instance().page_change_signal.connect(partial(self.navigate_to, stack=self.main_stack, date=None))
-
 		# 通过名称记录页面，使用字典双向映射
 		self.main_stack_map = {}  # 名称→索引
 

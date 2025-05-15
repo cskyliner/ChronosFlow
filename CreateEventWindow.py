@@ -166,6 +166,7 @@ class Schedule(QWidget):
 				f"创建新事件，标题：{theme}, 截止时间：{deadline}, 内容：{content}, 提前提醒时间：{reminder}, 重要程度：Great"),
 			# DDL参数(标题，截止时间，具体内容，提前提醒时间，重要程度)
 			Emitter.instance().send_create_event_signal("DDL", theme, deadline, content, reminder, "Great")
+			
 			Emitter.instance().send_signal_to_schedule_notice(theme, content, notify_time)
 			QMessageBox.information(self, "保存成功",
 									f"主题: {theme}\n内容: {content}\n截止时间: {deadline}\n提醒时间: {reminder}")

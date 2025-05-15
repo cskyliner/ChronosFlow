@@ -22,7 +22,8 @@ class Emitter(QObject):
 	signal_to_schedule_notice: Signal = Signal(str, str, QDateTime, str)  # 向Notice中的schedule_notice函数发送信号
 	from_upcoming_to_create_event_signal: Signal = Signal(str, str)  # 从upcoming跳转到create_event
 	refresh_upcoming_signal: Signal = Signal()  # 在切换到Upcoming时更新
-
+	notify_to_backend_signal:Signal = Signal(object)
+	notice_signal:Signal = Signal(object)
 	@staticmethod
 	def instance() -> "Emitter":
 		if Emitter._instance is None:
@@ -35,6 +36,7 @@ class Emitter(QObject):
 	# ===转发信号函数====
 	def send_refresh_upcoming_signal(self):
 		self.refresh_upcoming_signal.emit()
+	
 
 	def send_page_change_signal(self, name):
 		"""向 main_stack发送改变页面的信号"""
@@ -118,3 +120,5 @@ class Emitter(QObject):
 		log.info(f"request search some columns event，搜索列为{columns}，关键字为{keyword}")
 		out = ("search_some_columns", (columns, keyword))
 		self.search_some_columns_event_signal.emit(out)
+	def request_latest_event_signal(self, cur_time:QDateTime):
+		self.notify_to_backend_signal.emit(cur_time)

@@ -8,7 +8,7 @@ class CalendarDelegate(QStyledItemDelegate):
 		self.date_font = QFont("Microsoft YaHei", 10, QFont.Bold)  # 日期字体
 		self.font_metrics = QFontMetrics(self.base_font)
 		self.date_font_metrics = QFontMetrics(self.date_font)
-		
+
 		# 设置周末格式
 		self.weekend_format = QTextCharFormat()
 		self.weekend_format.setForeground(QColor("red"))

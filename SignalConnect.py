@@ -1,7 +1,6 @@
 from Emitter import Emitter
 from Event import recieve_signal,request_signal
 from common import logging
-
 log = logging.getLogger(__name__)
 
 
