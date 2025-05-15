@@ -91,14 +91,14 @@ class Emitter(QObject):
 		out = ("create_event", name, True, *args)
 		self.create_event_signal.emit(out)
 	
-	def send_delelte_event_signal(self, event_id: int,event_type: str):
+	def send_delelte_event_signal(self, event_id: int,event_table_type: str):
 		"""
 		发送删除事件的信号
 		event_id为事件ID
 		event_type为事件类型
 		"""
-		log.info(f"send delete event signal，事件ID为{event_id}，事件类型为{event_type}")
-		out = ("delete_event", event_id, event_type)
+		log.info(f"send delete event signal，事件ID为{event_id}，事件表名为{event_table_type}")
+		out = ("delete_event", (event_id, event_table_type))
 		self.delete_event_signal.emit(out)
 
 	# ===向后端发送请求（回传数据），回调信号===
