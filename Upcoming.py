@@ -231,7 +231,8 @@ class Upcoming(QListWidget):
 
 		self.kind = kind
 		self.events_used_to_update: tuple[DDLEvent] = tuple()  # 储存这次需要更新的至多10个数据
-		self.index_of_data_label = dict()  # 储存显示日期的项的位置
+		self.index_of_date_label = dict()  # 储存显示日期的项的位置
+		self.items_of_one_date = dict()  # 储存同一日期的项的位置,每个日期对应一个列表，列表中的项为tuple(id,位置)
 		self.loading = False  # 是否正在加载
 		self.no_more_events = False  # 是否显示全部数据
 		self.event_num = 0  # 记录当前个数，传给后端提取数据
@@ -289,17 +290,17 @@ class Upcoming(QListWidget):
 
 		# 寻找插入位置（第一个比自身日期大的日期）
 		find = False
-		for key in self.index_of_data_label.keys():
+		for key in self.index_of_date_label.keys():
 			if key > date:
 				find = True
 				record = key
 				break
 		if find:
-			self.insertItem(self.index_of_data_label[record].row(), date_item)
+			self.insertItem(self.index_of_date_label[record].row(), date_item)
 		else:
 			self.addItem(date_item)
-		self.index_of_data_label[date] = QPersistentModelIndex(self.indexFromItem(date_item))
-		self.index_of_data_label = dict(sorted(self.index_of_data_label.items()))  # 保证日期标签按升序排列，仅支持python3.7及以上
+		self.index_of_date_label[date] = QPersistentModelIndex(self.indexFromItem(date_item))
+		self.index_of_date_label = dict(sorted(self.index_of_date_label.items()))  # 保证日期标签按升序排列，仅支持python3.7及以上
 
 	def get_data(self, data: tuple[BaseEvent] = None):
 		"""从后端加载数据"""
@@ -327,26 +328,36 @@ class Upcoming(QListWidget):
 		item = QListWidgetItem()
 		item.setSizeHint(QSize(custom_widget.sizeHint().width(), 80))  # 设置合适的大小
 		# 如果没有对应日期的标签，就加上
-		if not event.datetime[:10] in self.index_of_data_label:
+		if not event.datetime[:10] in self.index_of_date_label:
 			self.add_date_label(event.datetime)
-
-		self.insertItem(self.index_of_data_label[event.datetime[:10]].row() + 1, item)
-		self.setItemWidget(item, custom_widget)
-		custom_widget.delete_me_signal.connect(self.delete_one_item)
+			self.insertItem(self.index_of_date_label[event.datetime[:10]].row() + 1, item)
+			self.setItemWidget(item, custom_widget)
+			self.items_of_one_date[event.datetime[:10]] = [(event.id, QPersistentModelIndex(self.indexFromItem(item)))]
+			custom_widget.delete_me_signal.connect(self.delete_one_item)
+		else:
+			self.insertItem(self.index_of_date_label[event.datetime[:10]].row() + 1, item)
+			self.setItemWidget(item, custom_widget)
+			self.items_of_one_date[event.datetime[:10]].append(
+				(event.id, QPersistentModelIndex(self.indexFromItem(item))))
+			custom_widget.delete_me_signal.connect(self.delete_one_item)
 
 	def delete_one_item(self, event: BaseEvent):
-		"""
-		删除事件
-		"""
-		for row in range(self.count()):
-			item = self.item(row)
-			widget = self.itemWidget(item)
-			if isinstance(widget, CustomListItem) and widget.nevent.id == event.id:
-				# 删除界面元素
-				self.takeItem(row)
-				log.info(f"删除事件成功：{event.title} @ {event.datetime}")
+		"""删除事件"""
+		date = event.datetime[:10]
+		for i in range(len(self.items_of_one_date[date])):
+			if self.items_of_one_date[date][i][0] == event.id:
+				self.takeItem(self.row(self.itemFromIndex(self.items_of_one_date[date][i][1])))
 				self.event_num -= 1
+				del self.items_of_one_date[date][i]
+				log.info(f"删除事件成功：{event.title} @ {event.datetime}")
+				# 删除日期标签
+				if len(self.items_of_one_date[date]) == 0:
+					del self.items_of_one_date[date]
+					self.takeItem(self.row(self.itemFromIndex(self.index_of_date_label[date])))
+					del self.index_of_date_label[date]
+					log.info(f"日期标签删除成功：{date}")
 				break
+
 		Emitter.instance().send_delelte_event_signal(event.id, event.table_name())
 
 	def load_more_data(self):
@@ -378,7 +389,8 @@ class Upcoming(QListWidget):
 			return
 
 		self.clear()
-		self.index_of_data_label.clear()
+		self.index_of_date_label.clear()
+		self.items_of_one_date.clear()
 		self.events_used_to_update = tuple()
 		self.no_more_events = False
 		self.loading = False
@@ -412,7 +424,8 @@ class Upcoming(QListWidget):
 			return
 
 		self.clear()
-		self.index_of_data_label.clear()
+		self.index_of_date_label.clear()
+		self.items_of_one_date.clear()
 		self.events_used_to_update = tuple()
 		self.loading = False
 		self.no_more_events = False
