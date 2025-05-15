@@ -271,6 +271,7 @@ def request_signal(recieve_data: tuple) -> None:
 		now_time = recieve_data[1][0]
 		result = get_latest_ddlevent(now_time)
 		Emitter.instance().send_notice_signal((result,))
+		log.info(f"接收{signal_name}请求信号成功，获取事件")
 		return
 	else:
 		log.error(f"接收信号失败，未知信号类型{signal_name}，参数为{recieve_data}")
