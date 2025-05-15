@@ -204,14 +204,11 @@ class CustomListItem(QWidget):
 class Upcoming(QListWidget):
 	"""
 	容纳多个SingleUpcoming，有滚动等功能
+	kind:0:Upcoming页面的Upcoming；1:Calendar页面的search_column；2:某个日期的Upcoming
 	"""
 
-	def __init__(self, parent=None):
+	def __init__(self, kind=0, parent=None):
 		super().__init__(parent)
-		#self.setDragDropMode(QListWidget.InternalMove)  # 允许内部拖动重排
-		#self.setDefaultDropAction(Qt.MoveAction)  # 设置默认动作为移动而非复制
-		#self.setSelectionMode(QListWidget.SingleSelection)  # 一次只能选择列表中的一个项目
-		#self.model().rowsMoved.connect(self.show_current_order_to_backend)  # 将顺序改变加入日志，并通知后端
 
 		self.setStyleSheet("""
 		    QListWidget::item:selected {
@@ -235,9 +232,13 @@ class Upcoming(QListWidget):
 		self.page_num = 10  # 每页显示的事件数
 		self.loading_item = None  # 加载标签
 
-		self.load_more_data()
-		self.verticalScrollBar().valueChanged.connect(self.check_scroll)  # 检测是否滚动到底部
-		log.info(f"共{self.event_num }条日程")
+		# MainWindow的search_column不用预先加载
+		if kind == 0:
+			self.load_more_data()
+			log.info(f"共{self.event_num}条日程")
+			self.verticalScrollBar().valueChanged.connect(self.check_scroll)  # 检测是否滚动到底部
+		elif kind == 2:
+			self.load_more_data(True)
 
 	def check_scroll(self):
 		"""检查是否滚动到底部"""
@@ -251,11 +252,6 @@ class Upcoming(QListWidget):
 				log.info("没有更多数据了，停止加载……")
 			else:
 				log.error("未知错误，无法加载数据")
-
-	#def show_current_order_to_backend(self):
-	#	"""在Upcoming中顺序改变时显示在log中，并通知后端"""
-		# TODO：通知后端：移动的event的日期改变
-	#	log.info("Upcoming顺序改变")
 
 	def show_loading_label(self):
 		self.loading_item = QListWidgetItem("Loading……")
@@ -276,10 +272,10 @@ class Upcoming(QListWidget):
 		today = today.toString("yyyy-MM-dd")
 
 		date = date[:10]
-		if date==today:
+		if date == today:
 			date_item = QListWidgetItem('\n今天\n————————')
-		elif date==tomorrow:
-			date_item=QListWidgetItem('\n明天\n————————')
+		elif date == tomorrow:
+			date_item = QListWidgetItem('\n明天\n————————')
 		else:
 			tmp_date = date.split('-')
 			date_item = QListWidgetItem(f"\n{tmp_date[0]}年{int(tmp_date[1])}月{int(tmp_date[2])}日\n————————")
@@ -331,20 +327,48 @@ class Upcoming(QListWidget):
 		self.insertItem(self.index_of_data_label[event.datetime[:10]].row() + 1, item)
 		self.setItemWidget(item, custom_widget)
 
-	def load_more_data(self):
+	def load_more_data(self, only_one_day=False):
 		"""将数据添加到self"""
+		if not only_one_day:
+			# 连接接收信号
+			Emitter.instance().backend_data_to_frontend_signal.connect(self.get_data)
+			# 显示加载标签
+			self.show_loading_label()
+			# 发送请求信号
+			Emitter.instance().request_update_upcoming_event_signal(self.event_num, self.page_num)
+			# 断开接收信号连接
+			Emitter.instance().backend_data_to_frontend_signal.disconnect(self.get_data)
+			# 停止加载
+			self.loading = False
+			if self.no_more_events:
+				log.info("没有更多数据了，停止加载……")
+				return
+			for event in self.events_used_to_update:
+				self.add_one_item(event)
+		else:
+			# TODO:只获取指定日期的待办
+			pass
+
+	def load_searched_data(self, text):
+		"""search_column"""
+		# TODO：接收后端信息
+		# TODO：展示到search_column（Upcoming形式）
 		# 连接接收信号
 		Emitter.instance().backend_data_to_frontend_signal.connect(self.get_data)
 		# 显示加载标签
 		self.show_loading_label()
-		# 发送请求信号
-		Emitter.instance().request_update_upcoming_event_signal(self.event_num, self.page_num)
+		# 发送搜索信息
+		Emitter.instance().send_search_signal(tuple(text.split()))
 		# 断开接收信号连接
 		Emitter.instance().backend_data_to_frontend_signal.disconnect(self.get_data)
-		# 停止加载
-		self.loading = False
-		if self.no_more_events:
-			log.info("没有更多数据了，停止加载……")
-			return
-		for event in self.events_used_to_update:
-			self.add_one_item(event)
+
+		if not self.no_more_events:
+			for event in self.events_used_to_update:
+				self.add_one_item(event)
+		else:
+			font = QFont()
+			font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
+			font.setPointSize(12)
+			item=QListWidgetItem("没有匹配的日程")
+			item.setTextAlignment(Qt.AlignCenter)
+			self.addItem(item)

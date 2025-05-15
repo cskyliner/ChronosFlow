@@ -105,7 +105,7 @@ class MainWindow(QMainWindow):
 		main_window_layout.setContentsMargins(20, 5, 20, 20)
 		self.main_window.setLayout(main_window_layout)
 
-		upper_layout=QHBoxLayout()
+		upper_layout = QHBoxLayout()
 		# 添加'<'按钮
 		sidebar_btn = QPushButton("<")
 		sidebar_btn.setStyleSheet("""
@@ -126,16 +126,59 @@ class MainWindow(QMainWindow):
 				            """)
 		sidebar_btn.setFont(self.button_font)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
-		main_window_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
 
-		middle_layout=QHBoxLayout()
+		# ===添加search文本框===
+		# 左侧文本框
+		self.search_edit = QLineEdit()
+		self.search_edit.setPlaceholderText("请输入名称或日期...")
+		self.search_edit.setStyleSheet("""
+								    QLineEdit {
+						            padding: 8px;
+					                border: 1px solid #ccc;
+					                border-radius: 4px;
+					                font-size: 14px;
+						            }
+						            QLineEdit:focus {
+						            border: 1px solid #4CAF50;
+						            }
+							    """)
+		# ===右侧按钮===
+		btn = QPushButton()
+		btn.setIcon(QIcon.fromTheme("system-search"))
+		btn.setStyleSheet("""
+					QPushButton {
+		                background-color: transparent;
+		                border: 1px solid #d0d0d0;
+		                border-radius: 4px;
+		                padding: 25px;
+		                text-align: center;
+		            }
+		            QPushButton:hover {
+		                background-color: palette(midlight);
+		                border-radius: 4px;
+		            }
+		            QPushButton:pressed {
+						background-color: palette(mid);
+					}
+				""")
+		btn.setFixedSize(40, 40)
+		btn.clicked.connect(self.get_search_result)
+
+		upper_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
+		spacer = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
+		upper_layout.addItem(spacer)
+		upper_layout.addWidget(self.search_edit)
+		upper_layout.addWidget(btn)
+		main_window_layout.addLayout(upper_layout)
+
+		middle_layout = QHBoxLayout()
 		# 创建日历界面
 		self.main_window_calendar = Calendar()
 		self.main_window_calendar.setGridVisible(False)
 		self.main_window_calendar.clicked.connect(
 			lambda date: self.navigate_to("Schedule", self.main_stack, date))  # 点击日历时跳转到 schedule
 		# 右侧搜索栏
-		self.search_column = QListWidget(self)
+		self.search_column = Upcoming(1)
 		self.search_column.setMaximumWidth(0)
 		self.main_layout.addWidget(self.search_column)
 		self.search_column_visible = False
@@ -365,15 +408,23 @@ class MainWindow(QMainWindow):
 		self.animations["search_column"].setDuration(300)
 		self.animations["search_column"].setEasingCurve(QEasingCurve.Type.InOutQuad)
 
+	def get_search_result(self):
+		"""向后端发送搜索内容"""
+		self.search_column.load_searched_data(self.search_edit.text())
+		self.search_edit.clear()
+		# TODO:收起search_column
+		if not self.search_column_visible:
+			self.toggle_search_column()
+
 	def toggle_search_column(self):
 		"""处理search_column的变化TODO:调用"""
-		self.search_column_visible=not self.search_column_visible
+		self.search_column_visible = not self.search_column_visible
 
 		if self.search_column_visible:
 			self.animations["search_column"].setStartValue(0)
-			self.animations["search_column"].setEndValue(230)
+			self.animations["search_column"].setEndValue(250)
 		else:
-			self.animations["search_column"].setStartValue(230)
+			self.animations["search_column"].setStartValue(250)
 			self.animations["search_column"].setEndValue(0)
 
 		self.animations["search_column"].start()

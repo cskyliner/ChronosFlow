@@ -12,53 +12,17 @@ class SideBar(QFrame):
 		layout = QVBoxLayout()
 		layout.setContentsMargins(10, 10, 10, 20)
 
-		# ===添加search文本框===
-		search_layout = QHBoxLayout()
-		# 左侧文本框
-		self.search_edit = QLineEdit()
-		self.search_edit.setPlaceholderText("请输入名称或日期...")
-		self.search_edit.setStyleSheet("""
-						            QLineEdit {
-						                padding: 8px;
-						                border: 1px solid #ccc;
-						                border-radius: 4px;
-						                font-size: 14px;
-						            }
-						            QLineEdit:focus {
-						                border: 1px solid #4CAF50;
-						            }
-						        """)
-		search_layout.addWidget(self.search_edit)
-		# ===右侧按钮===
-		btn = QPushButton()
-		btn.setIcon(QIcon.fromTheme("system-search"))
-		btn.setStyleSheet("""
-			QPushButton {
-                background-color: transparent;
-                border: 1px solid #d0d0d0;
-                border-radius: 4px;
-                padding: 25px;
-                text-align: center;
-            }
-            QPushButton:hover {
-                background-color: palette(midlight);
-                border-radius: 4px;
-            }
-            QPushButton:pressed {
-				background-color: palette(mid);
-			}
-		""")
-		btn.setFixedSize(40, 40)
-		btn.clicked.connect(self.get_text)
-		search_layout.addWidget(btn)
-		layout.addLayout(search_layout)
-
-		# ===添加功能按钮===
-		names = ("Calendar", "Upcoming", "Setting")
-		# 使用Qt的字体回退机制，解决在Mac上找不到字体报错的问题 FIXME:前端可能需要调试一下字体大小，以及缩放问题
+		# 使用Qt的字体回退机制，解决在Mac上找不到字体报错的问题
 		button_font = QFont()
 		button_font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
 		button_font.setPointSize(15)
+
+		name_label=QLabel("Todolist")
+		name_label.setFont(button_font)
+		layout.addWidget(name_label)
+
+		# ===添加功能按钮===
+		names = ("Calendar", "Upcoming", "Setting")
 		for name in names:
 			btn = QPushButton(f"{name}")
 			btn.setStyleSheet("""
@@ -82,8 +46,3 @@ class SideBar(QFrame):
 			btn.clicked.connect(partial(Emitter.instance().send_page_change_signal, name))
 		layout.addStretch()
 		self.setLayout(layout)
-
-	# 获取文本框内容 TODO:后端
-	def get_text(self):
-		Emitter.instance().send_search_signal(self.search_edit.text())
-		self.search_edit.clear()
