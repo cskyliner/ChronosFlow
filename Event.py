@@ -22,9 +22,23 @@ TYPE_MAP = {
 TABLE_MAP = {
 	"ddlevents": "DDL",
 	"taskevents": "Task",
-	"clockevents": "Clock",
+	"activityevents": "Activity",
 }
-
+# ===构建全局id===
+def init_global_id_table():
+	"""构建全局id表，包括唯一ID和创建时间"""
+	cursor.execute("""
+        CREATE TABLE IF NOT EXISTS global_id (
+            id INTEGER PRIMARY KEY,
+			created_at TEXT DEFAULT (datetime('now', 'localtime'))
+        )
+    """)
+	conn.commit()
+def get_global_id()	-> int:
+	"""获取全局id"""
+	cursor.execute("INSERT INTO global_id DEFAULT VALUES")
+	conn.commit()
+	return cursor.lastrowid
 
 def create_table_if_not_exist(table_name: str, data) -> None:
 	"""
@@ -33,7 +47,7 @@ def create_table_if_not_exist(table_name: str, data) -> None:
 	columns = ', '.join([f"{key} {TYPE_MAP.get(key, 'TEXT')}" for key in data.keys()])
 	create_query = f"""
         CREATE TABLE IF NOT EXISTS {table_name} (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id INTEGER PRIMARY KEY,
             {columns})
     """
 	cursor.execute(create_query)
@@ -64,24 +78,29 @@ class BaseEvent:
 		"""
 		if self.id is not None:
 			raise RuntimeError("事件对象已有 ID，可能已经添加过数据库。")
+		global_id = get_global_id() 					# 获取全局变量 
 		table_name = self.table_name()
 		data = self.to_dict()
 		create_table_if_not_exist(table_name, data)
 		columns = ', '.join(data.keys())
-		placeholders = ', '.join(['?'] * len(data))  # 使用占位符防御SQL注入
+		placeholders = ', '.join(['?'] * len(data))  	# 使用占位符防御SQL注入
 		values = tuple(data.values())
-		query = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})"
-		cursor.execute(query, values)
-		self.id = cursor.lastrowid  # 获取table中的唯一id值
+		query = f"INSERT INTO {table_name} (id,{columns}) VALUES (?,{placeholders})"
+		cursor.execute(query, (global_id,) + values)
+		self.id = global_id  							# 获取全局中的唯一id值作为事件标识符
 		conn.commit()
 
 	def delete_event(self) -> None:
 		"""
 		删除日程
 		"""
+		# 删除所在事件表记录
 		table_name = self.table_name()
 		query = f"DELETE FROM {table_name} WHERE id = ?"
 		cursor.execute(query, (self.id,))
+		# # 删除 global_id 表中的对应记录
+		# query_global = "DELETE FROM global_id WHERE id = ?"
+		# cursor.execute(query_global, (self.id,))
 		conn.commit()
 
 	def modify_event(self) -> None:
@@ -102,7 +121,6 @@ class DDLEvent(BaseEvent):
 	DDL类
 	输入：标题，截止时间，具体内容，提前提醒时间，重要程度，是否完成或过期（0为未完成，1为完成，2为过期）
 	"""
-
 	def __init__(self, title: str, datetime: str, notes: str, advance_time: str, importance: str, done: int = 0):
 		super().__init__(title)
 		self.datetime = datetime  # 格式："yyyy-MM-dd HH:mm"
@@ -131,9 +149,9 @@ class TaskEvent(BaseEvent):
 		super().__init__(title)
 
 
-class ClockEvent(BaseEvent):
+class ActivityEvent(BaseEvent):
 	"""
-	TODO:打卡
+	TODO:事件段时间
 	"""
 
 	def __init__(self, title):
@@ -147,7 +165,7 @@ class EventFactory:
 	registry: dict[str, BaseEvent] = {
 		"DDL": DDLEvent,
 		"Task": TaskEvent,
-		"Clock": ClockEvent
+		"Clock": ActivityEvent
 	}
 
 	@classmethod
@@ -165,11 +183,15 @@ class EventFactory:
 		event_cls = cls.registry[event_type]
 		try:
 			n_event: BaseEvent = event_cls(*args)
-			log.info(f"create new event in {n_event.table_name()} table successfully")
 			if add is True:
 				n_event.add_event()
 				if n_event.table_name() == "ddlevents":
-					if latest_ddlevent is None:
+					now_time = QDateTime.currentDateTime()
+					now_time = now_time.toString("yyyy-MM-dd HH:mm")
+					log.info(f"now_time is {now_time}")
+					if now_time > n_event.datetime:
+						log.info(f"now_time is {now_time} 添加新事件比最新事件更晚，不更新最新事件")
+					elif latest_ddlevent is None:
 						log.info("没有最新的DDL事件，添加新事件")
 						latest_ddlevent = n_event
 						Emitter.instance().send_notice_signal(n_event)
@@ -179,7 +201,7 @@ class EventFactory:
 						Emitter.instance().send_notice_signal(n_event)
 					else:
 						log.info("添加新事件比最新事件更晚，不更新最新事件")
-				log.info(f"add event {n_event.title} to {n_event.table_name()} table successfully")
+					log.info(f"add event {n_event.title} to {n_event.table_name()} table successfully")
 			return n_event
 		except TypeError as e:
 			log.error(f"创建event失败，创建使用参数为{args}，Error:{e}")
@@ -190,24 +212,24 @@ def recieve_signal(recieve_data: tuple) -> None:
 	"""
 	接收信号函数
 	"""
+	global DB_PATH, conn, cursor  					# 全局变量
 	if not recieve_data or len(recieve_data) == 0:
 		log.error("接收信号失败，参数为空")
 	elif recieve_data[0] == "create_event":
-		event_type = recieve_data[1]  # 事件类型
-		add = recieve_data[2]  # 是否添加到数据库
-		args = recieve_data[3:]  # 事件参数
+		event_type = recieve_data[1]  				# 事件类型
+		add = recieve_data[2]  						# 是否添加到数据库
+		args = recieve_data[3:]  					# 事件参数
 		EventFactory.create(event_type, add, *args)
 		log.info(f"接收{recieve_data[0]}信号成功，创建事件{event_type}，参数为{args}")
-
-	# sent_signal("search_all", result)
+		Emitter.instance().send_refresh_upcoming_signal()
 	elif recieve_data[0] == "storage_path":
-		global DB_PATH, conn, cursor  # 全局变量
 		path = recieve_data[1]
 		DB_PATH = os.path.join(path, "events.db")
 		try:
 			conn = sqlite3.connect(DB_PATH)
 			cursor = conn.cursor()
 			log.info(f"接收{recieve_data[0]}信号成功，存储路径为{path}")
+			init_global_id_table()					# 如果没创建过全局id表就重新创建一个
 		except Exception as e:
 			log.error(f"连接数据库失败：{e}")
 			QMessageBox.warning(
@@ -215,6 +237,13 @@ def recieve_signal(recieve_data: tuple) -> None:
 				"错误",
 				"连接数据库失败，请检查存储路径是否正确",
 			)
+	elif recieve_data[0] == "delete_event":
+		if cursor is not None and conn is not None:
+			cursor.execute(f"DELETE FROM {recieve_data[1][1]} WHERE id = ?", (recieve_data[1][0],))
+			conn.commit()
+			log.info(f"删除{recieve_data[1][1]}中{recieve_data[1][0]}事件成功")
+		else:
+			log.error(f"未能连接到数据库，删除{recieve_data[1][1]}类{recieve_data[1][0]}事件失败")
 	else:
 		log.error(f"接收信号失败，未知信号类型{recieve_data[0]}，参数为{recieve_data[1:]}")
 
@@ -238,17 +267,23 @@ def request_signal(recieve_data: tuple) -> None:
 		raise NotImplementedError("时间范围搜索功能尚未实现")
 	elif signal_name == "search_some_columns":
 		raise NotImplementedError("部分列搜索功能尚未实现")
+	elif signal_name == "latest_event":
+		now_time = recieve_data[1][0]
+		result = get_latest_ddlevent(now_time)
+		Emitter.instance().send_notice_signal((result,))
+		return
 	else:
 		log.error(f"接收信号失败，未知信号类型{signal_name}，参数为{recieve_data}")
 	# 发送结果给回调函数
 	Emitter.instance().send_backend_data_to_frontend_signal(result)
 
-def get_latest_ddlevent() -> DDLEvent:
+def get_latest_ddlevent(now_time:str) -> BaseEvent:
 	"""
-	获取最新的ddlevent
+	获取最新的ddlevent，其 advance_time 不早于 now_time
 	"""
 	global latest_ddlevent
-	cursor.execute("SELECT * FROM ddlevents ORDER BY datetime DESC LIMIT 1 WHERE done = 0")
+	cursor.execute("SELECT * FROM ddlevents WHERE advance_time > ? ORDER BY advance_time DESC LIMIT 1",
+        			(now_time,))
 	row = cursor.fetchone()
 	if row is None:
 		log.info("没有找到任何未来的DDL事件")
@@ -265,21 +300,22 @@ def search_all(keyword: tuple[str]) -> list[BaseEvent]:
 	多关键词模糊性全局搜索（AND关系）
 	"""
 	result: list[BaseEvent] = []
-	cursor.execute("SELECT name FROM sqlite_master WHERE type ='table'")  # 获取所有table
+	cursor.execute("SELECT name FROM sqlite_master WHERE type ='table'")  					# 获取所有table
 	tables = [row[0] for row in cursor.fetchall()]
 	for table in tables:
-		cursor.execute(f"PRAGMA table_info({table})")  # 通过PRAGMA获取table列信息
+		cursor.execute(f"PRAGMA table_info({table})")  										# 通过PRAGMA获取table列信息
 		columns_info = cursor.fetchall()
-		possible_columns = [column[1] for column in columns_info if "TEXT" == column[2]]  # 排除格式非TEXT的列
+		possible_columns = [column[1] for column in columns_info if "TEXT" == column[2]] 	# 排除格式非TEXT的列
 		if not possible_columns:
 			continue
+		# 拼接语句，注意使用AND连接
 		where_clauses = [
 			" AND ".join(f"{col} LIKE ?" for key in keyword)
 			for col in possible_columns
 		]
-		where_column = " OR ".join(where_clauses)  # 选择所有匹配所有关键字的列
+		where_column = " OR ".join(where_clauses)  											# 选择所有匹配所有关键字的列
 		values = [f"%{key}%" for key in keyword] * len(possible_columns)
-		query = f"SELECT * FROM {table} WHERE {where_column}"  # 选择匹配关键字的行
+		query = f"SELECT * FROM {table} WHERE {where_column}" 								# 选择匹配关键字的行
 		cursor.execute(query, values)
 		rows = cursor.fetchall()
 		for row in rows:
@@ -295,13 +331,13 @@ def search_time(start_time: str, end_time: str) -> list[BaseEvent]:
 	时间范围搜索
 	"""
 	result: list[BaseEvent] = []
-	cursor.execute("SELECT name FROM sqlite_master WHERE type ='table'")  # 获取所有table名称
+	cursor.execute("SELECT name FROM sqlite_master WHERE type ='table'")  	# 获取所有table名称
 	tables = [row[0] for row in cursor.fetchall()]
 	for table in tables:
-		cursor.execute(f"PRAGMA table_info({table})")  # 通过PRAGMA获取table列信息
+		cursor.execute(f"PRAGMA table_info({table})")  						# 通过PRAGMA获取table列信息
 		columns_info = cursor.fetchall()
 		columns_name = [column[1] for column in columns_info][1:]
-		if "datetime" not in columns_name:  # 排除没有datetime列的table
+		if "datetime" not in columns_name:  								# 排除没有datetime列的table
 			continue
 		query = f"SELECT * FROM {table} WHERE datetime BETWEEN ? AND ?"
 		cursor.execute(query, (start_time, end_time))
