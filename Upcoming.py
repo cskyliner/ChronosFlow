@@ -289,6 +289,7 @@ class Upcoming(QListWidget):
 				date_item = QListWidgetItem(f"\n{int(tmp_date[1])}月{int(tmp_date[2])}日\n————————")
 			else:
 				date_item = QListWidgetItem(f"\n{tmp_date[0]}年{int(tmp_date[1])}月{int(tmp_date[2])}日\n————————")
+
 		date_item.setFont(font)
 
 		# 寻找插入位置（第一个比自身日期大的日期）
@@ -366,6 +367,7 @@ class Upcoming(QListWidget):
 	def load_more_data(self):
 		"""将数据添加到self"""
 		if self.kind == 0:
+
 			# 连接接收信号
 			Emitter.instance().backend_data_to_frontend_signal.connect(self.get_data)
 			# 显示加载标签
@@ -381,6 +383,7 @@ class Upcoming(QListWidget):
 				return
 			for event in self.events_used_to_update:
 				self.add_one_item(event)
+        
 		elif self.kind == 2:
 			# TODO:只获取指定日期的待办
 			pass
@@ -396,6 +399,7 @@ class Upcoming(QListWidget):
 		self.items_of_one_date.clear()
 		self.events_used_to_update = tuple()
 		self.no_more_events = False
+
 		self.loading = False
 		self.event_num = 0
 		self.loading_item = None

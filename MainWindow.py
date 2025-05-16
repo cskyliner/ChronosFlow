@@ -160,9 +160,9 @@ class MainWindow(QMainWindow):
 		                background-color: transparent;
 		                border: 1px solid #d0d0d0;
 		                border-top-left-radius: 0px;     /* 左上角 */
-    					border-top-right-radius: 19px;    /* 右上角 */
-    					border-bottom-left-radius: 0px;  /* 左下角 */
-    					border-bottom-right-radius: 19px; /* 右下角 */
+    					      border-top-right-radius: 19px;    /* 右上角 */
+    					      border-bottom-left-radius: 0px;  /* 左下角 */
+    					      border-bottom-right-radius: 19px; /* 右下角 */
 		                padding: 25px;
 		                text-align: center;
 		            }
@@ -433,6 +433,7 @@ class MainWindow(QMainWindow):
 
 	def toggle_search_column(self):
 		"""处理search_column的变化"""
+
 		self.search_column_visible = not self.search_column_visible
 
 		if self.search_column_visible:
