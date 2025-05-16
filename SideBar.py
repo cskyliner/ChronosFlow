@@ -1,7 +1,7 @@
 from common import *
 from functools import partial
 from Emitter import Emitter
-from SetFont import common_set_font
+from Setfont import common_set_font
 
 
 class SideBar(QFrame):
@@ -13,15 +13,12 @@ class SideBar(QFrame):
 		layout = QVBoxLayout()
 		layout.setContentsMargins(10, 10, 10, 20)
 
-		title_font = QFont()
-		title_font.setFamilies(["Inter", "Helvetica Neue", "Segoe UI", "Arial"])
-		title_font.setPointSize(20)
-		name_label=QLabel("ChronosFlow\n————————")
+		name_label = QLabel("ChronosFlow\n————————")
 		name_label.setAlignment(Qt.AlignCenter)
-		name_label.setFont(title_font)
+		common_set_font(name_label, 2)
 		layout.addWidget(name_label)
 
-		#把sidebar撑开
+		# 把sidebar撑开
 		spacer = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
 		layout.addItem(spacer)
 
@@ -44,7 +41,7 @@ class SideBar(QFrame):
 					background-color: palette(mid);
 				}
             """)
-			common_set_font(btn,1)
+			common_set_font(btn, 1)
 			layout.addWidget(btn)
 			# 连接按钮与切换页面信号
 			btn.clicked.connect(partial(Emitter.instance().send_page_change_signal, name))

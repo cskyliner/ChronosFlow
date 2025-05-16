@@ -10,7 +10,7 @@ from FloatingWindow import FloatingWindow
 from Notice import Notice
 from Upcoming import Upcoming, FloatingButton
 from Event import BaseEvent, DDLEvent
-from SetFont import common_set_font
+from Setfont import common_set_font
 
 log = logging.getLogger(__name__)
 

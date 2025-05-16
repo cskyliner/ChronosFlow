@@ -1,6 +1,6 @@
 from common import *
 from Emitter import Emitter
-from SetFont import common_set_font
+from Setfont import common_set_font
 
 log = logging.getLogger(__name__)
 

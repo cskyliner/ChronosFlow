@@ -2,7 +2,7 @@ from common import *
 from Emitter import Emitter
 from functools import partial
 from Event import BaseEvent, DDLEvent
-from SetFont import common_set_font
+from Setfont import common_set_font
 
 log = logging.getLogger("Upcoming")
 
