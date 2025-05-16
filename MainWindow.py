@@ -81,8 +81,6 @@ class MainWindow(QMainWindow):
 		self.notice_system = Notice()
 		# 用于在通知时自动显示悬浮窗
 		self.notice_system.notify_show_floating_window.connect(self.show_floating_window)
-		# 连接schedule_notice的信号
-		Emitter.instance().signal_to_schedule_notice.connect(self.notice_system.schedule_notice)
 
 		# 初始化托盘
 		self.tray = None
@@ -412,7 +410,9 @@ class MainWindow(QMainWindow):
 
 			if name == 'Upcoming':
 				self.upcoming.refresh_upcoming()
-
+			elif name == "Schedule":
+				self.schedule.deadline_edit.setDateTime(QDateTime.currentDateTime())
+				self.schedule.reminder_edit.setDateTime(QDateTime.currentDateTime())
 			stack.setCurrentIndex(self.main_stack_map[name])
 			log.info(f"跳转到{name}页面，日期为{date.toString() if date else date}")
 		else:
@@ -481,7 +481,6 @@ class MainWindow(QMainWindow):
 		self.tray.exit_app.connect(self.quit_application)
 		self.tray.activated_response.connect(self.show_main_window)
 		# 初始化托盘图标提醒
-		self.tray.show_notification("启动提醒", "程序已添加到系统托盘")
 		self.notice_system.notify_to_tray.connect(self.tray.notification_received)
 
 	def _get_icon_path(self):  # 暂时无用
