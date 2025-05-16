@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 class MainWindow(QMainWindow):
 
-	def __init__(self, app, width=800, height=600):
+	def __init__(self, app, width=1000, height=600):
 		super().__init__()
 		self.setWindowTitle("todolist")
 		# self.main_window_calendar = None
@@ -92,6 +92,11 @@ class MainWindow(QMainWindow):
 		# 悬浮窗口初始化
 		self._init_floating_window()
 
+		# 安装事件过滤器，处理Calendar页面的侧边栏的收放
+		self.main_stack.installEventFilter(self)
+		self.search_column.installEventFilter(self)
+		self.search_edit.installEventFilter(self)
+
 	# 或许可以有
 	# self.setWindowIcon(QIcon(self._get_icon_path()))
 
@@ -127,66 +132,53 @@ class MainWindow(QMainWindow):
 		sidebar_btn.setFont(self.button_font)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
-		# ===添加search文本框===
-		self.search_column_btn = QPushButton("<")
-		self.search_column_btn.setStyleSheet("""
-										QPushButton {
-										background-color: transparent;
-										border: none;
-										padding: 0;
-										margin: 0;
-										text-align: center;
-										color: #a0a0a0;
-										}
-										QPushButton:hover {
-										color: #07C160;
-										}
-										QPushButton:pressed {
-										color: #05974C;
-										}
-										""")
-		self.search_column_btn.setFont(self.button_font)
-		self.search_column_btn.clicked.connect(partial(self.toggle_search_column, btn=self.search_column_btn))
+		# 添加search文本框
 		# 左侧文本框
 		self.search_edit = QLineEdit()
-		self.search_edit.setPlaceholderText("请输入名称或日期...")
+		self.search_edit.setPlaceholderText("搜索")
+		_font = QFont()
+		_font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
+		self.search_edit.setFont(_font)
 		self.search_edit.setStyleSheet("""
 								    QLineEdit {
+								    background: transparent;
 						            padding: 8px;
 					                border: 1px solid #ccc;
-					                border-radius: 4px;
+					                border-top-left-radius: 19px;     /* 左上角 */
+    								border-top-right-radius: 0px;    /* 右上角 */
+    								border-bottom-left-radius: 19px;  /* 左下角 */
+    								border-bottom-right-radius: 0px; /* 右下角 */
 					                font-size: 14px;
 						            }
-						            QLineEdit:focus {
-						            border: 1px solid #4CAF50;
-						            }
 							    """)
-		# ===右侧按钮===
+		self.search_edit.setFixedHeight(38)
+		# 右侧按钮
 		btn = QPushButton()
 		btn.setIcon(QIcon.fromTheme("system-search"))
 		btn.setStyleSheet("""
 					QPushButton {
 		                background-color: transparent;
 		                border: 1px solid #d0d0d0;
-		                border-radius: 4px;
+		                border-top-left-radius: 0px;     /* 左上角 */
+    					      border-top-right-radius: 19px;    /* 右上角 */
+    					      border-bottom-left-radius: 0px;  /* 左下角 */
+    					      border-bottom-right-radius: 19px; /* 右下角 */
 		                padding: 25px;
 		                text-align: center;
 		            }
 		            QPushButton:hover {
 		                background-color: palette(midlight);
-		                border-radius: 4px;
 		            }
 		            QPushButton:pressed {
 						background-color: palette(mid);
 					}
 				""")
-		btn.setFixedSize(40, 40)
+		btn.setFixedSize(38, 38)
 		btn.clicked.connect(self.get_search_result)
 
 		upper_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
 		spacer = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
 		upper_layout.addItem(spacer)
-		upper_layout.addWidget(self.search_column_btn)
 		upper_layout.addWidget(self.search_edit)
 		upper_layout.addWidget(btn)
 		main_window_layout.addLayout(upper_layout)
@@ -437,20 +429,19 @@ class MainWindow(QMainWindow):
 			self.search_edit.clear()
 
 		if not self.search_column_visible:
-			self.toggle_search_column(self.search_column_btn)
+			self.toggle_search_column()
 
-	def toggle_search_column(self, btn):
-		"""处理search_column的变化TODO:调用"""
+	def toggle_search_column(self):
+		"""处理search_column的变化"""
+
 		self.search_column_visible = not self.search_column_visible
 
 		if self.search_column_visible:
 			self.animations["search_column"].setStartValue(0)
 			self.animations["search_column"].setEndValue(250)
-			btn.setText(">")
 		else:
 			self.animations["search_column"].setStartValue(250)
 			self.animations["search_column"].setEndValue(0)
-			btn.setText("<")
 
 		self.animations["search_column"].start()
 
@@ -555,3 +546,22 @@ class MainWindow(QMainWindow):
 				# 处理错误，例如使用默认日期
 				qdate = QDate.currentDate()
 				log.info(f"解析失败，使用当前日期: {qdate.toString()}")
+
+	def eventFilter(self, obj, event):
+		"""事件过滤器，用于Calendar的search_column"""
+		if event.type() == QEvent.MouseButtonPress:
+			# 如果当前显示的是带侧边栏的页面
+			if self.main_stack.currentWidget() == self.main_window:
+				# 处理文本框点击
+				if obj == self.search_edit and not self.search_column_visible and event.button() == Qt.LeftButton:
+					self.toggle_search_column()  # 打开侧边栏
+				# 处理收起侧边栏
+				else:
+					mouse_pos = event.globalPosition().toPoint()
+					search_column_pos = self.search_column.mapFromGlobal(mouse_pos)
+					search_edit_pos = self.search_edit.mapFromGlobal(mouse_pos)
+					if self.search_column_visible and not self.search_column.rect().contains(
+							search_column_pos) and not self.search_edit.rect().contains(search_edit_pos):
+						self.toggle_search_column()
+
+		return super().eventFilter(obj, event)
