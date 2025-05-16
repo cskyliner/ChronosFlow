@@ -92,7 +92,7 @@ class FloatingButton(QPushButton):
 			QPushButton {
 				background-color: rgba(7, 193, 96, 0.1);  /* 半透明绿色背景 */
 				border: 1px solid rgba(7, 193, 96, 0.3);
-				border-radius: 8px;                       /* 圆角 */
+				border-radius: 24px;                       /* 圆形 */
 				min-width: 48px;
 				min-height: 48px;
 				padding: 0;
@@ -231,7 +231,8 @@ class Upcoming(QListWidget):
 
 		self.kind = kind
 		self.events_used_to_update: tuple[DDLEvent] = tuple()  # 储存这次需要更新的至多10个数据
-		self.index_of_data_label = dict()  # 储存显示日期的项的位置
+		self.index_of_date_label = dict()  # 储存显示日期的项的位置
+		self.items_of_one_date = dict()  # 储存同一日期的项的位置,每个日期对应一个列表，列表中的项为tuple(id,位置)
 		self.loading = False  # 是否正在加载
 		self.no_more_events = False  # 是否显示全部数据
 		self.event_num = 0  # 记录当前个数，传给后端提取数据
@@ -244,7 +245,7 @@ class Upcoming(QListWidget):
 			log.info(f"共{self.event_num}条日程")
 			self.verticalScrollBar().valueChanged.connect(self.check_scroll)  # 检测是否滚动到底部
 		elif self.kind == 2:
-			self.load_more_data(True)
+			self.load_more_data()
 
 	def check_scroll(self):
 		"""检查是否滚动到底部"""
@@ -284,22 +285,26 @@ class Upcoming(QListWidget):
 			date_item = QListWidgetItem('\n明天\n————————')
 		else:
 			tmp_date = date.split('-')
-			date_item = QListWidgetItem(f"\n{tmp_date[0]}年{int(tmp_date[1])}月{int(tmp_date[2])}日\n————————")
+			if date[:4]==today[:4]:
+				date_item = QListWidgetItem(f"\n{int(tmp_date[1])}月{int(tmp_date[2])}日\n————————")
+			else:
+				date_item = QListWidgetItem(f"\n{tmp_date[0]}年{int(tmp_date[1])}月{int(tmp_date[2])}日\n————————")
+
 		date_item.setFont(font)
 
 		# 寻找插入位置（第一个比自身日期大的日期）
 		find = False
-		for key in self.index_of_data_label.keys():
+		for key in self.index_of_date_label.keys():
 			if key > date:
 				find = True
 				record = key
 				break
 		if find:
-			self.insertItem(self.index_of_data_label[record].row(), date_item)
+			self.insertItem(self.index_of_date_label[record].row(), date_item)
 		else:
 			self.addItem(date_item)
-		self.index_of_data_label[date] = QPersistentModelIndex(self.indexFromItem(date_item))
-		self.index_of_data_label = dict(sorted(self.index_of_data_label.items()))  # 保证日期标签按升序排列，仅支持python3.7及以上
+		self.index_of_date_label[date] = QPersistentModelIndex(self.indexFromItem(date_item))
+		self.index_of_date_label = dict(sorted(self.index_of_date_label.items()))  # 保证日期标签按升序排列，仅支持python3.7及以上
 
 	def get_data(self, data: tuple[BaseEvent] = None):
 		"""从后端加载数据"""
@@ -311,8 +316,8 @@ class Upcoming(QListWidget):
 		else:
 			log.info("接受数据为空，无更多数据")
 			# 数据加载完毕
-			if self.kind == 0:
-				self.no_more_events = True
+			self.no_more_events = True
+
 		# 删除加载标签
 		if hasattr(self, "loading_item"):
 			self.takeItem(self.row(self.loading_item))
@@ -327,31 +332,42 @@ class Upcoming(QListWidget):
 		item = QListWidgetItem()
 		item.setSizeHint(QSize(custom_widget.sizeHint().width(), 80))  # 设置合适的大小
 		# 如果没有对应日期的标签，就加上
-		if not event.datetime[:10] in self.index_of_data_label:
+		if not event.datetime[:10] in self.index_of_date_label:
 			self.add_date_label(event.datetime)
-
-		self.insertItem(self.index_of_data_label[event.datetime[:10]].row() + 1, item)
-		self.setItemWidget(item, custom_widget)
-		custom_widget.delete_me_signal.connect(self.delete_one_item)
+			self.insertItem(self.index_of_date_label[event.datetime[:10]].row() + 1, item)
+			self.setItemWidget(item, custom_widget)
+			self.items_of_one_date[event.datetime[:10]] = [(event.id, QPersistentModelIndex(self.indexFromItem(item)))]
+			custom_widget.delete_me_signal.connect(self.delete_one_item)
+		else:
+			self.insertItem(self.index_of_date_label[event.datetime[:10]].row() + 1, item)
+			self.setItemWidget(item, custom_widget)
+			self.items_of_one_date[event.datetime[:10]].append(
+				(event.id, QPersistentModelIndex(self.indexFromItem(item))))
+			custom_widget.delete_me_signal.connect(self.delete_one_item)
 
 	def delete_one_item(self, event: BaseEvent):
-		"""
-		删除事件
-		"""
-		for row in range(self.count()):
-			item = self.item(row)
-			widget = self.itemWidget(item)
-			if isinstance(widget, CustomListItem) and widget.nevent.id == event.id:
-				# 删除界面元素
-				self.takeItem(row)
-				log.info(f"删除事件成功：{event.title} @ {event.datetime}")
+		"""删除事件"""
+		date = event.datetime[:10]
+		for i in range(len(self.items_of_one_date[date])):
+			if self.items_of_one_date[date][i][0] == event.id:
+				self.takeItem(self.row(self.itemFromIndex(self.items_of_one_date[date][i][1])))
 				self.event_num -= 1
+				del self.items_of_one_date[date][i]
+				log.info(f"删除事件成功：{event.title} @ {event.datetime}")
+				# 删除日期标签
+				if len(self.items_of_one_date[date]) == 0:
+					del self.items_of_one_date[date]
+					self.takeItem(self.row(self.itemFromIndex(self.index_of_date_label[date])))
+					del self.index_of_date_label[date]
+					log.info(f"日期标签删除成功：{date}")
 				break
+
 		Emitter.instance().send_delelte_event_signal(event.id, event.table_name())
 
-	def load_more_data(self, only_one_day=False):
+	def load_more_data(self):
 		"""将数据添加到self"""
-		if not only_one_day:
+		if self.kind == 0:
+
 			# 连接接收信号
 			Emitter.instance().backend_data_to_frontend_signal.connect(self.get_data)
 			# 显示加载标签
@@ -367,15 +383,23 @@ class Upcoming(QListWidget):
 				return
 			for event in self.events_used_to_update:
 				self.add_one_item(event)
-		else:
+        
+		elif self.kind == 2:
 			# TODO:只获取指定日期的待办
 			pass
 
 	def load_searched_data(self, text):
 		"""search_column"""
+		if self.kind != 1:  # 仅供search_column调用
+			log.error("load_searched_data被非search_column调用！")
+			return
+
 		self.clear()
-		self.index_of_data_label.clear()
-		self.events_used_to_update=tuple()
+		self.index_of_date_label.clear()
+		self.items_of_one_date.clear()
+		self.events_used_to_update = tuple()
+		self.no_more_events = False
+
 		self.loading = False
 		self.event_num = 0
 		self.loading_item = None
@@ -389,7 +413,7 @@ class Upcoming(QListWidget):
 		# 断开接收信号连接
 		Emitter.instance().backend_data_to_frontend_signal.disconnect(self.get_data)
 
-		if len(self.events_used_to_update) > 0:
+		if not self.no_more_events:
 			for event in self.events_used_to_update:
 				self.add_one_item(event)
 		else:
@@ -397,12 +421,19 @@ class Upcoming(QListWidget):
 			font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
 			font.setPointSize(12)
 			item = QListWidgetItem("没有匹配的日程")
+			item.setFont(font)
 			item.setTextAlignment(Qt.AlignCenter)
 			self.addItem(item)
 
 	def refresh_upcoming(self):
+		"""用于每次切换到Upcoming时刷新"""
+		if self.kind != 0:  # 仅限Upcoming页面使用
+			log.error("refresh_upcoming被非Upcoming页面调用！")
+			return
+
 		self.clear()
-		self.index_of_data_label.clear()
+		self.index_of_date_label.clear()
+		self.items_of_one_date.clear()
 		self.events_used_to_update = tuple()
 		self.loading = False
 		self.no_more_events = False
