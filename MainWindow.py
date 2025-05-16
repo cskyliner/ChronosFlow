@@ -133,9 +133,7 @@ class MainWindow(QMainWindow):
 		# 左侧文本框
 		self.search_edit = QLineEdit()
 		self.search_edit.setPlaceholderText("搜索")
-		_font = QFont()
-		_font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
-		self.search_edit.setFont(_font)
+		set_font(self.search_edit)
 		self.search_edit.setStyleSheet("""
 								    QLineEdit {
 								    background: transparent;

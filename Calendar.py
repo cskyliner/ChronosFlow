@@ -1,5 +1,6 @@
 from common import *
 from Event import DDLEvent
+from PySide6.QtGui import QFont
 
 
 class CalendarDelegate(QStyledItemDelegate):
@@ -120,7 +121,7 @@ class CalendarDelegate(QStyledItemDelegate):
 				for i, event in enumerate(events[:]):
 					painter.drawText(
 						option.rect.x() + (
-									option.rect.width() - self.font_metrics.horizontalAdvance(event.title)) / 2 - 8,
+								option.rect.width() - self.font_metrics.horizontalAdvance(event.title)) / 2 - 8,
 						# 左侧缩进5px
 						y_pos + i * line_height,  # 垂直位置逐行增加
 						f"• {event.title}"
