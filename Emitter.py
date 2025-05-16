@@ -16,6 +16,7 @@ class Emitter(QObject):
 	refresh_upcoming_signal: Signal = Signal()								# 在切换到Upcoming时更新
 	create_event_signal: Signal = Signal(object)  							# 发送创建事件的信号
 	search_signal: Signal = Signal(str)  									# 发送sidebar搜索文本框的信息
+	modify_event_signal: Signal = Signal(object) 							# 发送修改事件的信号 
 	storage_path_signal: Signal = Signal(object) 							# 发送存储路径的信号
 	update_upcoming_event_signal: Signal = Signal(object)  					# 向后端发送更新upcoming的回调信号
 	delete_event_signal: Signal = Signal(object)  							# 发送删除事件的信号
@@ -87,6 +88,16 @@ class Emitter(QObject):
 		log.info(f"send create event signal，事件类型为{name}，参数为{args}")
 		out = ("create_event", name, True, *args)
 		self.create_event_signal.emit(out)
+
+	def send_modify_event_signal(self, name, *args):
+		"""
+		发送修改事件的信号
+		name为event类型如 DDL
+		*args代表name_event类对应的参数列表（元组）
+		"""
+		log.info(f"send modify event signal，事件类型为{name}，参数为{args}")
+		out = ("modify_event", name, False, *args)
+		self.modify_event_signal.emit(out)
 
 	def send_delelte_event_signal(self, event_id: int, event_table_type: str):
 		"""
