@@ -44,10 +44,6 @@ class Emitter(QObject):
 		"""向 main_stack发送改变页面的信号"""
 		self.page_change_signal.emit(name)
 
-	def send_search_signal(self, content):
-		"""发送sidebar搜索文本框的信息"""
-		self.search_signal.emit(content)
-
 	def send_dynamic_signal(self, *args):
 		"""发送格式不定的信号（元组形式）,只有一个对象也会变成元组"""
 		self.dynamic_signal.emit(args)
@@ -91,9 +87,8 @@ class Emitter(QObject):
 		log.info(f"send create event signal，事件类型为{name}，参数为{args}")
 		out = ("create_event", name, True, *args)
 		self.create_event_signal.emit(out)
-	
 
-	def send_delelte_event_signal(self, event_id: int,event_table_type: str):
+	def send_delelte_event_signal(self, event_id: int, event_table_type: str):
 		"""
 		发送删除事件的信号
 		event_id为事件ID
