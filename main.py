@@ -8,7 +8,7 @@ def init_platform_style(a):
 	if sys.platform == "win32":
 		a.setStyle(QStyleFactory.create("windows"))
 	elif sys.platform == "darwin":
-		a.setStyle(QStyleFactory.create("macintosh"))
+		a.setStyle(QStyleFactory.create("macos"))
 	elif sys.platform.startswith("linux"):
 		a.setStyle(QStyleFactory.create("fusion"))
 
