@@ -61,12 +61,13 @@ class MainWindow(QMainWindow):
 		self.button_font.setPointSize(18)
 
 		# 设置 main_stack各页面的内容，注意初始化顺序
-		self.setup_main_window()  # 日历窗口（主界面）
-		self.setup_create_event_window()  # 日程填写窗口
-		self.setup_setting_window()  # 设置界面
-		self.setup_upcoming_window()  # 日程展示窗口
+		self.setup_main_window()  					# 日历窗口（主界面）
+		self.setup_create_event_window()  			# 日程填写窗口
+		self.setup_setting_window()  				# 设置界面
+		self.setup_upcoming_window()  				# 日程展示窗口
 
-		self.load_event_in_calendar(self.upcoming.events)
+		# TODO:更改日历加载事件逻辑，通过向后端发送时间端请求事件，不要耦合upcoming完成
+		# self.load_event_in_calendar(self.upcoming.events)
   
 		# 初始化通知系统
 		self.notice_system = Notice()
