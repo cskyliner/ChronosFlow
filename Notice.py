@@ -40,24 +40,29 @@ class Notice(QObject):
 	def check_notice(self):
 		current = QDateTime.currentDateTime()
 		if self.latest_event:
-			notify_time = QDateTime.fromString(self.latest_event.datetime, "yyyy-MM-dd HH:mm")
-			if current >= notify_time:
+			notify_time = QDateTime.fromString(self.latest_event.advance_time, "yyyy-MM-dd HH:mm")
+			while self.latest_event and current >= notify_time:
 				log.info(f"提醒: {self.latest_event.title} - {self.latest_event.notes}")
 				if sys.platform == "darwin":
 					pync.notify(self.latest_event.notes, title='ChronosFlow', subtitle=self.latest_event.title, sound='Ping')
-				else:
-					self.notify_show_floating_window.emit()
+				#else:
+					"""self.notify_show_floating_window.emit()
 					self.notify_to_floating_window.emit(
 						self.latest_event.title,
 						self.latest_event.notes,
 						"#3498db"
 					)
-				self.notify_to_tray.emit(
-					self.latest_event.title,
-					self.latest_event.notes,
-					"#3498db"
-				)
+	 				self.notify_to_tray.emit(
+						self.latest_event.title,
+						self.latest_event.notes,
+						"#3498db"
+					)"""
+				self.latest_event = None
+				time.sleep(10)
 				self.request_latest_event(current)
+
+		else:
+			self.request_latest_event(current)
 	def check_notices(self):
 		"""检查是否到达通知时间"""
 		current = QDateTime.currentDateTime()
@@ -79,8 +84,9 @@ class Notice(QObject):
 				notice["content"],
 				notice["color"]
 			)
-	def update_latest_event(self, latest_event:DDLEvent):
-		self.latest_event = latest_event
+	def update_latest_event(self, latest_event_info:tuple):
+		self.latest_event = latest_event_info[0]
+		log.info(f"最新DDLEvent：{self.latest_event.title}; 提醒时间{self.latest_event.advance_time}; 截止时间{self.latest_event.datetime}")
 	def request_latest_event(self, cur_time: QDateTime):
 		Emitter.instance().request_latest_event_signal(cur_time)
 
@@ -95,12 +101,12 @@ class NotificationWidget(QFrame):
 
 	def _init_ui(self, title, content, color):
 		self.setStyleSheet(f"""
-            NotificationWidget {{
-                background: {color}15;
-                border-radius: 8px;
-                border: 2px solid {color};
-            }}
-        """)
+			NotificationWidget {{
+				background: {color}15;
+				border-radius: 8px;
+				border: 2px solid {color};
+			}}
+		""")
 
 		layout = QVBoxLayout()
 		layout.setContentsMargins(12, 8, 12, 8)
@@ -108,19 +114,19 @@ class NotificationWidget(QFrame):
 		# 标题
 		title_label = QLabel(title)
 		title_label.setStyleSheet(f"""
-            font-size: 14px; 
-            font-weight: bold; 
-            color: {color};
-            margin-bottom: 4px;
-        """)
+			font-size: 14px; 
+			font-weight: bold; 
+			color: {color};
+			margin-bottom: 4px;
+		""")
 		layout.addWidget(title_label)
 
 		# 内容
 		content_label = QLabel(content)
 		content_label.setStyleSheet("""
-            font-size: 12px;
-            color: #2c3e50;
-        """)
+			font-size: 12px;
+			color: #2c3e50;
+		""")
 		layout.addWidget(content_label)
 
 		self.setLayout(layout)

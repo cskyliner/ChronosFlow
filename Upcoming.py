@@ -5,7 +5,6 @@ from Event import BaseEvent, DDLEvent
 
 log = logging.getLogger("Upcoming")
 
-
 class DeleteButton(QPushButton):
 	def __init__(self, parent=None):
 		super().__init__("🗑", parent)  # 使用垃圾桶emoji
@@ -150,11 +149,12 @@ class FloatingButton(QPushButton):
 
 class CustomListItem(QWidget):
 	"""一条日程"""
-
-	def __init__(self, theme, parent=None):
+	delete_me_signal:Signal = Signal(BaseEvent)
+	def __init__(self, event:BaseEvent, parent=None):
 		super().__init__(parent)
 		self.setAttribute(Qt.WA_StyledBackground, True)
-
+		# 绑定item和对应的event
+		self.nevent = event 
 		self.setStyleSheet("""
 		            CustomListItem {
 		                background-color: transparent;
@@ -182,7 +182,7 @@ class CustomListItem(QWidget):
 		font1.setPointSize(18)
 
 		# 展示主题的标签
-		self.theme_display_label = QLabel(f"{theme}")
+		self.theme_display_label = QLabel(f"{event.title}")
 		self.theme_display_label.setFont(font)
 		layout.addWidget(self.theme_display_label)
 
@@ -192,13 +192,14 @@ class CustomListItem(QWidget):
 
 		self.view_schedule_button = EyeButton()
 		# self.view_schedule_button.clicked.connect() TODO: 跳转到之前的日程记录页面,需要补充函数访问后端数据
-		# self.delete_button.clicked.connect() TODO: 需要补充函数删除这个日程对应的后端数据(前端消失我之后再写)
 		self.delete_button = DeleteButton()
+		self.delete_button.clicked.connect(self.this_one_is_deleted) 
 
 		self.setLayout(layout)
 		layout.addWidget(self.view_schedule_button)
 		layout.addWidget(self.delete_button)
-
+	def this_one_is_deleted(self):
+		self.delete_me_signal.emit(self.nevent)
 	def this_one_is_finished(self):
 		"""打勾后发信号"""
 		# TODO
@@ -227,14 +228,13 @@ class Upcoming(QListWidget):
 		    }}
 		""")
 
-		self.events: list[DDLEvent] = []  # 存贮所有从后端得到的数据，用于储存id
-		self.events_used_to_update: tuple[DDLEvent] = tuple()  # 储存这次需要更新的至多10个数据
-		self.index_of_data_label = dict()  # 储存显示日期的项的位置
-		self.loading = False  # 是否正在加载
-		self.no_more_events = False  # 是否显示全部数据
-		self.event_num = 0  # 记录当前个数，传给后端提取数据
-		self.page_num = 10  # 每页显示的事件数
-		self.loading_item = None  # 加载标签
+		self.events_used_to_update: tuple[DDLEvent] = tuple()  	# 储存这次需要更新的至多10个数据
+		self.index_of_data_label = dict()  						# 储存显示日期的项的位置
+		self.loading = False  									# 是否正在加载
+		self.no_more_events = False  							# 是否显示全部数据
+		self.event_num = 0  									# 记录当前个数，传给后端提取数据
+		self.page_num = 10  									# 每页显示的事件数
+		self.loading_item = None  								# 加载标签
 
 		# 添加今天、明天两个标签
 		font = QFont()
@@ -275,8 +275,10 @@ class Upcoming(QListWidget):
 		"""在Upcoming中顺序改变时显示在log中，并通知后端"""
 		# TODO：通知后端：移动的event的日期改变
 		log.info("Upcoming顺序改变")
+		pass
 
 	def show_loading_label(self):
+		"""显示加载标签"""
 		self.loading_item = QListWidgetItem("Loading……")
 		self.loading_item.setTextAlignment(Qt.AlignCenter)
 		self.addItem(self.loading_item)
@@ -284,7 +286,6 @@ class Upcoming(QListWidget):
 	def add_date_label(self, date):
 		"""
 		在所有同一天的日程前加上日期
-		仅支持python3.7及以上
 		"""
 		font = QFont()
 		font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
@@ -312,7 +313,6 @@ class Upcoming(QListWidget):
 		if data is not None and len(data) > 0:
 			log.info(f"接收数据成功，共接收 {len(data)} 条数据：\n" +
 					 "\n".join(f"- {event.title} @ {event.datetime}" for event in data))
-			self.events.extend(data)
 			self.events_used_to_update = data
 			self.event_num += len(data)
 		else:
@@ -324,12 +324,12 @@ class Upcoming(QListWidget):
 			self.takeItem(self.row(self.loading_item))
 			del self.loading_item
 
-	def add_one_item(self, event):
+	def add_one_item(self, event:BaseEvent):
 		"""
 		将每条的日期和已有的日期比较，如果日期已有，插入到这一日期标签的下面；如果没有，新建日期标签
 		self.index_of_data_label的形式为event.datetime[:10],仅有年月日
 		"""
-		custom_widget = CustomListItem(f"{event.title}")
+		custom_widget = CustomListItem(event)
 		item = QListWidgetItem()
 		item.setSizeHint(QSize(custom_widget.sizeHint().width(), 80))  # 设置合适的大小
 		# 如果没有对应日期的标签，就加上
@@ -338,7 +338,22 @@ class Upcoming(QListWidget):
 
 		self.insertItem(self.index_of_data_label[event.datetime[:10]].row() + 1, item)
 		self.setItemWidget(item, custom_widget)
+		custom_widget.delete_me_signal.connect(self.delete_one_item)
 
+	def delete_one_item(self,event:BaseEvent):
+		"""
+		删除事件
+		"""
+		for row in range(self.count()):
+			item = self.item(row)
+			widget = self.itemWidget(item)
+			if isinstance(widget, CustomListItem) and widget.nevent.id == event.id:
+				# 删除界面元素
+				self.takeItem(row)
+				log.info(f"删除事件成功：{event.title} @ {event.datetime}")
+				self.event_num-=1
+				break
+		Emitter.instance().send_delelte_event_signal(event.id,event.table_name())
 	def load_more_data(self):
 		"""将数据添加到self"""
 		# 连接接收信号
@@ -354,6 +369,5 @@ class Upcoming(QListWidget):
 		if self.no_more_events:
 			log.info("没有更多数据了，停止加载……")
 			return
-
 		for event in self.events_used_to_update:
 			self.add_one_item(event)
