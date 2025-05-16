@@ -3,8 +3,10 @@ from common import *
 
 if sys.platform == 'darwin':
 	import pystray
+	import threading
 from PIL import Image
 
+log = logging.getLogger(__name__)
 
 class Tray(QObject):
 	show_main = Signal()
@@ -18,6 +20,8 @@ class Tray(QObject):
 		self.app = app or QApplication.instance()
 		self.icon_path = icon_path
 		self.notification_widgets = []
+		self.frame_index = 0			# 当前为动图第几帧
+		self.frames = []				# 存储动图
 		self._init_tray()
 		self._connect_signals()
 
@@ -29,11 +33,12 @@ class Tray(QObject):
 			else:
 				self._init_macos_tray()
 		except Exception as e:
-			print(f"托盘初始化失败: {str(e)}")
+			log.error(f"托盘初始化失败: {str(e)}")
 			self._create_fallback_tray()
 
 	def _init_windows_tray(self):
 		"""Windows托盘实现"""
+		log.info("初始化托盘")
 		self.tray = QSystemTrayIcon(self)  # 关键修复：设置parent
 		self._setup_icon()
 		self._create_menu()
@@ -42,12 +47,21 @@ class Tray(QObject):
 
 	def _init_macos_tray(self):
 		"""macOS托盘实现"""
+		log.info("初始化托盘")
+		self.load_frames()
 		self.tray = pystray.Icon(
 			"app_tray",
 			self._create_pillow_icon(),
 			"待办事项",
 			self._create_pystray_menu()
 		)
+		# def update_icon():
+		# 	while self.tray.visible:
+		# 		self.tray.icon = self.frames[self.frame_index]
+		# 		self.frame_index = (self.frame_index + 1) % len(self.frames)
+		# 		time.sleep(0.1)  # 控制帧率，10fps
+
+		# threading.Thread(target=update_icon, daemon=True).start()
 		self.tray.run_detached()
 
 	def _create_fallback_tray(self):
@@ -73,6 +87,7 @@ class Tray(QObject):
 		"""安全创建菜单"""
 		menu = QMenu()
 
+
 		actions = [
 			("打开主窗口", lambda: self.show_main.emit()),
 			("打开悬浮窗", lambda: self.show_floating.emit()),
@@ -97,8 +112,22 @@ class Tray(QObject):
 	# 暂时无用
 	def _create_pillow_icon(self):
 		"""生成默认托盘图标"""
-		img = Image.new('RGB', (64, 64), (70, 130, 180))
-		return img
+		if self.frames:
+			return self.frames[0]
+		else:
+			img = Image.new('RGB', (64, 64), (70, 130, 180))
+			return img
+
+	def load_frames(self, frame_folder='pic', frame_count=36):
+		"""TODO:macos托盘加载多帧PNG图像"""
+		self.frames = []
+		path = f"{frame_folder}/icon_bar.png"
+		img = Image.open(path).convert("RGBA")
+		self.frames.append(img)
+		# for i in range(frame_count):
+		# 	path = f"{frame_folder}/frame_{i:02d}.png"
+		# 	img = Image.open(path).convert("RGBA")
+		# 	self.frames.append(img)
 
 	@Slot(str, str, str)
 	def show_notification(self, title, message, color=None):

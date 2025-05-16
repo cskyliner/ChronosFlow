@@ -18,9 +18,9 @@ class SideBar(QFrame):
 		button_font.setPointSize(15)
 
 		_font = QFont()
-		_font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
+		_font.setFamilies(["Inter", "Helvetica Neue", "Segoe UI", "Arial"])
 		_font.setPointSize(20)
-		name_label=QLabel("Todolist\n————————")
+		name_label=QLabel("ChronosFlow\n————————")
 		name_label.setAlignment(Qt.AlignCenter)
 		name_label.setFont(_font)
 		layout.addWidget(name_label)

@@ -220,7 +220,14 @@ def recieve_signal(recieve_data: tuple) -> None:
 		add = recieve_data[2]  						# 是否添加到数据库
 		args = recieve_data[3:]  					# 事件参数
 		EventFactory.create(event_type, add, *args)
-		log.info(f"接收{recieve_data[0]}信号成功，创建事件{event_type}，参数为{args}")
+		log.info(f"接收{recieve_data[0]}信号成功，创建{event_type}事件，参数为{args}")
+	elif recieve_data[0] == "modify_event":
+		event_type = recieve_data[1]  				# 事件类型
+		add = recieve_data[2]  						# 是否添加到数据库
+		args = recieve_data[3:]  					# 事件参数
+		event = EventFactory.create(event_type, add, *args)
+		event.modify_event()
+		log.info(f"接收{recieve_data[0]}信号成功，修改{event_type}事件，参数为{args}")
 	elif recieve_data[0] == "storage_path":
 		path = recieve_data[1]
 		DB_PATH = os.path.join(path, "events.db")
@@ -300,7 +307,7 @@ def search_all(keyword: tuple[str]) -> list[BaseEvent]:
 	多关键词模糊性全局搜索（AND关系）
 	"""
 	result: list[BaseEvent] = []
-	cursor.execute("SELECT name FROM sqlite_master WHERE type ='table'")  					# 获取所有table
+	cursor.execute("SELECT name FROM sqlite_master WHERE type ='table' AND name != 'global_id'")  					# 获取所有table
 	tables = [row[0] for row in cursor.fetchall()]
 	for table in tables:
 		cursor.execute(f"PRAGMA table_info({table})")  										# 通过PRAGMA获取table列信息

@@ -18,7 +18,7 @@ class MainWindow(QMainWindow):
 
 	def __init__(self, app, width=1000, height=600):
 		super().__init__()
-		self.setWindowTitle("todolist")
+		self.setWindowTitle("ChronosFlow")
 		# self.main_window_calendar = None
 
 		# 获取屏幕尺寸，设置主窗口位置
@@ -152,6 +152,10 @@ class MainWindow(QMainWindow):
 						            }
 							    """)
 		self.search_edit.setFixedHeight(38)
+		
+		# 回车触发搜索功能
+		self.search_edit.returnPressed.connect(self.get_search_result)
+
 		# 右侧按钮
 		btn = QPushButton()
 		btn.setIcon(QIcon.fromTheme("system-search"))
