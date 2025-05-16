@@ -280,16 +280,20 @@ def request_signal(recieve_data: tuple) -> None:
 		log.info(f"接收{signal_name}请求信号成功，获取事件")
 		return
 	else:
+		if signal_name == "latest_event":
+			print("纳尼？")
 		log.error(f"接收信号失败，未知信号类型{signal_name}，参数为{recieve_data}")
 	# 发送结果给回调函数
 	Emitter.instance().send_backend_data_to_frontend_signal(result)
 
-def get_latest_ddlevent(now_time:str) -> BaseEvent:
+def get_latest_ddlevent(now_time:str) -> DDLEvent:
 	"""
 	获取最新的ddlevent，其 advance_time 不早于 now_time
 	"""
 	global latest_ddlevent
-	cursor.execute("SELECT * FROM ddlevents WHERE advance_time > ? ORDER BY advance_time DESC LIMIT 1",
+	log.info(f"当前时间：{now_time}")
+
+	cursor.execute("SELECT * FROM ddlevents WHERE advance_time >= ? ORDER BY advance_time ASC LIMIT 1",
         			(now_time,))
 	row = cursor.fetchone()
 	if row is None:
@@ -298,7 +302,7 @@ def get_latest_ddlevent(now_time:str) -> BaseEvent:
 	paras = row[1:]
 	event = EventFactory.create("DDL", False, *paras)
 	event.id = row[0]
-	log.info(f"获取最新的DDL事件成功，事件为{event.title}")
+	log.info(f"获取最新的DDL事件成功，事件为{event.title} @ {event.advance_time}")
 	latest_ddlevent = event
 	return event
 
