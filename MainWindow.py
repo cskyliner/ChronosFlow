@@ -10,7 +10,7 @@ from FloatingWindow import FloatingWindow
 from Notice import Notice
 from Upcoming import Upcoming, FloatingButton
 from Event import BaseEvent, DDLEvent
-from Setfont import common_set_font
+from FontSetting import set_font
 
 log = logging.getLogger(__name__)
 
@@ -126,7 +126,7 @@ class MainWindow(QMainWindow):
 									color: #05974C;
 								}
 				            """)
-		common_set_font(sidebar_btn,1)
+		set_font(sidebar_btn,1)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 添加search文本框
@@ -234,7 +234,7 @@ class MainWindow(QMainWindow):
 								color: #05974C;
 								}
 								""")
-		common_set_font(sidebar_btn)
+		set_font(sidebar_btn)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 返回按钮，回到calendar
@@ -255,7 +255,7 @@ class MainWindow(QMainWindow):
 								color: rgb(189,41,29);
 								}
 						        """)
-		common_set_font(return_btn,1)
+		set_font(return_btn,1)
 		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
 
 		btn_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -294,7 +294,7 @@ class MainWindow(QMainWindow):
 								color: #05974C;
 								}
 						            """)
-		common_set_font(sidebar_btn)
+		set_font(sidebar_btn)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 返回按钮，回到calendar
@@ -315,7 +315,7 @@ class MainWindow(QMainWindow):
 								color: rgb(189,41,29);
 								}
 				            """)
-		common_set_font(return_btn,1)
+		set_font(return_btn,1)
 		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
 
 		btn_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -354,7 +354,7 @@ class MainWindow(QMainWindow):
 								color: #05974C;
 								}
 								""")
-		common_set_font(sidebar_btn,1)
+		set_font(sidebar_btn,1)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 返回按钮，回到calendar
@@ -375,7 +375,7 @@ class MainWindow(QMainWindow):
 								color: rgb(189,41,29);
 								}
 								""")
-		common_set_font(return_btn,1)
+		set_font(return_btn,1)
 		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
 
 		btn_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)

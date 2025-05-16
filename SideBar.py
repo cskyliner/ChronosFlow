@@ -1,7 +1,7 @@
 from common import *
 from functools import partial
 from Emitter import Emitter
-from Setfont import common_set_font
+from FontSetting import set_font
 
 
 class SideBar(QFrame):
@@ -15,7 +15,7 @@ class SideBar(QFrame):
 
 		name_label = QLabel("ChronosFlow\n————————")
 		name_label.setAlignment(Qt.AlignCenter)
-		common_set_font(name_label, 2)
+		set_font(name_label, 2)
 		layout.addWidget(name_label)
 
 		# 把sidebar撑开
@@ -41,7 +41,7 @@ class SideBar(QFrame):
 					background-color: palette(mid);
 				}
             """)
-			common_set_font(btn, 1)
+			set_font(btn, 1)
 			layout.addWidget(btn)
 			# 连接按钮与切换页面信号
 			btn.clicked.connect(partial(Emitter.instance().send_page_change_signal, name))

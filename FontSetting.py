@@ -15,7 +15,7 @@ title_font.setFamilies(["Inter", "Helvetica Neue", "Segoe UI", "Arial"])
 title_font.setPointSize(20)
 
 
-def common_set_font(my_widget, kind=0):
+def set_font(my_widget, kind=0):
 	"""
 	设置init中有的字体字体
 	"""

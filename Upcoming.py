@@ -2,7 +2,7 @@ from common import *
 from Emitter import Emitter
 from functools import partial
 from Event import BaseEvent, DDLEvent
-from Setfont import common_set_font
+from FontSetting import set_font
 
 log = logging.getLogger("Upcoming")
 
@@ -178,7 +178,7 @@ class CustomListItem(QWidget):
 
 		# 展示主题的标签
 		self.theme_display_label = QLabel(f"{event.title}")
-		common_set_font(self.theme_display_label)
+		set_font(self.theme_display_label)
 		layout.addWidget(self.theme_display_label)
 
 		# 弹性空白区域（将右侧按钮推到最右）
@@ -282,7 +282,7 @@ class Upcoming(QListWidget):
 				date_item = QListWidgetItem(f"\n{int(tmp_date[1])}月{int(tmp_date[2])}日\n————————")
 			else:
 				date_item = QListWidgetItem(f"\n{tmp_date[0]}年{int(tmp_date[1])}月{int(tmp_date[2])}日\n————————")
-		common_set_font(date_item)
+		set_font(date_item)
 
 		# 寻找插入位置（第一个比自身日期大的日期）
 		find = False
@@ -407,7 +407,7 @@ class Upcoming(QListWidget):
 				self.add_one_item(event)
 		else:
 			item = QListWidgetItem("没有匹配的日程")
-			common_set_font(item)
+			set_font(item)
 			item.setTextAlignment(Qt.AlignCenter)
 			self.addItem(item)
 

@@ -1,6 +1,6 @@
 from common import *
 from Emitter import Emitter
-from Setfont import common_set_font
+from FontSetting import set_font
 
 log = logging.getLogger(__name__)
 
@@ -16,14 +16,14 @@ class Schedule(QWidget):
 		# 单行文本框
 		self.theme_text_edit = QLineEdit()
 		self.theme_text_edit.setPlaceholderText("主题")
-		common_set_font(self.theme_text_edit)
+		set_font(self.theme_text_edit)
 		self.theme_text_edit.setFixedHeight(50)
 		layout.addWidget(self.theme_text_edit)
 
 		# 创建多行文本框
 		self.text_edit = QPlainTextEdit()
 		self.text_edit.setPlaceholderText("内容")
-		common_set_font(self.text_edit)
+		set_font(self.text_edit)
 		layout.addWidget(self.text_edit)
 
 		# 截止、提醒时间选择框
@@ -32,11 +32,11 @@ class Schedule(QWidget):
 		# 截止时间选择框
 		deadline_layout = QVBoxLayout()
 		self.deadline_label = QLabel("截止时间:")
-		common_set_font(self.deadline_label)
+		set_font(self.deadline_label)
 		deadline_layout.addWidget(self.deadline_label)
 
 		self.deadline_edit = QDateTimeEdit()
-		common_set_font(self.deadline_edit)
+		set_font(self.deadline_edit)
 		self.deadline_edit.setDisplayFormat("yyyy-MM-dd HH:mm")
 		self.deadline_edit.setDateTime(QDateTime.currentDateTime())
 		self.deadline_edit.setCalendarPopup(True)  # 在点击时弹出日历
@@ -61,11 +61,11 @@ class Schedule(QWidget):
 		# 提醒时间选择框
 		reminder_layout = QVBoxLayout()
 		self.reminder_label = QLabel("提醒时间:")
-		common_set_font(self.reminder_label)
+		set_font(self.reminder_label)
 		reminder_layout.addWidget(self.reminder_label)
 
 		self.reminder_edit = QDateTimeEdit()
-		common_set_font(self.reminder_edit)
+		set_font(self.reminder_edit)
 		self.reminder_edit.setDisplayFormat("yyyy-MM-dd HH:mm")
 		self.reminder_edit.setDateTime(QDateTime.currentDateTime())
 		self.reminder_edit.setCalendarPopup(True)
@@ -109,7 +109,7 @@ class Schedule(QWidget):
 					background-color: palette(mid);
 				}
 							""")
-		common_set_font(btn)
+		set_font(btn)
 		button_layout.addWidget(btn)
 
 		# 状态栏
