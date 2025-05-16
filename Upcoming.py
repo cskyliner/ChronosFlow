@@ -92,7 +92,7 @@ class FloatingButton(QPushButton):
 			QPushButton {
 				background-color: rgba(7, 193, 96, 0.1);  /* 半透明绿色背景 */
 				border: 1px solid rgba(7, 193, 96, 0.3);
-				border-radius: 8px;                       /* 圆角 */
+				border-radius: 24px;                       /* 圆形 */
 				min-width: 48px;
 				min-height: 48px;
 				padding: 0;
@@ -285,7 +285,10 @@ class Upcoming(QListWidget):
 			date_item = QListWidgetItem('\n明天\n————————')
 		else:
 			tmp_date = date.split('-')
-			date_item = QListWidgetItem(f"\n{tmp_date[0]}年{int(tmp_date[1])}月{int(tmp_date[2])}日\n————————")
+			if date[:4]==today[:4]:
+				date_item = QListWidgetItem(f"\n{int(tmp_date[1])}月{int(tmp_date[2])}日\n————————")
+			else:
+				date_item = QListWidgetItem(f"\n{tmp_date[0]}年{int(tmp_date[1])}月{int(tmp_date[2])}日\n————————")
 		date_item.setFont(font)
 
 		# 寻找插入位置（第一个比自身日期大的日期）
@@ -414,6 +417,7 @@ class Upcoming(QListWidget):
 			font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
 			font.setPointSize(12)
 			item = QListWidgetItem("没有匹配的日程")
+			item.setFont(font)
 			item.setTextAlignment(Qt.AlignCenter)
 			self.addItem(item)
 
