@@ -10,6 +10,7 @@ from FloatingWindow import FloatingWindow
 from Notice import Notice
 from Upcoming import Upcoming, FloatingButton
 from Event import BaseEvent, DDLEvent
+from SetFont import common_set_font
 
 log = logging.getLogger(__name__)
 
@@ -64,11 +65,6 @@ class MainWindow(QMainWindow):
 
 		# 通过名称记录页面，使用字典双向映射
 		self.main_stack_map = {}  # 名称→索引
-
-		# 字体
-		self.button_font = QFont()
-		self.button_font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
-		self.button_font.setPointSize(18)
 
 		# 设置 main_stack各页面的内容，注意初始化顺序
 		self.setup_main_window()  # 日历窗口（主界面）
@@ -130,7 +126,7 @@ class MainWindow(QMainWindow):
 									color: #05974C;
 								}
 				            """)
-		sidebar_btn.setFont(self.button_font)
+		common_set_font(sidebar_btn,1)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 添加search文本框
@@ -238,7 +234,7 @@ class MainWindow(QMainWindow):
 								color: #05974C;
 								}
 								""")
-		sidebar_btn.setFont(self.button_font)
+		common_set_font(sidebar_btn)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 返回按钮，回到calendar
@@ -259,7 +255,7 @@ class MainWindow(QMainWindow):
 								color: rgb(189,41,29);
 								}
 						        """)
-		return_btn.setFont(self.button_font)
+		common_set_font(return_btn,1)
 		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
 
 		btn_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -298,7 +294,7 @@ class MainWindow(QMainWindow):
 								color: #05974C;
 								}
 						            """)
-		sidebar_btn.setFont(self.button_font)
+		common_set_font(sidebar_btn)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 返回按钮，回到calendar
@@ -319,7 +315,7 @@ class MainWindow(QMainWindow):
 								color: rgb(189,41,29);
 								}
 				            """)
-		return_btn.setFont(self.button_font)
+		common_set_font(return_btn,1)
 		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
 
 		btn_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -358,7 +354,7 @@ class MainWindow(QMainWindow):
 								color: #05974C;
 								}
 								""")
-		sidebar_btn.setFont(self.button_font)
+		common_set_font(sidebar_btn,1)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 返回按钮，回到calendar
@@ -379,7 +375,7 @@ class MainWindow(QMainWindow):
 								color: rgb(189,41,29);
 								}
 								""")
-		return_btn.setFont(self.button_font)
+		common_set_font(return_btn,1)
 		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
 
 		btn_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)

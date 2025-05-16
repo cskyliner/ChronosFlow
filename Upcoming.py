@@ -2,6 +2,7 @@ from common import *
 from Emitter import Emitter
 from functools import partial
 from Event import BaseEvent, DDLEvent
+from SetFont import common_set_font
 
 log = logging.getLogger("Upcoming")
 
@@ -175,14 +176,9 @@ class CustomListItem(QWidget):
 		self.finish_checkbox.toggled.connect(partial(self.this_one_is_finished))
 		layout.addWidget(self.finish_checkbox)
 
-		# 字体
-		font = QFont()
-		font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
-		font.setPointSize(13)
-
 		# 展示主题的标签
 		self.theme_display_label = QLabel(f"{event.title}")
-		self.theme_display_label.setFont(font)
+		common_set_font(self.theme_display_label)
 		layout.addWidget(self.theme_display_label)
 
 		# 弹性空白区域（将右侧按钮推到最右）
@@ -270,9 +266,6 @@ class Upcoming(QListWidget):
 		"""
 		在所有同一天的日程前加上日期
 		"""
-		font = QFont()
-		font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
-		font.setPointSize(12)
 
 		today = QDate.currentDate()
 		tomorrow = today.addDays(1).toString("yyyy-MM-dd")
@@ -289,7 +282,7 @@ class Upcoming(QListWidget):
 				date_item = QListWidgetItem(f"\n{int(tmp_date[1])}月{int(tmp_date[2])}日\n————————")
 			else:
 				date_item = QListWidgetItem(f"\n{tmp_date[0]}年{int(tmp_date[1])}月{int(tmp_date[2])}日\n————————")
-		date_item.setFont(font)
+		common_set_font(date_item)
 
 		# 寻找插入位置（第一个比自身日期大的日期）
 		find = False
@@ -413,11 +406,8 @@ class Upcoming(QListWidget):
 			for event in self.events_used_to_update:
 				self.add_one_item(event)
 		else:
-			font = QFont()
-			font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
-			font.setPointSize(12)
 			item = QListWidgetItem("没有匹配的日程")
-			item.setFont(font)
+			common_set_font(item)
 			item.setTextAlignment(Qt.AlignCenter)
 			self.addItem(item)
 

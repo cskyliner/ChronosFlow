@@ -1,6 +1,7 @@
 from common import *
 from functools import partial
 from Emitter import Emitter
+from SetFont import common_set_font
 
 
 class SideBar(QFrame):
@@ -12,17 +13,12 @@ class SideBar(QFrame):
 		layout = QVBoxLayout()
 		layout.setContentsMargins(10, 10, 10, 20)
 
-		# 使用Qt的字体回退机制，解决在Mac上找不到字体报错的问题
-		button_font = QFont()
-		button_font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
-		button_font.setPointSize(15)
-
-		_font = QFont()
-		_font.setFamilies(["Inter", "Helvetica Neue", "Segoe UI", "Arial"])
-		_font.setPointSize(20)
+		title_font = QFont()
+		title_font.setFamilies(["Inter", "Helvetica Neue", "Segoe UI", "Arial"])
+		title_font.setPointSize(20)
 		name_label=QLabel("ChronosFlow\n————————")
 		name_label.setAlignment(Qt.AlignCenter)
-		name_label.setFont(_font)
+		name_label.setFont(title_font)
 		layout.addWidget(name_label)
 
 		#把sidebar撑开
@@ -48,7 +44,7 @@ class SideBar(QFrame):
 					background-color: palette(mid);
 				}
             """)
-			btn.setFont(button_font)
+			common_set_font(btn,1)
 			layout.addWidget(btn)
 			# 连接按钮与切换页面信号
 			btn.clicked.connect(partial(Emitter.instance().send_page_change_signal, name))
