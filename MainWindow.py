@@ -106,11 +106,12 @@ class MainWindow(QMainWindow):
 		"""
 		self.main_window = QWidget()
 		main_window_layout = QVBoxLayout()  # 内容区域布局
-		main_window_layout.setSpacing(0)  # 设置相邻控件间距为0
+		main_window_layout.setSpacing(5)  # 设置相邻控件间距为0
 		main_window_layout.setContentsMargins(20, 5, 20, 20)
 		self.main_window.setLayout(main_window_layout)
 
 		upper_layout = QHBoxLayout()
+		upper_layout.setSpacing(0)
 		# 添加'<'按钮
 		sidebar_btn = QPushButton("<")
 		sidebar_btn.setStyleSheet("""
