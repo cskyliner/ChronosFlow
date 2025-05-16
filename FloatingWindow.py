@@ -1,12 +1,12 @@
 from common import *
 # ---------------------- 悬浮窗口类 ----------------------
 from Notice import NotificationWidget
-
+from Event import DDLEvent
 
 class FloatingWindow(QWidget):
 	exit_requested = Signal()  # 完全退出信号
 	show_main_requested = Signal()  # 显示主窗口信号
-	notification_received = Signal(str, str, str)  # 通知信号(主题，内容，颜色)
+	notification_received = Signal(object)  # 通知信号
 
 	def __init__(self, parent=None, show_x=40, show_y=400, width=300, height=200):
 		super().__init__(parent)
@@ -106,10 +106,11 @@ class FloatingWindow(QWidget):
 		self.btn_exit.clicked.connect(self.exit_requested.emit)
 		self.notification_received.connect(self.show_notification)
 
-	@Slot(str, str, str)
-	def show_notification(self, title, content, color):
+	@Slot(object)
+	def show_notification(self, data:tuple):
 		"""显示通知"""
-		notification = NotificationWidget(title, content, color, self)
+		event = data[0]
+		notification = NotificationWidget(event.title, event.notes, "#3498db", self)
 		self.notification_area.addWidget(notification)
 		notification.show()
 		self.notification_widgets.append(notification)
