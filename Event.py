@@ -280,6 +280,8 @@ def request_signal(recieve_data: tuple) -> None:
 		log.info(f"接收{signal_name}请求信号成功，获取事件")
 		return
 	else:
+		if signal_name == "latest_event":
+			print("纳尼？")
 		log.error(f"接收信号失败，未知信号类型{signal_name}，参数为{recieve_data}")
 	# 发送结果给回调函数
 	Emitter.instance().send_backend_data_to_frontend_signal(result)
