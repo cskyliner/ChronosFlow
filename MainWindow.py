@@ -136,17 +136,22 @@ class MainWindow(QMainWindow):
 		# 左侧文本框
 		self.search_edit = QLineEdit()
 		self.search_edit.setPlaceholderText("搜索")
+		_font = QFont()
+		_font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
+		self.search_edit.setFont(_font)
 		self.search_edit.setStyleSheet("""
 								    QLineEdit {
+								    background: transparent;
 						            padding: 8px;
 					                border: 1px solid #ccc;
-					                border-radius: 4px;
+					                border-top-left-radius: 19px;     /* 左上角 */
+    								border-top-right-radius: 0px;    /* 右上角 */
+    								border-bottom-left-radius: 19px;  /* 左下角 */
+    								border-bottom-right-radius: 0px; /* 右下角 */
 					                font-size: 14px;
 						            }
-						            QLineEdit:focus {
-						            border: 1px solid #4CAF50;
-						            }
 							    """)
+		self.search_edit.setFixedHeight(38)
 		# 右侧按钮
 		btn = QPushButton()
 		btn.setIcon(QIcon.fromTheme("system-search"))
@@ -154,19 +159,21 @@ class MainWindow(QMainWindow):
 					QPushButton {
 		                background-color: transparent;
 		                border: 1px solid #d0d0d0;
-		                border-radius: 4px;
+		                border-top-left-radius: 0px;     /* 左上角 */
+    					border-top-right-radius: 19px;    /* 右上角 */
+    					border-bottom-left-radius: 0px;  /* 左下角 */
+    					border-bottom-right-radius: 19px; /* 右下角 */
 		                padding: 25px;
 		                text-align: center;
 		            }
 		            QPushButton:hover {
 		                background-color: palette(midlight);
-		                border-radius: 4px;
 		            }
 		            QPushButton:pressed {
 						background-color: palette(mid);
 					}
 				""")
-		btn.setFixedSize(40, 40)
+		btn.setFixedSize(38, 38)
 		btn.clicked.connect(self.get_search_result)
 
 		upper_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -545,7 +552,7 @@ class MainWindow(QMainWindow):
 			# 如果当前显示的是带侧边栏的页面
 			if self.main_stack.currentWidget() == self.main_window:
 				# 处理文本框点击
-				if obj == self.search_edit and event.button() == Qt.LeftButton and not self.search_column_visible:
+				if obj == self.search_edit and not self.search_column_visible and event.button() == Qt.LeftButton:
 					self.toggle_search_column()  # 打开侧边栏
 				# 处理收起侧边栏
 				else:
