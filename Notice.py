@@ -1,19 +1,27 @@
 from common import *
 from Event import DDLEvent
+from Event import DDLEvent
 if sys.platform == 'darwin':
 	import pync
 log = logging.getLogger(__name__)
+from Emitter import Emitter
 from Emitter import Emitter
 
 class Notice(QObject):
 	notify_to_floating_window = Signal(object)  # 向悬浮窗发送通知信号(标题，内容，颜色代码)
 	notify_to_tray = Signal(object)  # 向托盘发送通知信号(标题，内容，颜色代码)
+	notify_to_floating_window = Signal(object)  # 向悬浮窗发送通知信号(标题，内容，颜色代码)
+	notify_to_tray = Signal(object)  # 向托盘发送通知信号(标题，内容，颜色代码)
 	notify_show_floating_window = Signal()
+	notify_to_backend = Signal()
+
 	notify_to_backend = Signal()
 
 	def __init__(self):
 		super().__init__()
 		self.scheduled_notices = []  # 存储计划通知
+		self.if_backend_exist_event = True
+		self.latest_event:DDLEvent = None
 		self.if_backend_exist_event = True
 		self.latest_event:DDLEvent = None
 		self.timer = QTimer()
@@ -88,6 +96,12 @@ class NotificationWidget(QFrame):
 				border: 2px solid {color};
 			}}
 		""")
+			NotificationWidget {{
+				background: {color}15;
+				border-radius: 8px;
+				border: 2px solid {color};
+			}}
+		""")
 
 		layout = QVBoxLayout()
 		layout.setContentsMargins(12, 8, 12, 8)
@@ -100,11 +114,19 @@ class NotificationWidget(QFrame):
 			color: {color};
 			margin-bottom: 4px;
 		""")
+			font-size: 14px; 
+			font-weight: bold; 
+			color: {color};
+			margin-bottom: 4px;
+		""")
 		layout.addWidget(title_label)
 
 		# 内容
 		content_label = QLabel(content)
 		content_label.setStyleSheet("""
+			font-size: 12px;
+			color: #2c3e50;
+		""")
 			font-size: 12px;
 			color: #2c3e50;
 		""")
