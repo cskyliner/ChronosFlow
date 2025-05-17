@@ -19,18 +19,19 @@ class Notice(QObject):
 		self.timer = QTimer()
 		#self.timer.timeout.connect(self.check_notices)
 		self.timer.timeout.connect(self.check_notice)
-		self.timer.start(200)  # 每秒检查一次
+		self.timer.start(1000)  # 每秒检查一次
 		Emitter.instance().notice_signal.connect(self.update_latest_event)
 
 	def check_notice(self):
 		if not self.if_backend_exist_event:
-			"""如果后端没有存储任何时间，不进行提醒"""
+			"""如果后端没有存储任何事件，不进行提醒"""
+			log.info(f"后端没有储存任何事件，不进行提醒")
 			return
 		current = QDateTime.currentDateTime()
 		if self.latest_event:
+			log.info(f"当前Notice储存最新事件{self.latest_event.title}；提醒时间{self.latest_event.advance_time}")
 			notify_time = QDateTime.fromString(self.latest_event.advance_time, "yyyy-MM-dd HH:mm")
-			while self.latest_event and current >= notify_time:
-				
+			if self.latest_event and current >= notify_time:
 				log.info(f"提醒: {self.latest_event.title} - {self.latest_event.notes}")
 				if sys.platform == "darwin":
 					pync.notify(self.latest_event.notes, title='ChronosFlow', subtitle=self.latest_event.title, sound='Ping')
@@ -40,11 +41,11 @@ class Notice(QObject):
 					self.notify_to_tray.emit((self.latest_event,))
 
 				self.latest_event = None
-				time.sleep(5)
 				current = QDateTime.currentDateTime().addSecs(60)
 				self.request_latest_event(current)
 
 		else:
+			log.info(f"当前Notice没有储存事件，正调用request_latest_event获取事件")
 			self.request_latest_event(current)
 
 	def update_latest_event(self, latest_event_info:tuple):
@@ -66,7 +67,7 @@ class Notice(QObject):
 				self.if_backend_exist_event = False
 			else:
 				self.latest_event = latest_event_info[0]
-				log.info(f"tag：f{tag}最新DDLEvent：{self.latest_event.title}; 提醒时间{self.latest_event.advance_time}; 截止时间{self.latest_event.datetime}")
+				log.info(f"tag：{tag}最新DDLEvent：{self.latest_event.title}; 提醒时间{self.latest_event.advance_time}; 截止时间{self.latest_event.datetime}")
 	def request_latest_event(self, cur_time: QDateTime):
 		Emitter.instance().request_latest_event_signal(cur_time)
 

@@ -169,7 +169,7 @@ class EventFactory:
 	}
 
 	@classmethod
-	def create(cls, event_type: str, add: bool, *args) -> BaseEvent:
+	def create(cls, event_type: str, add: bool, *args) -> DDLEvent:
 		"""
 		根据种类创造不同Event
 		:param event_type:事件类型
@@ -182,7 +182,7 @@ class EventFactory:
 			raise Exception(f"event_type {event_type} not supported")
 		event_cls = cls.registry[event_type]
 		try:
-			n_event: BaseEvent = event_cls(*args)
+			n_event: DDLEvent = event_cls(*args)
 			if add is True:
 				n_event.add_event()
 				if n_event.table_name() == "ddlevents":
@@ -192,13 +192,13 @@ class EventFactory:
 					if now_time > n_event.datetime:
 						log.info(f"now_time is {now_time} 添加新事件比最新事件更晚，不更新最新事件")
 					elif latest_ddlevent is None:
-						log.info("没有最新的DDL事件，添加新事件:title：f{n_event.title}; notes:f{n_event.notes}")
+						log.info(f"没有最新的DDL事件，添加新事件:title：{n_event.title}; notes:{n_event.notes}")
 						latest_ddlevent = n_event
 						Emitter.instance().send_notice_signal((n_event,"create"))
 					elif n_event.datetime < latest_ddlevent.datetime:
-						log.info("添加新事件比最新事件更早，更新最新事件为新事件:title：f{n_event.title}; notes:f{n_event.notes}")
+						log.info(f"添加新事件比最新事件更早，更新最新事件为新事件:title：{n_event.title}; notes:{n_event.notes}")
 						latest_ddlevent = n_event
-						Emitter.instance().send_notice_signal(n_event,"update")
+						Emitter.instance().send_notice_signal((n_event,"update"))
 					else:
 						log.info("添加新事件比最新事件更晚，不更新最新事件")
 					log.info(f"add event {n_event.title} to {n_event.table_name()} table successfully")
@@ -300,7 +300,7 @@ def get_latest_ddlevent(now_time:str) -> DDLEvent:
 	paras = row[1:]
 	event = EventFactory.create("DDL", False, *paras)
 	event.id = row[0]
-	log.info(f"获取最新的DDL事件成功，事件为{event.title} @ {event.advance_time}")
+	log.info(f"获取最新的DDL事件id{event.id}成功，事件为{event.title} @ {event.advance_time}")
 	latest_ddlevent = event
 	return event
 
