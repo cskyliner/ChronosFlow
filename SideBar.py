@@ -24,8 +24,9 @@ class SideBar(QFrame):
 
 		# ===添加功能按钮===
 		names = ("Calendar", "Upcoming", "Setting")
-		for name in names:
-			btn = QPushButton(f"{name}")
+		_names = ("日历", "待办", "设置")
+		for i in range(len(names)):
+			btn = QPushButton(f"{_names[i]}")
 			btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
@@ -44,6 +45,6 @@ class SideBar(QFrame):
 			set_font(btn, 1)
 			layout.addWidget(btn)
 			# 连接按钮与切换页面信号
-			btn.clicked.connect(partial(Emitter.instance().send_page_change_signal, name))
+			btn.clicked.connect(partial(Emitter.instance().send_page_change_signal, names[i]))
 		layout.addStretch()
 		self.setLayout(layout)

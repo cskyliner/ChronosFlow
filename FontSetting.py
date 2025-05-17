@@ -15,11 +15,6 @@ title_font = QFont()  # 用于应用名的字体，2
 title_font.setFamilies(["Inter", "Helvetica Neue", "Segoe UI", "Arial"])
 title_font.setPointSize(20)
 
-bold_font = QFont()  # 加粗，3
-bold_font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
-bold_font.setBold(True)
-bold_font.setPointSize(14)
-
 
 def set_font(my_widget, kind=0):
 	"""
@@ -33,3 +28,10 @@ def set_font(my_widget, kind=0):
 		my_widget.setFont(title_font)
 	else:
 		log.error("警告：使用未知字体！")
+
+def reset_font(size0,size1,size2):
+	"""
+	Setting中重设字体大小
+	:param size: 字体大小
+	"""
+	pass

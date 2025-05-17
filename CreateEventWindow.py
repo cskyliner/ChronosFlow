@@ -91,7 +91,7 @@ class Schedule(QWidget):
 		button_layout = QHBoxLayout()
 		layout.addLayout(button_layout)
 
-		btn = QPushButton("Save")
+		btn = QPushButton("保存")
 		btn.clicked.connect(self.create_new_event)
 		btn.setStyleSheet("""
                 QPushButton {
