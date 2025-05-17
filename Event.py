@@ -169,7 +169,7 @@ class EventFactory:
 	}
 
 	@classmethod
-	def create(cls, event_type: str, add: bool, *args) -> BaseEvent:
+	def create(cls, event_type: str, add: bool, *args) -> DDLEvent:
 		"""
 		根据种类创造不同Event
 		:param event_type:事件类型
@@ -182,7 +182,7 @@ class EventFactory:
 			raise Exception(f"event_type {event_type} not supported")
 		event_cls = cls.registry[event_type]
 		try:
-			n_event: BaseEvent = event_cls(*args)
+			n_event: DDLEvent = event_cls(*args)
 			if add is True:
 				n_event.add_event()
 				if n_event.table_name() == "ddlevents":
@@ -192,13 +192,14 @@ class EventFactory:
 					if now_time > n_event.datetime:
 						log.info(f"now_time is {now_time} 添加新事件比最新事件更晚，不更新最新事件")
 					elif latest_ddlevent is None:
-						log.info("没有最新的DDL事件，添加新事件")
+						log.info(f"没有最新的DDL事件，添加新事件:title：{n_event.title}; notes:{n_event.notes}")
 						latest_ddlevent = n_event
-						Emitter.instance().send_notice_signal(n_event)
+						Emitter.instance().send_notice_signal((n_event,"create"))
+						Emitter.instance().send_notice_signal((n_event,"create"))
 					elif n_event.datetime < latest_ddlevent.datetime:
-						log.info("添加新事件比最新事件更早，更新最新事件")
+						log.info(f"添加新事件比最新事件更早，更新最新事件为新事件:title：{n_event.title}; notes:{n_event.notes}")
 						latest_ddlevent = n_event
-						Emitter.instance().send_notice_signal(n_event)
+						Emitter.instance().send_notice_signal((n_event,"update"))
 					else:
 						log.info("添加新事件比最新事件更晚，不更新最新事件")
 					log.info(f"add event {n_event.title} to {n_event.table_name()} table successfully")
@@ -276,20 +277,26 @@ def request_signal(recieve_data: tuple) -> None:
 	elif signal_name == "latest_event":
 		now_time = recieve_data[1][0]
 		result = get_latest_ddlevent(now_time)
-		Emitter.instance().send_notice_signal((result,))
+		Emitter.instance().send_notice_signal((result,"get"))
+		Emitter.instance().send_notice_signal((result,"get"))
 		log.info(f"接收{signal_name}请求信号成功，获取事件")
 		return
 	else:
+		if signal_name == "latest_event":
+			print("纳尼？")
 		log.error(f"接收信号失败，未知信号类型{signal_name}，参数为{recieve_data}")
 	# 发送结果给回调函数
 	Emitter.instance().send_backend_data_to_frontend_signal(result)
 
-def get_latest_ddlevent(now_time:str) -> BaseEvent:
+
+def get_latest_ddlevent(now_time:str) -> DDLEvent:
 	"""
 	获取最新的ddlevent，其 advance_time 不早于 now_time
 	"""
 	global latest_ddlevent
-	cursor.execute("SELECT * FROM ddlevents WHERE advance_time > ? ORDER BY advance_time DESC LIMIT 1",
+	log.info(f"当前时间：{now_time}")
+
+	cursor.execute("SELECT * FROM ddlevents WHERE advance_time >= ? ORDER BY advance_time ASC LIMIT 1",
         			(now_time,))
 	row = cursor.fetchone()
 	if row is None:
@@ -298,7 +305,7 @@ def get_latest_ddlevent(now_time:str) -> BaseEvent:
 	paras = row[1:]
 	event = EventFactory.create("DDL", False, *paras)
 	event.id = row[0]
-	log.info(f"获取最新的DDL事件成功，事件为{event.title}")
+	log.info(f"获取最新的DDL事件成功，事件为{event.title} @ {event.advance_time}")
 	latest_ddlevent = event
 	return event
 

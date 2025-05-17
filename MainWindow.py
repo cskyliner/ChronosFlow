@@ -62,7 +62,6 @@ class MainWindow(QMainWindow):
 
 		# 连接sidebar的信号
 		Emitter.instance().page_change_signal.connect(partial(self.navigate_to, stack=self.main_stack, date=None))
-
 		# 通过名称记录页面，使用字典双向映射
 		self.main_stack_map = {}  # 名称→索引
 
@@ -78,8 +77,6 @@ class MainWindow(QMainWindow):
 		self.notice_system = Notice()
 		# 用于在通知时自动显示悬浮窗
 		self.notice_system.notify_show_floating_window.connect(self.show_floating_window)
-		# 连接schedule_notice的信号
-		Emitter.instance().signal_to_schedule_notice.connect(self.notice_system.schedule_notice)
 
 		# 初始化托盘
 		self.tray = None
@@ -380,6 +377,7 @@ class MainWindow(QMainWindow):
 		btn_layout.addWidget(return_btn, alignment=Qt.AlignmentFlag.AlignRight)
 
 		self.upcoming = Upcoming()
+		Emitter.instance().view_and_edit_schedule_signal.connect(self.check_one_schedule)
 		layout.addWidget(self.upcoming)
 		self.add_page(self.main_stack, self.upcoming_window, "Upcoming")
 
@@ -388,6 +386,7 @@ class MainWindow(QMainWindow):
 		float_btn.move(50, 50)  # 初始位置
 		float_btn.raise_()  # 确保在最上层
 		float_btn.clicked.connect(partial(self.navigate_to, "Schedule", self.main_stack))
+		
 
 	def add_page(self, stack: QStackedWidget, widget: QWidget, name: str):
 		'''
@@ -395,7 +394,7 @@ class MainWindow(QMainWindow):
 		'''
 		self.main_stack_map[name] = stack.addWidget(widget)
 
-	def navigate_to(self, name: str, stack: QStackedWidget, date: QDate = None):
+	def navigate_to(self, name: str, stack: QStackedWidget, date: QDate = None, tag: tuple = None):
 		'''
 		通过名称跳转页面
 		'''
@@ -408,12 +407,23 @@ class MainWindow(QMainWindow):
 
 			if name == 'Upcoming':
 				self.upcoming.refresh_upcoming()
+			elif name == "Schedule":
+				self.schedule.deadline_edit.setDateTime(QDateTime.currentDateTime())
+				self.schedule.reminder_edit.setDateTime(QDateTime.currentDateTime())
 
 			stack.setCurrentIndex(self.main_stack_map[name])
 			log.info(f"跳转到{name}页面，日期为{date.toString() if date else date}")
 		else:
 			raise RuntimeError(f"错误：未知页面 {name}")
 
+	def check_one_schedule(self, data:tuple):
+		event = data[0]
+		self.schedule.deadline_edit.setDateTime(QDateTime.fromString(event.datetime, "yyyy-MM-dd HH:mm"))
+		self.schedule.reminder_edit.setDateTime(QDateTime.fromString(event.advance_time, "yyyy-MM-dd HH:mm"))
+		self.schedule.theme_text_edit.setText(event.title)
+		self.schedule.text_edit.setPlainText(event.notes)	
+		self.main_stack.setCurrentIndex(self.main_stack_map["Schedule"])
+		self.schedule.save_btn.clicked.connect(lambda: self.upcoming.delete_one_item(event))
 	def setup_search_column_animation(self) -> None:
 		"""搜索结果栏展开动画设置"""
 		self.animations["search_column"] = QPropertyAnimation(self.search_column, b"maximumWidth")
@@ -476,7 +486,6 @@ class MainWindow(QMainWindow):
 		self.tray.exit_app.connect(self.quit_application)
 		self.tray.activated_response.connect(self.show_main_window)
 		# 初始化托盘图标提醒
-		self.tray.show_notification("启动提醒", "程序已添加到系统托盘")
 		self.notice_system.notify_to_tray.connect(self.tray.notification_received)
 
 	def _get_icon_path(self):  # 暂时无用

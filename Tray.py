@@ -12,7 +12,7 @@ class Tray(QObject):
 	show_main = Signal()
 	show_floating = Signal()
 	exit_app = Signal()
-	notification_received = Signal(str, str, str)
+	notification_received = Signal(object)
 	activated_response = Signal()
 
 	def __init__(self, app, parent=None, icon_path=None):
@@ -128,20 +128,16 @@ class Tray(QObject):
 		# 	path = f"{frame_folder}/frame_{i:02d}.png"
 		# 	img = Image.open(path).convert("RGBA")
 		# 	self.frames.append(img)
-
-	@Slot(str, str, str)
-	def show_notification(self, title, message, color=None):
+	@Slot(object)
+	def show_notification(self, data:tuple):
 		"""显示通知"""
+		event = data[0]
 		if platform.system() == 'Windows':
-			self.tray.showMessage(title, message, QSystemTrayIcon.Information, 2000)
-
-	# macOS菜单回调函数
-	def _pystray_show_main(self, icon, item):
-		self.show_main.emit()
-
+			self.tray.showMessage(event.title, event.notes, QSystemTrayIcon.Information, 2000)
+     # macOS菜单回调函数
 	def _pystray_show_floating(self, icon, item):
 		self.show_floating.emit()
-
+  
 	def _pystray_exit(self, icon, item):
 		self.exit_app.emit()
 
