@@ -37,7 +37,9 @@ class Notice(QObject):
 			return
 		current = QDateTime.currentDateTime()
 		if self.latest_event:
-			log.info(f"当前Notice储存最新事件{self.latest_event.title}；提醒时间{self.latest_event.advance_time}")
+
+			#log.info(f"当前Notice储存最新事件{self.latest_event.title}；提醒时间{self.latest_event.advance_time}")
+
 			notify_time = QDateTime.fromString(self.latest_event.advance_time, "yyyy-MM-dd HH:mm")
 			if self.latest_event and current >= notify_time:
 				log.info(f"提醒: {self.latest_event.title} - {self.latest_event.notes}")
