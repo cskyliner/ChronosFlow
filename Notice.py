@@ -96,12 +96,6 @@ class NotificationWidget(QFrame):
 				border: 2px solid {color};
 			}}
 		""")
-			NotificationWidget {{
-				background: {color}15;
-				border-radius: 8px;
-				border: 2px solid {color};
-			}}
-		""")
 
 		layout = QVBoxLayout()
 		layout.setContentsMargins(12, 8, 12, 8)
@@ -114,19 +108,11 @@ class NotificationWidget(QFrame):
 			color: {color};
 			margin-bottom: 4px;
 		""")
-			font-size: 14px; 
-			font-weight: bold; 
-			color: {color};
-			margin-bottom: 4px;
-		""")
 		layout.addWidget(title_label)
 
 		# 内容
 		content_label = QLabel(content)
 		content_label.setStyleSheet("""
-			font-size: 12px;
-			color: #2c3e50;
-		""")
 			font-size: 12px;
 			color: #2c3e50;
 		""")

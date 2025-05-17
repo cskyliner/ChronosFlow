@@ -288,15 +288,12 @@ def request_signal(recieve_data: tuple) -> None:
 	# 发送结果给回调函数
 	Emitter.instance().send_backend_data_to_frontend_signal(result)
 
-def get_latest_ddlevent(now_time:str) -> DDLEvent:
+
 def get_latest_ddlevent(now_time:str) -> DDLEvent:
 	"""
 	获取最新的ddlevent，其 advance_time 不早于 now_time
 	"""
 	global latest_ddlevent
-	log.info(f"当前时间：{now_time}")
-
-	cursor.execute("SELECT * FROM ddlevents WHERE advance_time >= ? ORDER BY advance_time ASC LIMIT 1",
 	log.info(f"当前时间：{now_time}")
 
 	cursor.execute("SELECT * FROM ddlevents WHERE advance_time >= ? ORDER BY advance_time ASC LIMIT 1",
@@ -308,7 +305,7 @@ def get_latest_ddlevent(now_time:str) -> DDLEvent:
 	paras = row[1:]
 	event = EventFactory.create("DDL", False, *paras)
 	event.id = row[0]
-	log.info(f"获取最新的DDL事件id{event.id}成功，事件为{event.title} @ {event.advance_time}")
+	log.info(f"获取最新的DDL事件成功，事件为{event.title} @ {event.advance_time}")
 	latest_ddlevent = event
 	return event
 
