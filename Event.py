@@ -192,12 +192,16 @@ class EventFactory:
 					if now_time > n_event.datetime:
 						log.info(f"EventFactory.create:now_time is {now_time} 添加新事件比最新事件更晚，不更新最新事件")
 					elif latest_ddlevent is None:
+
 						log.info(f"EventFactory.create:没有最新的DDL事件，添加新事件:title：{n_event.title}; notes:{n_event.notes}")
+
 						latest_ddlevent = n_event
 						Emitter.instance().send_notice_signal((n_event,"create"))
 						Emitter.instance().send_notice_signal((n_event,"create"))
 					elif n_event.datetime < latest_ddlevent.datetime:
+
 						log.info(f"EventFactory.create:添加新事件比最新事件更早，更新最新事件为新事件:title：{n_event.title}; notes:{n_event.notes}")
+
 						latest_ddlevent = n_event
 						Emitter.instance().send_notice_signal((n_event,"update"))
 					else:
@@ -279,7 +283,9 @@ def request_signal(recieve_data: tuple) -> None:
 		result = get_latest_ddlevent(now_time)
 		Emitter.instance().send_notice_signal((result,"get"))
 		Emitter.instance().send_notice_signal((result,"get"))
+
 		log.info(f"request_signal:接收{signal_name}请求信号成功，获取事件")
+
 		return
 	else:
 		log.error(f"request_signal:接收信号失败，未知信号类型{signal_name}，参数为{recieve_data}")
