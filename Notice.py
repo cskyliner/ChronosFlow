@@ -1,27 +1,19 @@
 from common import *
 from Event import DDLEvent
-from Event import DDLEvent
 if sys.platform == 'darwin':
 	import pync
 log = logging.getLogger(__name__)
-from Emitter import Emitter
 from Emitter import Emitter
 
 class Notice(QObject):
 	notify_to_floating_window = Signal(object)  # 向悬浮窗发送通知信号(标题，内容，颜色代码)
 	notify_to_tray = Signal(object)  # 向托盘发送通知信号(标题，内容，颜色代码)
-	notify_to_floating_window = Signal(object)  # 向悬浮窗发送通知信号(标题，内容，颜色代码)
-	notify_to_tray = Signal(object)  # 向托盘发送通知信号(标题，内容，颜色代码)
 	notify_show_floating_window = Signal()
-	notify_to_backend = Signal()
-
 	notify_to_backend = Signal()
 
 	def __init__(self):
 		super().__init__()
 		self.scheduled_notices = []  # 存储计划通知
-		self.if_backend_exist_event = True
-		self.latest_event:DDLEvent = None
 		self.if_backend_exist_event = True
 		self.latest_event:DDLEvent = None
 		self.timer = QTimer()
@@ -37,7 +29,7 @@ class Notice(QObject):
 			return
 		current = QDateTime.currentDateTime()
 		if self.latest_event:
-			log.info(f"当前Notice储存最新事件{self.latest_event.title}；提醒时间{self.latest_event.advance_time}")
+			#log.info(f"当前Notice储存最新事件{self.latest_event.title}；提醒时间{self.latest_event.advance_time}")
 			notify_time = QDateTime.fromString(self.latest_event.advance_time, "yyyy-MM-dd HH:mm")
 			if self.latest_event and current >= notify_time:
 				log.info(f"提醒: {self.latest_event.title} - {self.latest_event.notes}")

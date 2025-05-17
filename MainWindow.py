@@ -9,7 +9,7 @@ from Tray import Tray
 from FloatingWindow import FloatingWindow
 from Notice import Notice
 from Upcoming import Upcoming, FloatingButton
-from Event import BaseEvent, DDLEvent
+from Event import BaseEvent, DDLEvent, get_events_in_month
 
 log = logging.getLogger(__name__)
 
@@ -76,6 +76,9 @@ class MainWindow(QMainWindow):
 		self.setup_upcoming_window()  # 日程展示窗口
 
 		# TODO:更改日历加载事件逻辑，通过向后端发送时间端请求事件，不要耦合upcoming完成
+		cur_month = QDate.currentDate().month()
+		cur_year = QDate.currentDate().year()
+		self.get_events_in_month_from_backend(cur_year, cur_month)
 		# self.load_event_in_calendar(self.upcoming.events)
 		# 初始化通知系统
 		self.notice_system = Notice()
@@ -548,17 +551,8 @@ class MainWindow(QMainWindow):
 		self.floating_window.show_main_requested.connect(self.show_main_window)
 
 	def load_event_in_calendar(self, events: list[DDLEvent]):
-		format_string = "yyyy-MM-dd HH:mm"
 		for event in events:
-			date_time = QDateTime.fromString(event.datetime, format_string)
-
-			if date_time.isValid():
-				qdate = date_time.date()
-				self.main_window_calendar.add_schedule(qdate, event)
-			else:
-				# 处理错误，例如使用默认日期
-				qdate = QDate.currentDate()
-				log.info(f"解析失败，使用当前日期: {qdate.toString()}")
+			self.main_window_calendar.add_schedule(event)
 
 	def eventFilter(self, obj, event):
 		"""事件过滤器，用于Calendar的search_column"""
@@ -578,3 +572,7 @@ class MainWindow(QMainWindow):
 						self.toggle_search_column()
 
 		return super().eventFilter(obj, event)
+	def get_events_in_month_from_backend(self, cur_year: int, cur_month: int):
+		"""获取当前月份的事件"""
+		events:list[DDLEvent] = get_events_in_month(cur_year, cur_month)
+		self.load_event_in_calendar(events)
