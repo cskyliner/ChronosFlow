@@ -414,7 +414,7 @@ class Upcoming(QListWidget):
 		# TODO：通知后端;再次刷新时保持这一状态
 		self.delete_one_item(event, True)
 		# 再获取“是否完成”改变后的event
-		event.done = 1
+		event.done = 0
 		# 再插入
 		self.add_one_item(event)
 		log.info(f"标记该事件未完成：{event.title} @ {event.datetime}")
