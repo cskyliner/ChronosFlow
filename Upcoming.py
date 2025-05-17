@@ -149,9 +149,10 @@ class FloatingButton(QPushButton):
 
 class CustomListItem(QWidget):
 	"""一条日程"""
-	delete_me_signal: Signal = Signal(BaseEvent)
-
-	def __init__(self, event: BaseEvent, parent=None):
+	delete_me_signal: Signal = Signal(DDLEvent)
+	this_one_is_finished: Signal = Signal(DDLEvent)
+	view_and_edit_signal: Signal = Signal(DDLEvent)
+	def __init__(self, event: DDLEvent, parent=None):
 		super().__init__(parent)
 		self.setAttribute(Qt.WA_StyledBackground, True)
 		# 绑定item和对应的event
@@ -190,7 +191,7 @@ class CustomListItem(QWidget):
 		layout.addItem(spacer)
 
 		self.view_schedule_button = EyeButton()
-		# self.view_schedule_button.clicked.connect() TODO: 跳转到之前的日程记录页面,需要补充函数访问后端数据
+		self.view_schedule_button.clicked.connect(self.this_one_is_viewed_and_edited) 
 		self.delete_button = DeleteButton()
 		self.delete_button.clicked.connect(self.this_one_is_deleted)
 
@@ -200,6 +201,10 @@ class CustomListItem(QWidget):
 
 	def this_one_is_deleted(self):
 		self.delete_me_signal.emit(self.nevent)
+	
+	def this_one_is_viewed_and_edited(self):
+		"""查看后发信号"""
+		self.view_and_edit_signal.emit(self.nevent)
 
 	def this_one_is_finished(self):
 		"""打勾后发信号"""
@@ -338,13 +343,19 @@ class Upcoming(QListWidget):
 			self.setItemWidget(item, custom_widget)
 			self.items_of_one_date[event.datetime[:10]] = [(event.id, QPersistentModelIndex(self.indexFromItem(item)))]
 			custom_widget.delete_me_signal.connect(self.delete_one_item)
+			custom_widget.view_and_edit_signal.connect(self.view_and_edit_one_item)
 		else:
 			self.insertItem(self.index_of_date_label[event.datetime[:10]].row() + 1, item)
 			self.setItemWidget(item, custom_widget)
 			self.items_of_one_date[event.datetime[:10]].append(
 				(event.id, QPersistentModelIndex(self.indexFromItem(item))))
 			custom_widget.delete_me_signal.connect(self.delete_one_item)
-
+			custom_widget.view_and_edit_signal.connect(self.view_and_edit_one_item)
+    
+	def view_and_edit_one_item(self, event: DDLEvent):
+		"""查看和编辑事件"""
+		log.info(f"查看编辑事件：{event.title}; 提醒时间：{event.advance_time}")
+		Emitter.instance().send_view_and_edit_schedule_signal((event,))
 	def delete_one_item(self, event: BaseEvent):
 		"""删除事件"""
 		date = event.datetime[:10]
@@ -362,7 +373,7 @@ class Upcoming(QListWidget):
 					log.info(f"日期标签删除成功：{date}")
 				break
 
-		Emitter.instance().send_delelte_event_signal(event.id, event.table_name())
+		Emitter.instance().send_delete_event_signal(event.id, event.table_name())
 
 	def load_more_data(self):
 		"""将数据添加到self"""

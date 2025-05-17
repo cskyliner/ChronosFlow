@@ -11,20 +11,24 @@ class Emitter(QObject):
 	_instance = None  # 唯一实例
 	dynamic_signal: Signal = Signal(object)  								# 可接收任意参数
 	page_change_signal: Signal = Signal(str)  								# 向 main_stack发送改变页面的信号
-	signal_to_schedule_notice: Signal = Signal(str, str, QDateTime, str)  	# 向Notice中的schedule_notice函数发送信号
 	from_upcoming_to_create_event_signal: Signal = Signal(str, str)  		# 从upcoming跳转到create_event
+	refresh_upcoming_signal: Signal = Signal()								# 在切换到Upcoming时更新
 	refresh_upcoming_signal: Signal = Signal()								# 在切换到Upcoming时更新
 	create_event_signal: Signal = Signal(object)  							# 发送创建事件的信号
 	search_signal: Signal = Signal(str)  									# 发送sidebar搜索文本框的信息
+	search_signal: Signal = Signal(str)  									# 发送sidebar搜索文本框的信息
 	modify_event_signal: Signal = Signal(object) 							# 发送修改事件的信号 
 	storage_path_signal: Signal = Signal(object) 							# 发送存储路径的信号
+	view_and_edit_schedule_signal: Signal = Signal(object)					# 发送查看单条日程信号
 	update_upcoming_event_signal: Signal = Signal(object)  					# 向后端发送更新upcoming的回调信号
 	delete_event_signal: Signal = Signal(object)  							# 发送删除事件的信号
 	search_all_event_signal: Signal = Signal(object)  						# 向后端发送搜索全局事件的信号
 	search_some_columns_event_signal: Signal = Signal(object)  				# 向后端发送搜索部分列事件的信号
 	search_time_event_signal: Signal = Signal(object)  						# 向后端发送搜索时间范围内事件的信号
 	backend_data_to_frontend_signal: Signal = Signal(object) 			 	# 向前端发送后端数据的信号
+	backend_data_to_frontend_signal: Signal = Signal(object) 			 	# 向前端发送后端数据的信号
 	notice_signal: Signal = Signal(object)  								# 向通知栏发送最新数据
+	latest_event_signal: Signal = Signal(object)							# 处理前端通知更新最新数据
 	latest_event_signal: Signal = Signal(object)							# 处理前端通知更新最新数据
 
 	@staticmethod
@@ -41,6 +45,10 @@ class Emitter(QObject):
 		self.refresh_upcoming_signal.emit()
 	
 
+	def send_refresh_upcoming_signal(self):
+		self.refresh_upcoming_signal.emit()
+	
+
 	def send_page_change_signal(self, name):
 		"""向 main_stack发送改变页面的信号"""
 		self.page_change_signal.emit(name)
@@ -49,14 +57,16 @@ class Emitter(QObject):
 		"""发送格式不定的信号（元组形式）,只有一个对象也会变成元组"""
 		self.dynamic_signal.emit(args)
 
-	def send_signal_to_schedule_notice(self, title, content, notify_time, color="#3498db"):
-		"""向Notice中的schedule_notice函数发送信号"""
-		self.signal_to_schedule_notice.emit(title, content, notify_time, color)
 
 	def send_from_upcoming_to_create_event_signal(self, theme, date):
 		"""从upcoming跳转到create_event"""
 		# TODO:如何确定是哪一个日程（哈希的标准是什么）
 		self.from_upcoming_to_create_event_signal.emit(theme, date)
+	
+	def send_view_and_edit_schedule_signal(self, data:tuple):
+		"""data[0]是一个DDLEvent，储存显示信息；data[1]是告诉navigate_to的信号，再传给后端确保编辑某日程
+  		之后原来的这条日程被覆盖"""
+		self.view_and_edit_schedule_signal.emit(data)
 
 	# ===转发数据函数====
 
@@ -99,7 +109,7 @@ class Emitter(QObject):
 		out = ("modify_event", name, False, *args)
 		self.modify_event_signal.emit(out)
 
-	def send_delelte_event_signal(self, event_id: int, event_table_type: str):
+	def send_delete_event_signal(self, event_id: int, event_table_type: str):
 		"""
 		发送删除事件的信号
 		event_id为事件ID
@@ -148,8 +158,11 @@ class Emitter(QObject):
 	def request_latest_event_signal(self, now_time: QDateTime):
 		"""
 		向后端发送需要更新最新的事件
+		向后端发送需要更新最新的事件
 		"""
 		formatted_time = now_time.toString("yyyy-MM-dd HH:mm")
 		log.info(f"request latest event，当前时间为{formatted_time}")
+		out = ("latest_event", (formatted_time,))
+		self.latest_event_signal.emit(out)
 		out = ("latest_event", (formatted_time,))
 		self.latest_event_signal.emit(out)
