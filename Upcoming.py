@@ -151,35 +151,39 @@ class FloatingButton(QPushButton):
 class CustomListItem(QWidget):
 	"""一条日程"""
 	delete_me_signal: Signal = Signal(DDLEvent)
-	this_one_is_finished: Signal = Signal(DDLEvent)
+	finished_signal: Signal = Signal(DDLEvent)
+	unfinished_signal: Signal = Signal(DDLEvent)
 	view_and_edit_signal: Signal = Signal(DDLEvent)
+
 	def __init__(self, event: DDLEvent, parent=None):
 		super().__init__(parent)
 		self.setAttribute(Qt.WA_StyledBackground, True)
 		# 绑定item和对应的event
 		self.nevent = event
-		self.setStyleSheet("""
-		            CustomListItem {
-		                background-color: palette(light);
-		                border-radius: 15px;
-		            }
-		            CustomListItem:hover {
-		                background-color: palette(midlight); /*轻微高亮*/
-		            }
-		        """)
 
 		# 设置消息布局
 		layout = QHBoxLayout(self)
 		layout.setContentsMargins(5, 2, 5, 2)  # 边距：左、上、右、下
+		self.setStyleSheet("""CustomListItem {background-color: palette(light);border-radius: 15px;}
+				CustomListItem:hover {background-color: palette(midlight); /*轻微高亮*/}""")
 
 		# 是否完成的复选框
 		self.finish_checkbox = QCheckBox()
-		self.finish_checkbox.toggled.connect(partial(self.this_one_is_finished))
+		if event.done == 1:
+			self.finish_checkbox.setChecked(True)  # 设置为选中状态
+
+		# 当打勾时触发
+		self.finish_checkbox.clicked.connect(lambda checked: self.this_one_is_finished() if checked else None)
+		# 当取消打勾时触发
+		self.finish_checkbox.clicked.connect(lambda checked: self.make_this_one_unfinished() if not checked else None)
 		layout.addWidget(self.finish_checkbox)
 
 		# 展示主题的标签
 		self.theme_display_label = QLabel(f"{event.title}")
-		set_font(self.theme_display_label)
+		if event.done == 0:
+			set_font(self.theme_display_label)
+		else:
+			set_font(self.theme_display_label, 3)
 		layout.addWidget(self.theme_display_label)
 
 		# 弹性空白区域（将右侧按钮推到最右）
@@ -187,7 +191,7 @@ class CustomListItem(QWidget):
 		layout.addItem(spacer)
 
 		self.view_schedule_button = EyeButton()
-		self.view_schedule_button.clicked.connect(self.this_one_is_viewed_and_edited) 
+		self.view_schedule_button.clicked.connect(self.this_one_is_viewed_and_edited)
 		self.delete_button = DeleteButton()
 		self.delete_button.clicked.connect(self.this_one_is_deleted)
 
@@ -197,21 +201,22 @@ class CustomListItem(QWidget):
 
 	def this_one_is_deleted(self):
 		self.delete_me_signal.emit(self.nevent)
-	
+
 	def this_one_is_viewed_and_edited(self):
 		"""查看后发信号"""
 		self.view_and_edit_signal.emit(self.nevent)
 
 	def this_one_is_finished(self):
-		"""打勾后发信号"""
-		# TODO
-		pass
+		"""标记日程已完成"""
+		self.finished_signal.emit(self.nevent)
+
+	def make_this_one_unfinished(self):
+		self.unfinished_signal.emit(self.nevent)
 
 
 class Upcoming(QListWidget):
 	"""
 	容纳多个SingleUpcoming，有滚动等功能
-	kind:0:Upcoming页面的Upcoming；1:Calendar页面的search_column；2:某个日期的Upcoming
 	"""
 
 	def __init__(self, kind=0, parent=None):
@@ -230,7 +235,7 @@ class Upcoming(QListWidget):
         	}
 			""")
 
-		self.kind = kind
+		self.kind = kind  # 0:Upcoming页面的Upcoming；1:Calendar页面的search_column；2:某个日期的Upcoming
 		self.events_used_to_update: tuple[DDLEvent] = tuple()  # 储存这次需要更新的至多10个数据
 		self.index_of_date_label = dict()  # 储存显示日期的项的位置
 		self.items_of_one_date = dict()  # 储存同一日期的项的位置,每个日期对应一个列表，列表中的项为tuple(id,位置)
@@ -283,7 +288,7 @@ class Upcoming(QListWidget):
 			date_item = QListWidgetItem('\n明天\n————————')
 		else:
 			tmp_date = date.split('-')
-			if date[:4]==today[:4]:
+			if date[:4] == today[:4]:
 				date_item = QListWidgetItem(f"\n{int(tmp_date[1])}月{int(tmp_date[2])}日\n————————")
 			else:
 				date_item = QListWidgetItem(f"\n{tmp_date[0]}年{int(tmp_date[1])}月{int(tmp_date[2])}日\n————————")
@@ -291,6 +296,7 @@ class Upcoming(QListWidget):
 
 		# 寻找插入位置（第一个比自身日期大的日期）
 		find = False
+		record = None
 		for key in self.index_of_date_label.keys():
 			if key > date:
 				find = True
@@ -331,41 +337,112 @@ class Upcoming(QListWidget):
 		# 如果没有对应日期的标签，就加上
 		if not event.datetime[:10] in self.index_of_date_label:
 			self.add_date_label(event.datetime)
-			self.insertItem(self.index_of_date_label[event.datetime[:10]].row() + 1, item)
-			self.setItemWidget(item, custom_widget)
-			self.items_of_one_date[event.datetime[:10]] = [(event.id, QPersistentModelIndex(self.indexFromItem(item)))]
-			custom_widget.delete_me_signal.connect(self.delete_one_item)
-			custom_widget.view_and_edit_signal.connect(self.view_and_edit_one_item)
+			# 如果未完成，插到自己的日期标签的下方
+			if event.done == 0:
+				self.insertItem(self.index_of_date_label[event.datetime[:10]].row() + 1, item)
+				self.setItemWidget(item, custom_widget)
+				self.items_of_one_date[event.datetime[:10]] = [
+					(event.id, QPersistentModelIndex(self.indexFromItem(item)))]  # 获取永久位置
+			# 如果完成，插到下一个日期标签的上方
+			else:
+				date = event.datetime[:10]
+				find = False
+				record = None
+				for key in self.index_of_date_label.keys():
+					if key > date:
+						find = True
+						record = key
+						break
+				if find:
+					self.insertItem(self.index_of_date_label[record].row(), item)
+					self.setItemWidget(item, custom_widget)
+					self.items_of_one_date[event.datetime[:10]] = [
+						(event.id, QPersistentModelIndex(self.indexFromItem(item)))]
+				else:
+					self.addItem(item)
+					self.setItemWidget(item, custom_widget)
+					self.items_of_one_date[event.datetime[:10]] = [
+						(event.id, QPersistentModelIndex(self.indexFromItem(item)))]
 		else:
-			self.insertItem(self.index_of_date_label[event.datetime[:10]].row() + 1, item)
-			self.setItemWidget(item, custom_widget)
-			self.items_of_one_date[event.datetime[:10]].append(
-				(event.id, QPersistentModelIndex(self.indexFromItem(item))))
-			custom_widget.delete_me_signal.connect(self.delete_one_item)
-			custom_widget.view_and_edit_signal.connect(self.view_and_edit_one_item)
-    
-	def view_and_edit_one_item(self, event: DDLEvent):
+			if event.done == 0:
+				self.insertItem(self.index_of_date_label[event.datetime[:10]].row() + 1, item)
+				self.setItemWidget(item, custom_widget)
+				self.items_of_one_date[event.datetime[:10]].append(
+					(event.id, QPersistentModelIndex(self.indexFromItem(item))))
+			else:
+				date = event.datetime[:10]
+				find = False
+				record = None
+				for key in self.index_of_date_label.keys():
+					if key > date:
+						find = True
+						record = key
+						break
+				if find:
+					self.insertItem(self.index_of_date_label[record].row(), item)
+					self.setItemWidget(item, custom_widget)
+					self.items_of_one_date[event.datetime[:10]].append(
+						(event.id, QPersistentModelIndex(self.indexFromItem(item))))
+				else:
+					self.addItem(item)
+					self.setItemWidget(item, custom_widget)
+					self.items_of_one_date[event.datetime[:10]].append(
+						(event.id, QPersistentModelIndex(self.indexFromItem(item))))
+
+		custom_widget.delete_me_signal.connect(self.delete_one_item)
+		custom_widget.view_and_edit_signal.connect(self.view_and_edit_one_item)
+		custom_widget.finished_signal.connect(self.finish_one_item)
+		custom_widget.unfinished_signal.connect(self.make_one_item_unfinished)
+
+	def view_and_edit_one_item(self, event: BaseEvent):
 		"""查看和编辑事件"""
 		log.info(f"查看编辑事件：{event.title}; 提醒时间：{event.advance_time}")
 		Emitter.instance().send_view_and_edit_schedule_signal((event,))
-	def delete_one_item(self, event: BaseEvent):
-		"""删除事件"""
+
+	def finish_one_item(self, event: BaseEvent):
+		"""标记一个事件已完成"""
+		# 先删除
+		self.delete_one_item(event, True)
+		# TODO:通知后端;再次刷新时保持这一状态
+		event.done = 1
+		# 再插入
+		self.add_one_item(event)
+		log.info(f"标记该事件完成：{event.title} @ {event.datetime}")
+
+	def make_one_item_unfinished(self, event: BaseEvent):
+		"""取消复选框的对勾"""
+		# TODO：通知后端;再次刷新时保持这一状态
+		self.delete_one_item(event, True)
+		# 再获取“是否完成”改变后的event
+		event.done = 1
+		# 再插入
+		self.add_one_item(event)
+		log.info(f"标记该事件未完成：{event.title} @ {event.datetime}")
+
+	def delete_one_item(self, event: BaseEvent, keep_corresponding_event=False):
+		"""
+		删除事件
+		:param keep_corresponding_event: 复选框变化时也要调用，当其为True时，不从后端删除
+		"""
 		date = event.datetime[:10]
+		# 查找该事件
 		for i in range(len(self.items_of_one_date[date])):
 			if self.items_of_one_date[date][i][0] == event.id:
-				self.takeItem(self.row(self.itemFromIndex(self.items_of_one_date[date][i][1])))
+				self.takeItem(self.row(self.itemFromIndex(self.items_of_one_date[date][i][1])))  # 去除item
 				self.event_num -= 1
 				del self.items_of_one_date[date][i]
-				log.info(f"删除事件成功：{event.title} @ {event.datetime}")
+				if not keep_corresponding_event:
+					log.info(f"删除事件成功：{event.title} @ {event.datetime}")
 				# 删除日期标签
 				if len(self.items_of_one_date[date]) == 0:
 					del self.items_of_one_date[date]
 					self.takeItem(self.row(self.itemFromIndex(self.index_of_date_label[date])))
 					del self.index_of_date_label[date]
-					log.info(f"日期标签删除成功：{date}")
+					if not keep_corresponding_event:
+						log.info(f"日期标签删除成功：{date}")
 				break
-
-		Emitter.instance().send_delete_event_signal(event.id, event.table_name())
+		if not keep_corresponding_event:
+			Emitter.instance().send_delete_event_signal(event.id, event.table_name())
 
 	def load_more_data(self):
 		"""将数据添加到self"""

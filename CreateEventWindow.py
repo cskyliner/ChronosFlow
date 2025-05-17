@@ -91,9 +91,9 @@ class Schedule(QWidget):
 		button_layout = QHBoxLayout()
 		layout.addLayout(button_layout)
 
-		btn = QPushButton("保存")
-		btn.clicked.connect(self.create_new_event)
-		btn.setStyleSheet("""
+		self.save_btn = QPushButton("保存")
+		self.save_btn.clicked.connect(self.create_new_event)
+		self.save_btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
                     border: 1px solid #d0d0d0;
@@ -109,8 +109,8 @@ class Schedule(QWidget):
 					background-color: palette(mid);
 				}
 							""")
-		set_font(btn)
-		button_layout.addWidget(btn)
+		set_font(self.save_btn)
+		button_layout.addWidget(self.save_btn)
 
 		# 状态栏
 		self.status_label = QLabel()

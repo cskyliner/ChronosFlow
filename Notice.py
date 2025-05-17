@@ -1,31 +1,27 @@
 from common import *
 from Event import DDLEvent
-from Event import DDLEvent
+
 if sys.platform == 'darwin':
 	import pync
 log = logging.getLogger(__name__)
 from Emitter import Emitter
-from Emitter import Emitter
+
 
 class Notice(QObject):
 	notify_to_floating_window = Signal(object)  # 向悬浮窗发送通知信号(标题，内容，颜色代码)
 	notify_to_tray = Signal(object)  # 向托盘发送通知信号(标题，内容，颜色代码)
-	notify_to_floating_window = Signal(object)  # 向悬浮窗发送通知信号(标题，内容，颜色代码)
-	notify_to_tray = Signal(object)  # 向托盘发送通知信号(标题，内容，颜色代码)
 	notify_show_floating_window = Signal()
-	notify_to_backend = Signal()
-
 	notify_to_backend = Signal()
 
 	def __init__(self):
 		super().__init__()
 		self.scheduled_notices = []  # 存储计划通知
 		self.if_backend_exist_event = True
-		self.latest_event:DDLEvent = None
+		self.latest_event: DDLEvent = None
 		self.if_backend_exist_event = True
-		self.latest_event:DDLEvent = None
+		self.latest_event: DDLEvent = None
 		self.timer = QTimer()
-		#self.timer.timeout.connect(self.check_notices)
+		# self.timer.timeout.connect(self.check_notices)
 		self.timer.timeout.connect(self.check_notice)
 		self.timer.start(1000)  # 每秒检查一次
 		Emitter.instance().notice_signal.connect(self.update_latest_event)
@@ -42,7 +38,8 @@ class Notice(QObject):
 			if self.latest_event and current >= notify_time:
 				log.info(f"提醒: {self.latest_event.title} - {self.latest_event.notes}")
 				if sys.platform == "darwin":
-					pync.notify(self.latest_event.notes, title='ChronosFlow', subtitle=self.latest_event.title, sound='Ping')
+					pync.notify(self.latest_event.notes, title='ChronosFlow', subtitle=self.latest_event.title,
+								sound='Ping')
 				else:
 					self.notify_show_floating_window.emit()
 					self.notify_to_floating_window.emit((self.latest_event,))
@@ -56,26 +53,30 @@ class Notice(QObject):
 			log.info(f"当前Notice没有储存事件，正调用request_latest_event获取事件")
 			self.request_latest_event(current)
 
-	def update_latest_event(self, latest_event_info:tuple):
+	def update_latest_event(self, latest_event_info: tuple):
 		tag = latest_event_info[1]
 		if tag == "create":
-			#说明这是后端从零开始接受的第一条新消息
+			# 说明这是后端从零开始接受的第一条新消息
 			self.if_backend_exist_event = True
 			self.latest_event = latest_event_info[0]
-			log.info(f"tag：{tag} 最新DDLEvent：{self.latest_event.title}; 提醒时间{self.latest_event.advance_time}; 截止时间{self.latest_event.datetime}")		
+			log.info(
+				f"tag：{tag} 最新DDLEvent：{self.latest_event.title}; 提醒时间{self.latest_event.advance_time}; 截止时间{self.latest_event.datetime}")
 		elif tag == "update":
-			#说明后端有更新，需要重新获取最新消息
+			# 说明后端有更新，需要重新获取最新消息
 			self.latest_event = latest_event_info[0]
-			log.info(f"tag：{tag} 最新DDLEvent：{self.latest_event.title}; 提醒时间{self.latest_event.advance_time}; 截止时间{self.latest_event.datetime}")			
+			log.info(
+				f"tag：{tag} 最新DDLEvent：{self.latest_event.title}; 提醒时间{self.latest_event.advance_time}; 截止时间{self.latest_event.datetime}")
 		elif tag == "get":
-			#说明因提醒消耗了新消息，现在正在获取下一条最新消息
+			# 说明因提醒消耗了新消息，现在正在获取下一条最新消息
 			if latest_event_info[0] is None:
-				#说明后端没有储存的当前时间以后的新日程了
+				# 说明后端没有储存的当前时间以后的新日程了
 				log.info(f"暂无DDLEvent")
 				self.if_backend_exist_event = False
 			else:
 				self.latest_event = latest_event_info[0]
-				log.info(f"tag：{tag}最新DDLEvent：{self.latest_event.title}; 提醒时间{self.latest_event.advance_time}; 截止时间{self.latest_event.datetime}")
+				log.info(
+					f"tag：{tag}最新DDLEvent：{self.latest_event.title}; 提醒时间{self.latest_event.advance_time}; 截止时间{self.latest_event.datetime}")
+
 	def request_latest_event(self, cur_time: QDateTime):
 		Emitter.instance().request_latest_event_signal(cur_time)
 

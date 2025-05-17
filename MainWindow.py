@@ -123,7 +123,7 @@ class MainWindow(QMainWindow):
 									color: #05974C;
 								}
 				            """)
-		set_font(sidebar_btn,1)
+		set_font(sidebar_btn, 1)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 添加search文本框
@@ -144,7 +144,7 @@ class MainWindow(QMainWindow):
 						            }
 							    """)
 		self.search_edit.setFixedHeight(38)
-		
+
 		# 回车触发搜索功能
 		self.search_edit.returnPressed.connect(self.get_search_result)
 
@@ -250,7 +250,7 @@ class MainWindow(QMainWindow):
 								color: rgb(189,41,29);
 								}
 						        """)
-		set_font(return_btn,1)
+		set_font(return_btn, 1)
 		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
 
 		btn_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -310,7 +310,7 @@ class MainWindow(QMainWindow):
 								color: rgb(189,41,29);
 								}
 				            """)
-		set_font(return_btn,1)
+		set_font(return_btn, 1)
 		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
 
 		btn_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -349,7 +349,7 @@ class MainWindow(QMainWindow):
 								color: #05974C;
 								}
 								""")
-		set_font(sidebar_btn,1)
+		set_font(sidebar_btn, 1)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 返回按钮，回到calendar
@@ -370,7 +370,7 @@ class MainWindow(QMainWindow):
 								color: rgb(189,41,29);
 								}
 								""")
-		set_font(return_btn,1)
+		set_font(return_btn, 1)
 		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
 
 		btn_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -386,7 +386,6 @@ class MainWindow(QMainWindow):
 		float_btn.move(50, 50)  # 初始位置
 		float_btn.raise_()  # 确保在最上层
 		float_btn.clicked.connect(partial(self.navigate_to, "Schedule", self.main_stack))
-		
 
 	def add_page(self, stack: QStackedWidget, widget: QWidget, name: str):
 		'''
@@ -416,14 +415,15 @@ class MainWindow(QMainWindow):
 		else:
 			raise RuntimeError(f"错误：未知页面 {name}")
 
-	def check_one_schedule(self, data:tuple):
+	def check_one_schedule(self, data: tuple):
 		event = data[0]
 		self.schedule.deadline_edit.setDateTime(QDateTime.fromString(event.datetime, "yyyy-MM-dd HH:mm"))
 		self.schedule.reminder_edit.setDateTime(QDateTime.fromString(event.advance_time, "yyyy-MM-dd HH:mm"))
 		self.schedule.theme_text_edit.setText(event.title)
-		self.schedule.text_edit.setPlainText(event.notes)	
+		self.schedule.text_edit.setPlainText(event.notes)
 		self.main_stack.setCurrentIndex(self.main_stack_map["Schedule"])
 		self.schedule.save_btn.clicked.connect(lambda: self.upcoming.delete_one_item(event))
+
 	def setup_search_column_animation(self) -> None:
 		"""搜索结果栏展开动画设置"""
 		self.animations["search_column"] = QPropertyAnimation(self.search_column, b"maximumWidth")
