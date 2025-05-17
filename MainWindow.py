@@ -404,17 +404,14 @@ class MainWindow(QMainWindow):
 		'''
 		if name in self.main_stack_map:
 			# 向Schedule传输date
-			if not date is None:
-				# Emitter.instance().dynamic_signal.connect(self.schedule.receive_signal)
-				# Emitter.instance().send_dynamic_signal(date)
-				self.schedule.receive_date(date)
-
-			if name == 'Upcoming':
+			if name == "Schedule":
+				if not date is None:
+					self.schedule.receive_date(date)
+				else:
+					self.schedule.deadline_edit.setDateTime(QDateTime.currentDateTime())
+					self.schedule.reminder_edit.setDateTime(QDateTime.currentDateTime())
+			elif name == 'Upcoming':
 				self.upcoming.refresh_upcoming()
-			elif name == "Schedule":
-				self.schedule.deadline_edit.setDateTime(QDateTime.currentDateTime())
-				self.schedule.reminder_edit.setDateTime(QDateTime.currentDateTime())
-
 			stack.setCurrentIndex(self.main_stack_map[name])
 			log.info(f"跳转到{name}页面，日期为{date.toString() if date else date}")
 		else:

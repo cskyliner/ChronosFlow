@@ -316,6 +316,8 @@ class Upcoming(QListWidget):
 					 "\n".join(f"- {event.title} @ {event.datetime}" for event in data))
 			self.events_used_to_update = data
 			self.event_num += len(data)
+			if len(data) < 10:
+				self.no_more_events = True
 		else:
 			log.info("接受数据为空，无更多数据")
 			# 数据加载完毕
