@@ -18,11 +18,11 @@ class SettingsPage(QWidget):
 		layout = QVBoxLayout()
 
 		# 存储路径设置
-		path_group=QGroupBox("数据存储目录")
+		path_group = QGroupBox("存储目录")
 		set_font(path_group)
 		path_group.setStyleSheet("""
 					QGroupBox {
-						border: 1px solid #3498db;
+						border: 1px solid palette(mid);
 						border-radius: 10px;
 						margin-top: 1.5ex;
 						padding: 5px;
@@ -43,7 +43,7 @@ class SettingsPage(QWidget):
 		self.storage_path_edit.setFixedHeight(35)
 		self.storage_path_edit.setStyleSheet("""QLineEdit {
 			border-radius: 5px;
-			border:1px solid palette(text);
+			border:1px solid palette(mid);
 			background:transparent
 		}""")
 		self.storage_path_edit.setPlaceholderText("请选择目录")
@@ -51,11 +51,11 @@ class SettingsPage(QWidget):
 		path_layout.addWidget(self.storage_path_edit)
 
 		browse_btn = QPushButton("浏览...")
-		browse_btn.setFixedSize(80,35)
+		browse_btn.setFixedSize(80, 35)
 		browse_btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
-                    border: 1px solid palette(text);
+                    border: 1px solid palette(mid);
                     border-radius: 4px;
                     padding: 0px;
                     text-align: center;
@@ -75,11 +75,11 @@ class SettingsPage(QWidget):
 		path_group.setLayout(path_layout)
 
 		# 主题设置
-		theme_group=QGroupBox("主题")
+		theme_group = QGroupBox("主题")
 		set_font(theme_group)
 		theme_group.setStyleSheet("""
 					QGroupBox {
-						border: 1px solid #3498db;
+						border: 1px solid palette(mid);
 						border-radius: 10px;
 						margin-top: 1.5ex;
 						padding: 5px;
@@ -92,7 +92,7 @@ class SettingsPage(QWidget):
 					""")
 
 		theme_layout = QHBoxLayout()
-		theme_label=QLabel("应用主题:")
+		theme_label = QLabel("应用主题:")
 		set_font(theme_label)
 		theme_layout.addWidget(theme_label)
 
@@ -107,7 +107,7 @@ class SettingsPage(QWidget):
 		notification_group = QGroupBox("通知设置")
 		notification_group.setStyleSheet("""
 					QGroupBox {
-						border: 1px solid #3498db;
+						border: 1px solid palette(mid);
 						border-radius: 10px;
 						margin-top: 1.5ex;
 						padding: 5px;
@@ -128,7 +128,7 @@ class SettingsPage(QWidget):
 
 		# 通知类型
 		notify_type_layout = QHBoxLayout()
-		notify_type_label=QLabel("通知类型:")
+		notify_type_label = QLabel("通知类型:")
 		set_font(notify_type_label)
 		notify_type_layout.addWidget(notify_type_label)
 
@@ -144,7 +144,7 @@ class SettingsPage(QWidget):
 		volume_group = QGroupBox("音量设置")
 		volume_group.setStyleSheet("""
 					QGroupBox {
-						border: 1px solid #3498db;
+						border: 1px solid palette(mid);
 						border-radius: 10px;
 						margin-top: 1.5ex;
 						padding: 5px;
@@ -178,7 +178,7 @@ class SettingsPage(QWidget):
 		save_btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
-                    border: 1px solid palette(text);
+                    border: 1px solid palette(mid);
                     border-radius: 4px;
                     padding: 0px;
                     text-align: center;
@@ -191,7 +191,7 @@ class SettingsPage(QWidget):
 					background-color: palette(mid);
 				}
             """)
-		save_btn.setFixedSize(100,40)
+		save_btn.setFixedSize(100, 40)
 		set_font(save_btn)
 		save_btn.clicked.connect(lambda: self.save_settings(reminder=True))  # 添加reminder参数使得手动保存与默认保存区分开来
 
@@ -233,8 +233,9 @@ class SettingsPage(QWidget):
 		if path:
 			log.info(f"用户选择的存储路径: {path}")
 			self.storage_path_edit.setText(path)
-		# os.makedirs(path, exist_ok=True)
-		# self.config_path_cpy : str = os.path.join(path, "settings_cpy.json")
+
+	# os.makedirs(path, exist_ok=True)
+	# self.config_path_cpy : str = os.path.join(path, "settings_cpy.json")
 
 	def get_config_path(self) -> str:
 		"""获取配置文件路径"""

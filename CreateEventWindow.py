@@ -97,7 +97,7 @@ class Schedule(QWidget):
 		group_box = QGroupBox("添加日程")
 		group_box.setStyleSheet("""
 			QGroupBox {
-				border: 1px solid #3498db;
+				border: 1px solid palette(mid);
 				border-radius: 10px;
 				margin-top: 1.5ex;
 				padding: 5px;
@@ -207,7 +207,7 @@ class Schedule(QWidget):
 		self.save_btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
-                    border: 1px solid #d0d0d0;
+                    border: 1px solid palette(mid);
                 	border-radius: 4px;
                     padding: 25px;
                     text-align: center;
