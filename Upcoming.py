@@ -295,14 +295,12 @@ class Upcoming(QListWidget):
 		set_font(date_item)
 
 		# 寻找插入位置（第一个比自身日期大的日期）
-		find = False
 		record = None
 		for key in self.index_of_date_label.keys():
 			if key > date:
-				find = True
 				record = key
 				break
-		if find:
+		if not record is None:
 			self.insertItem(self.index_of_date_label[record].row(), date_item)
 		else:
 			self.addItem(date_item)
@@ -316,8 +314,8 @@ class Upcoming(QListWidget):
 					 "\n".join(f"- {event.title} @ {event.datetime}" for event in data))
 			self.events_used_to_update = data
 			self.event_num += len(data)
-			if len(data) < 10:
-				self.no_more_events = True
+			#if len(data) < self.page_num:#TODO：应对奇怪的问题
+			#	self.no_more_events = True
 		else:
 			log.info("接受数据为空，无更多数据")
 			# 数据加载完毕
@@ -348,14 +346,12 @@ class Upcoming(QListWidget):
 			# 如果完成，插到下一个日期标签的上方
 			else:
 				date = event.datetime[:10]
-				find = False
 				record = None
 				for key in self.index_of_date_label.keys():
 					if key > date:
-						find = True
 						record = key
 						break
-				if find:
+				if not record is None:
 					self.insertItem(self.index_of_date_label[record].row(), item)
 					self.setItemWidget(item, custom_widget)
 					self.items_of_one_date[event.datetime[:10]] = [
@@ -373,14 +369,12 @@ class Upcoming(QListWidget):
 					(event.id, QPersistentModelIndex(self.indexFromItem(item))))
 			else:
 				date = event.datetime[:10]
-				find = False
 				record = None
 				for key in self.index_of_date_label.keys():
 					if key > date:
-						find = True
 						record = key
 						break
-				if find:
+				if not record is None:
 					self.insertItem(self.index_of_date_label[record].row(), item)
 					self.setItemWidget(item, custom_widget)
 					self.items_of_one_date[event.datetime[:10]].append(
@@ -436,11 +430,11 @@ class Upcoming(QListWidget):
 				if not keep_corresponding_event:
 					log.info(f"删除事件成功：{event.title} @ {event.datetime}")
 				# 删除日期标签
-				if len(self.items_of_one_date[date]) == 0:
-					del self.items_of_one_date[date]
-					self.takeItem(self.row(self.itemFromIndex(self.index_of_date_label[date])))
-					del self.index_of_date_label[date]
-					if not keep_corresponding_event:
+				if not keep_corresponding_event:
+					if len(self.items_of_one_date[date]) == 0:
+						del self.items_of_one_date[date]
+						self.takeItem(self.row(self.itemFromIndex(self.index_of_date_label[date])))
+						del self.index_of_date_label[date]
 						log.info(f"日期标签删除成功：{date}")
 				break
 		if not keep_corresponding_event:

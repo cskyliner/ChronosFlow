@@ -5,6 +5,85 @@ from FontSetting import set_font
 log = logging.getLogger(__name__)
 
 
+class StrictDynamicLineEdit(QLineEdit):
+	def __init__(self, parent=None):
+		super().__init__(parent)
+		self._parent = parent
+		self.update_limits()
+
+		# 禁止影响父控件布局
+		self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+
+		# 设置占位提示文字
+		self.setPlaceholderText("标题")
+		set_font(self)
+
+		# 初始宽度
+		self.setFixedWidth(self._min_width)
+		self.setFixedHeight(50)
+
+		self.setStyleSheet("""QLineEdit {
+			border: none;
+			border-bottom: 1px solid black;
+			background: transparent;
+		}""")
+
+		# 监听文本变化
+		self.textChanged.connect(self.adjust_width)
+
+	def update_limits(self):
+		"""从父控件获取当前允许的宽度范围"""
+		if self._parent:
+			self._min_width = int(self._parent.width() * 0.4)
+			self._max_width = self._parent.width()
+
+	def adjust_width(self):
+		"""根据内容调整宽度，限制在父控件范围内"""
+		# 确保使用最新的宽度限制
+		self.update_limits()
+
+		# 计算文本实际需要的宽度（包括边距）
+		text_width = self.fontMetrics().boundingRect(self.text()).width() + 20
+
+		# 严格限制宽度范围
+		new_width = max(self._min_width, min(text_width, self._max_width))
+
+		# 关键点：先解除固定宽度限制，再设置新宽度
+		self.setMinimumWidth(0)
+		self.setMaximumWidth(self._max_width)
+		self.setFixedWidth(new_width)
+
+	def resizeEvent(self, event):
+		"""父控件大小改变时重新调整"""
+		self.update_limits()
+		self.adjust_width()
+		super().resizeEvent(event)
+
+
+class ContainerFrame(QFrame):
+	"""隔离层，确保布局变化不会传递到主窗口"""
+
+	def __init__(self, parent=None):
+		super().__init__(parent)
+		self.setFixedHeight(50)
+		self.setFrameShape(QFrame.NoFrame)
+		layout = QVBoxLayout(self)
+		layout.setContentsMargins(0, 0, 0, 0)
+
+		# 添加动态文本框
+		self.line_edit = StrictDynamicLineEdit(self)
+		layout.addWidget(self.line_edit, 0, Qt.AlignLeft)
+
+		# 添加伸缩项固定布局
+		layout.addStretch()
+
+	def text(self):
+		return self.line_edit.text()
+
+	def clear(self):
+		self.line_edit.clear()
+
+
 class Schedule(QWidget):
 	def __init__(self, parent=None):
 		super().__init__(parent)
@@ -12,17 +91,28 @@ class Schedule(QWidget):
 		self.date = ['0000', '00', '00']  # 日期
 		self.datetime = ['00', '00']  # TODO:调整具体时间（小时，分钟）
 		layout = QVBoxLayout(self)
+		layout.setSpacing(0)
 
-		# 单行文本框
-		self.theme_text_edit = QLineEdit()
-		self.theme_text_edit.setPlaceholderText("主题")
-		set_font(self.theme_text_edit)
-		self.theme_text_edit.setFixedHeight(50)
+		# 动态调整宽度的主题文本框
+		self.theme_text_edit = ContainerFrame(self)
 		layout.addWidget(self.theme_text_edit)
+
+		# 间隔
+		self.line = QLabel()
+		self.line.setFixedHeight(20)
+		layout.addWidget(self.line)
 
 		# 创建多行文本框
 		self.text_edit = QPlainTextEdit()
-		self.text_edit.setPlaceholderText("内容")
+		self.text_edit.setStyleSheet("""
+    		QPlainTextEdit {
+        		background: transparent;
+        		border: none;
+			}
+			QScrollBar {
+				background: transparent;
+			}
+		""")
 		set_font(self.text_edit)
 		layout.addWidget(self.text_edit)
 
