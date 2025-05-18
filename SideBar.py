@@ -24,7 +24,7 @@ class SideBar(QFrame):
 
 		# ===添加功能按钮===
 		names = ("Calendar", "Upcoming", "Setting")
-		_names = ("日历", "待办", "设置")
+		_names = ("日历", "日程", "设置")
 		for i in range(len(names)):
 			btn = QPushButton(f"{_names[i]}")
 			btn.setStyleSheet("""

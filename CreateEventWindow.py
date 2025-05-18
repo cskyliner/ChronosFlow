@@ -24,7 +24,7 @@ class StrictDynamicLineEdit(QLineEdit):
 
 		self.setStyleSheet("""QLineEdit {
 			border: none;
-			border-bottom: 1px solid black;
+			border-bottom: 1px solid palette(text);
 			background: transparent;
 		}""")
 
@@ -93,14 +93,32 @@ class Schedule(QWidget):
 		layout = QVBoxLayout(self)
 		layout.setSpacing(0)
 
+		# 创建框
+		group_box = QGroupBox("添加日程")
+		group_box.setStyleSheet("""
+			QGroupBox {
+				border: 1px solid #3498db;
+				border-radius: 10px;
+				margin-top: 1.5ex;
+				padding: 5px;
+			}
+			QGroupBox::title {
+				subcontrol-origin: margin;
+				left: 10px;
+				padding: 0 3px;
+			}
+			""")
+		set_font(group_box)
+		group_layout = QVBoxLayout()
+
 		# 动态调整宽度的主题文本框
 		self.theme_text_edit = ContainerFrame(self)
-		layout.addWidget(self.theme_text_edit)
+		group_layout.addWidget(self.theme_text_edit)
 
 		# 间隔
 		self.line = QLabel()
 		self.line.setFixedHeight(20)
-		layout.addWidget(self.line)
+		group_layout.addWidget(self.line)
 
 		# 创建多行文本框
 		self.text_edit = QPlainTextEdit()
@@ -114,7 +132,10 @@ class Schedule(QWidget):
 			}
 		""")
 		set_font(self.text_edit)
-		layout.addWidget(self.text_edit)
+		group_layout.addWidget(self.text_edit)
+
+		group_box.setLayout(group_layout)
+		layout.addWidget(group_box)
 
 		# 截止、提醒时间选择框
 		deadline_and_reminder_label_layout = QHBoxLayout()

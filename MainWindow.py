@@ -9,7 +9,6 @@ from Tray import Tray
 from FloatingWindow import FloatingWindow
 from Notice import Notice
 from Upcoming import Upcoming, FloatingButton
-
 from FontSetting import set_font
 from Event import DDLEvent, get_events_in_month
 
@@ -140,7 +139,7 @@ class MainWindow(QMainWindow):
 								    QLineEdit {
 								    background: transparent;
 						            padding: 8px;
-					                border: 1px solid #ccc;
+					                border: 1px solid palette(mid);
 					                border-top-left-radius: 19px;     /* 左上角 */
     								border-top-right-radius: 0px;    /* 右上角 */
     								border-bottom-left-radius: 19px;  /* 左下角 */
@@ -159,7 +158,7 @@ class MainWindow(QMainWindow):
 		btn.setStyleSheet("""
 					QPushButton {
 		                background-color: transparent;
-		                border: 1px solid #d0d0d0;
+		                border: 1px solid palette(mid);
 		                border-top-left-radius: 0px;     /* 左上角 */
     					border-top-right-radius: 19px;    /* 右上角 */
     					border-bottom-left-radius: 0px;  /* 左下角 */
@@ -200,6 +199,12 @@ class MainWindow(QMainWindow):
 		middle_layout.addWidget(self.main_window_calendar)
 		middle_layout.addWidget(self.search_column)
 		main_window_layout.addLayout(middle_layout)
+
+		# 创建悬浮按钮
+		float_btn = FloatingButton(self.main_window)
+		float_btn.move(50, 50)  # 初始位置
+		float_btn.raise_()  # 确保在最上层
+		float_btn.clicked.connect(partial(self.navigate_to, "Schedule", self.main_stack))
 
 		self.add_page(self.main_stack, self.main_window, "Calendar")  # main_window是日历，故名为Calendar
 

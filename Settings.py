@@ -18,22 +18,79 @@ class SettingsPage(QWidget):
 		layout = QVBoxLayout()
 
 		# 存储路径设置
+		path_group=QGroupBox("数据存储目录")
+		set_font(path_group)
+		path_group.setStyleSheet("""
+					QGroupBox {
+						border: 1px solid #3498db;
+						border-radius: 10px;
+						margin-top: 1.5ex;
+						padding: 5px;
+					}
+					QGroupBox::title {
+						subcontrol-origin: margin;
+						left: 10px;
+						padding: 0 3px;
+					}
+					""")
+
 		path_layout = QHBoxLayout()
 		path_label = QLabel("数据存储目录:")
 		set_font(path_label)
 		path_layout.addWidget(path_label)
 
 		self.storage_path_edit = QLineEdit()
+		self.storage_path_edit.setFixedHeight(35)
+		self.storage_path_edit.setStyleSheet("""QLineEdit {
+			border-radius: 5px;
+			border:1px solid palette(text);
+			background:transparent
+		}""")
 		self.storage_path_edit.setPlaceholderText("请选择目录")
 		set_font(self.storage_path_edit)
 		path_layout.addWidget(self.storage_path_edit)
 
 		browse_btn = QPushButton("浏览...")
+		browse_btn.setFixedSize(80,35)
+		browse_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: transparent;
+                    border: 1px solid palette(text);
+                    border-radius: 4px;
+                    padding: 0px;
+                    text-align: center;
+                }
+                QPushButton:hover {
+                    background-color: palette(midlight); /*轻微高亮*/
+                    border-radius: 4px;
+                }
+                QPushButton:pressed {
+					background-color: palette(mid);
+				}
+            """)
 		set_font(browse_btn)
 		browse_btn.clicked.connect(self.select_storage_path)
 		path_layout.addWidget(browse_btn)
 
+		path_group.setLayout(path_layout)
+
 		# 主题设置
+		theme_group=QGroupBox("主题")
+		set_font(theme_group)
+		theme_group.setStyleSheet("""
+					QGroupBox {
+						border: 1px solid #3498db;
+						border-radius: 10px;
+						margin-top: 1.5ex;
+						padding: 5px;
+					}
+					QGroupBox::title {
+						subcontrol-origin: margin;
+						left: 10px;
+						padding: 0 3px;
+					}
+					""")
+
 		theme_layout = QHBoxLayout()
 		theme_label=QLabel("应用主题:")
 		set_font(theme_label)
@@ -44,8 +101,23 @@ class SettingsPage(QWidget):
 		set_font(self.theme_combo)
 		theme_layout.addWidget(self.theme_combo)
 
+		theme_group.setLayout(theme_layout)
+
 		# 通知设置组
 		notification_group = QGroupBox("通知设置")
+		notification_group.setStyleSheet("""
+					QGroupBox {
+						border: 1px solid #3498db;
+						border-radius: 10px;
+						margin-top: 1.5ex;
+						padding: 5px;
+					}
+					QGroupBox::title {
+						subcontrol-origin: margin;
+						left: 10px;
+						padding: 0 3px;
+					}
+					""")
 		set_font(notification_group)
 		notification_layout = QVBoxLayout()
 
@@ -70,6 +142,19 @@ class SettingsPage(QWidget):
 
 		# 音量设置组
 		volume_group = QGroupBox("音量设置")
+		volume_group.setStyleSheet("""
+					QGroupBox {
+						border: 1px solid #3498db;
+						border-radius: 10px;
+						margin-top: 1.5ex;
+						padding: 5px;
+					}
+					QGroupBox::title {
+						subcontrol-origin: margin;
+						left: 10px;
+						padding: 0 3px;
+					}
+					""")
 		set_font(volume_group)
 		volume_layout = QVBoxLayout()
 
@@ -90,12 +175,29 @@ class SettingsPage(QWidget):
 
 		# 保存按钮
 		save_btn = QPushButton("保存设置")
+		save_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: transparent;
+                    border: 1px solid palette(text);
+                    border-radius: 4px;
+                    padding: 0px;
+                    text-align: center;
+                }
+                QPushButton:hover {
+                    background-color: palette(midlight); /*轻微高亮*/
+                    border-radius: 4px;
+                }
+                QPushButton:pressed {
+					background-color: palette(mid);
+				}
+            """)
+		save_btn.setFixedSize(100,40)
 		set_font(save_btn)
 		save_btn.clicked.connect(lambda: self.save_settings(reminder=True))  # 添加reminder参数使得手动保存与默认保存区分开来
 
 		# 主布局
-		layout.addLayout(path_layout)
-		layout.addLayout(theme_layout)
+		layout.addWidget(path_group)
+		layout.addWidget(theme_group)
 		layout.addWidget(notification_group)
 		layout.addWidget(volume_group)
 		layout.addStretch()
