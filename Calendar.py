@@ -1,6 +1,6 @@
 from common import *
-from Event import DDLEvent
-
+from Event import DDLEvent, get_events_in_month
+log = logging.getLogger(__name__)
 
 class CalendarDelegate(QStyledItemDelegate):
 	def __init__(self, calendar=None, parent=None):
@@ -178,6 +178,8 @@ class Calendar(QCalendarWidget):
 					}
 				""")
 		self.init_ui()
+		# 连接信号到槽函数
+		self.currentPageChanged.connect(self.handle_page_changed)
 
 	def get_current_displayed_month(self):
 		return self.selectedDate().month()
@@ -214,6 +216,16 @@ class Calendar(QCalendarWidget):
 			self.holidays.add(date)
 		self.updateCells()
 
-	def add_schedule(self, date, event: DDLEvent):
+	def add_schedule(self, event: DDLEvent):	
+		date = QDate.fromString(event.datetime.split(" ")[0], "yyyy-MM-dd")
 		self.schedules[date].append(event)
 		self.updateCells()
+	def handle_page_changed(self, year: int, month: int):
+		"""月份或年份变化时的回调"""
+		#month += 1  # 注意：month 的范围是0~11
+		log.info(f"页面切换至: {year}年{month}月")
+		events = get_events_in_month(year, month)
+		self.schedules.clear()
+		for event in events:
+			self.add_schedule(event)
+

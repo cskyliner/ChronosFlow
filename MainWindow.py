@@ -9,7 +9,7 @@ from Tray import Tray
 from FloatingWindow import FloatingWindow
 from Notice import Notice
 from Upcoming import Upcoming, FloatingButton
-from Event import BaseEvent, DDLEvent
+from Event import BaseEvent, DDLEvent, get_events_in_month
 
 log = logging.getLogger(__name__)
 
@@ -76,6 +76,9 @@ class MainWindow(QMainWindow):
 		self.setup_upcoming_window()  # 日程展示窗口
 
 		# TODO:更改日历加载事件逻辑，通过向后端发送时间端请求事件，不要耦合upcoming完成
+		cur_month = QDate.currentDate().month()
+		cur_year = QDate.currentDate().year()
+		self.get_events_in_month_from_backend(cur_year, cur_month)
 		# self.load_event_in_calendar(self.upcoming.events)
 		# 初始化通知系统
 		self.notice_system = Notice()
@@ -382,6 +385,7 @@ class MainWindow(QMainWindow):
 		btn_layout.addWidget(return_btn, alignment=Qt.AlignmentFlag.AlignRight)
 
 		self.upcoming = Upcoming()
+		Emitter.instance().view_and_edit_schedule_signal.connect(self.check_one_schedule)
 		layout.addWidget(self.upcoming)
 		self.add_page(self.main_stack, self.upcoming_window, "Upcoming")
 
@@ -390,6 +394,7 @@ class MainWindow(QMainWindow):
 		float_btn.move(50, 50)  # 初始位置
 		float_btn.raise_()  # 确保在最上层
 		float_btn.clicked.connect(partial(self.navigate_to, "Schedule", self.main_stack))
+		
 
 	def add_page(self, stack: QStackedWidget, widget: QWidget, name: str):
 		'''
@@ -397,7 +402,7 @@ class MainWindow(QMainWindow):
 		'''
 		self.main_stack_map[name] = stack.addWidget(widget)
 
-	def navigate_to(self, name: str, stack: QStackedWidget, date: QDate = None):
+	def navigate_to(self, name: str, stack: QStackedWidget, date: QDate = None, tag: tuple = None):
 		'''
 		通过名称跳转页面
 		'''
@@ -413,11 +418,20 @@ class MainWindow(QMainWindow):
 			elif name == "Schedule":
 				self.schedule.deadline_edit.setDateTime(QDateTime.currentDateTime())
 				self.schedule.reminder_edit.setDateTime(QDateTime.currentDateTime())
+
 			stack.setCurrentIndex(self.main_stack_map[name])
 			log.info(f"跳转到{name}页面，日期为{date.toString() if date else date}")
 		else:
 			raise RuntimeError(f"错误：未知页面 {name}")
 
+	def check_one_schedule(self, data:tuple):
+		event = data[0]
+		self.schedule.deadline_edit.setDateTime(QDateTime.fromString(event.datetime, "yyyy-MM-dd HH:mm"))
+		self.schedule.reminder_edit.setDateTime(QDateTime.fromString(event.advance_time, "yyyy-MM-dd HH:mm"))
+		self.schedule.theme_text_edit.setText(event.title)
+		self.schedule.text_edit.setPlainText(event.notes)	
+		self.main_stack.setCurrentIndex(self.main_stack_map["Schedule"])
+		self.schedule.save_btn.clicked.connect(lambda: self.upcoming.delete_one_item(event))
 	def setup_search_column_animation(self) -> None:
 		"""搜索结果栏展开动画设置"""
 		self.animations["search_column"] = QPropertyAnimation(self.search_column, b"maximumWidth")
@@ -537,17 +551,8 @@ class MainWindow(QMainWindow):
 		self.floating_window.show_main_requested.connect(self.show_main_window)
 
 	def load_event_in_calendar(self, events: list[DDLEvent]):
-		format_string = "yyyy-MM-dd HH:mm"
 		for event in events:
-			date_time = QDateTime.fromString(event.datetime, format_string)
-
-			if date_time.isValid():
-				qdate = date_time.date()
-				self.main_window_calendar.add_schedule(qdate, event)
-			else:
-				# 处理错误，例如使用默认日期
-				qdate = QDate.currentDate()
-				log.info(f"解析失败，使用当前日期: {qdate.toString()}")
+			self.main_window_calendar.add_schedule(event)
 
 	def eventFilter(self, obj, event):
 		"""事件过滤器，用于Calendar的search_column"""
@@ -567,3 +572,7 @@ class MainWindow(QMainWindow):
 						self.toggle_search_column()
 
 		return super().eventFilter(obj, event)
+	def get_events_in_month_from_backend(self, cur_year: int, cur_month: int):
+		"""获取当前月份的事件"""
+		events:list[DDLEvent] = get_events_in_month(cur_year, cur_month)
+		self.load_event_in_calendar(events)

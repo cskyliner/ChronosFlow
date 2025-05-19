@@ -97,9 +97,9 @@ class Schedule(QWidget):
 		button_layout = QHBoxLayout()
 		layout.addLayout(button_layout)
 
-		btn = QPushButton("Save")
-		btn.clicked.connect(self.create_new_event)
-		btn.setStyleSheet("""
+		self.save_btn = QPushButton("Save")
+		self.save_btn.clicked.connect(self.create_new_event)
+		self.save_btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
                     border: 1px solid #d0d0d0;
@@ -115,8 +115,8 @@ class Schedule(QWidget):
 					background-color: palette(mid);
 				}
 							""")
-		btn.setFont(font)
-		button_layout.addWidget(btn)
+		self.save_btn.setFont(font)
+		button_layout.addWidget(self.save_btn)
 
 		# 状态栏
 		self.status_label = QLabel()
@@ -160,8 +160,6 @@ class Schedule(QWidget):
 				f"创建新事件，标题：{theme}, 截止时间：{deadline}, 内容：{content}, 提前提醒时间：{reminder}, 重要程度：Great"),
 			# DDL参数(标题，截止时间，具体内容，提前提醒时间，重要程度)
 			Emitter.instance().send_create_event_signal("DDL", theme, deadline, content, reminder, "Great")
-			
-			Emitter.instance().send_signal_to_schedule_notice(theme, content, notify_time)
 			QMessageBox.information(self, "保存成功",
 									f"主题: {theme}\n内容: {content}\n截止时间: {deadline}\n提醒时间: {reminder}")
 		else:
