@@ -42,11 +42,7 @@ class Notice(QObject):
 
 			notify_time = QDateTime.fromString(self.latest_event.advance_time, "yyyy-MM-dd HH:mm")
 			if self.latest_event and current >= notify_time:
-<<<<<<< HEAD
-				log.info(f"now_time{current};notify_time{notify_time} 提醒: {self.latest_event.title} - {self.latest_event.notes}")
-=======
 				log.info(f"提醒: {self.latest_event.title} - {self.latest_event.notes}")
->>>>>>> origin/main
 				if sys.platform == "darwin":
 					pync.notify(self.latest_event.notes, title='ChronosFlow', subtitle=self.latest_event.title, sound='Ping')
 				else:
@@ -55,10 +51,6 @@ class Notice(QObject):
 					self.notify_to_tray.emit((self.latest_event,))
 
 				self.latest_event = None
-<<<<<<< HEAD
-				time.sleep(1)
-=======
->>>>>>> origin/main
 				current = QDateTime.currentDateTime().addSecs(60)
 				self.request_latest_event(current)
 
@@ -85,11 +77,7 @@ class Notice(QObject):
 				self.if_backend_exist_event = False
 			else:
 				self.latest_event = latest_event_info[0]
-<<<<<<< HEAD
-				log.info(f"tag：{tag},最新DDLEvent：{self.latest_event.title}; 提醒时间{self.latest_event.advance_time}; 截止时间{self.latest_event.datetime}")
-=======
 				log.info(f"tag：{tag}最新DDLEvent：{self.latest_event.title}; 提醒时间{self.latest_event.advance_time}; 截止时间{self.latest_event.datetime}")
->>>>>>> origin/main
 	def request_latest_event(self, cur_time: QDateTime):
 		Emitter.instance().request_latest_event_signal(cur_time)
 
