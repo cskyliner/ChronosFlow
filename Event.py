@@ -78,7 +78,7 @@ class BaseEvent:
 		"""
 		if self.id is not None:
 			# 证明已经存在过该事件，应该为修改事件
-			log.info(f"修改事件{self.title}")
+			log.error(f"已经存在过该事件，应该为修改事件")
 			self.modify_event()
 		else:
 			global_id = get_global_id() 					# 获取全局变量 
@@ -110,6 +110,7 @@ class BaseEvent:
 		"""
 		修改日程
 		"""
+		log.info(f"修改事件{self.title}，事件ID为{self.id}")
 		table_name = self.table_name()
 		data = self.to_dict()
 		columns = ', '.join([f"{k} = ?" for k in data.keys()])
@@ -117,7 +118,6 @@ class BaseEvent:
 		query = f"UPDATE {table_name} SET {columns} WHERE id = ?"
 		cursor.execute(query, values)
 		conn.commit()
-		log.info(f"修改事件{self.title}")
 
 
 class DDLEvent(BaseEvent):
@@ -173,12 +173,10 @@ class EventFactory:
 	}
 
 	@classmethod
-	def create(cls, event_type: str, add: bool, *args) -> DDLEvent:
+	def create(cls, id:int , event_type: str, add: bool, *args) -> DDLEvent:
 		"""
 		根据种类创造不同Event
-		:param event_type:事件类型
-		:param add:是否添加到数据库
-		:param *args:参数
+		:params: id:事件ID event_type:事件类型 add:是否添加到数据库 *args:参数
 		:return: BaseEvent 事件类
 		"""
 		global latest_ddlevent
@@ -187,9 +185,11 @@ class EventFactory:
 		event_cls = cls.registry[event_type]
 		try:
 			n_event: DDLEvent = event_cls(*args)
-			if add is True:
+			if add is True and id is None:
+				# 此时纯粹为创建新事件
 				n_event.add_event()
 				if n_event.table_name() == "ddlevents":
+					# 如果是提醒类ddl，更新最新事件
 					now_time = QDateTime.currentDateTime()
 					now_time = now_time.toString("yyyy-MM-dd HH:mm")
 					log.info(f"EventFactory.create:现在时间是 {now_time}")
@@ -206,6 +206,9 @@ class EventFactory:
 					else:
 						log.info("EventFactory.create:添加新事件比最新事件更晚，不更新最新事件")
 					log.info(f"EventFactory.create:成功添加 {n_event.title} 到 {n_event.table_name()} 表中")
+			elif id is not None:
+				# 此时返回有id的事件，相当于根据id找出原事件
+				n_event.id = id
 			return n_event
 		except TypeError as e:
 			log.error(f"EventFactory.create:创建event失败，创建使用参数为{args}，Error:{e}")
@@ -224,14 +227,20 @@ def receive_signal(recieve_data: tuple) -> None:
 		event_type = recieve_data[1]  				# 事件类型
 		add = recieve_data[2]  						# 是否添加到数据库
 		args = recieve_data[3:]  					# 事件参数
-		EventFactory.create(event_type, add, *args)
+		EventFactory.create(None,event_type, add, *args)
 	elif recieve_data[0] == "modify_event":
 		log.info(f"receive_signal:接收{recieve_data[0]}信号成功，修改{recieve_data[2]}事件，参数为{recieve_data[3:]}")
-		event_type = recieve_data[1]  				# 事件类型
-		add = recieve_data[2]  						# 是否添加到数据库
+		id = recieve_data[1]  						# 事件ID
+		event_type = recieve_data[2]  				# 事件类型
 		args = recieve_data[3:]  					# 事件参数
-		event = EventFactory.create(event_type, add, *args)
+		event = EventFactory.create(id, event_type,False, *args)
 		event.modify_event()
+		# 修改事件后需要更新最新事件
+		now_time = QDateTime.currentDateTime()
+		now_time = now_time.toString("yyyy-MM-dd HH:mm")
+		result = get_latest_ddlevent(now_time)
+		latest_ddlevent = result
+		Emitter.instance().send_notice_signal((result,"update"))
 	elif recieve_data[0] == "storage_path":
 		path = recieve_data[1]
 		DB_PATH = os.path.join(path, "events.db")
@@ -310,7 +319,7 @@ def get_latest_ddlevent(now_time:str) -> DDLEvent:
 		log.info("get_latest_ddlevent:没有找到任何未来的DDL事件")
 		return None
 	paras = row[1:]
-	event = EventFactory.create("DDL", False, *paras)
+	event = EventFactory.create(None, "DDL", False, *paras)
 	event.id = row[0]
 	log.info(f"get_latest_ddlevent:获取最新的DDL事件成功，事件为{event.title} @ {event.advance_time}")
 	latest_ddlevent = event
@@ -346,7 +355,7 @@ def get_events_in_month(year: int, month: int) -> list[DDLEvent]:
         try:
             # 假设数据库字段顺序：id, title, advance_time, notes, ...
             paras = row[1:]  # 跳过 id 列
-            event = EventFactory.create("DDL", False, *paras)
+            event = EventFactory.create(None, "DDL", False, *paras)
             if event is not None:
                 event.id = row[0]  # 设置事件ID
                 events.append(event)
@@ -381,7 +390,7 @@ def search_all(keyword: tuple[str]) -> list[BaseEvent]:
 		rows = cursor.fetchall()
 		for row in rows:
 			paras = row[1:]
-			event = EventFactory.create(TABLE_MAP.get(table, "DDL"), False, *paras)
+			event = EventFactory.create(None, TABLE_MAP.get(table, "DDL"), False, *paras)
 			event.id = row[0]
 			result.append(event)
 	return result
@@ -405,7 +414,7 @@ def search_time(start_time: str, end_time: str) -> list[BaseEvent]:
 		rows = cursor.fetchall()
 		for row in rows:
 			paras = row[1:]
-			event = EventFactory.create(TABLE_MAP.get(table, "DDL"), False, *paras)
+			event = EventFactory.create(None, TABLE_MAP.get(table, "DDL"), False, *paras)
 			event.id = row[0]
 			result.append(event)
 	return result
@@ -427,7 +436,7 @@ def get_data_time_order(table_name: str, start_pos: int, event_num: int) -> tupl
 	result = []
 	for row in rows:
 		paras = row[1:]
-		event = EventFactory.create(TABLE_MAP.get(table_name, "DDL"), False, *paras)
+		event = EventFactory.create(None, TABLE_MAP.get(table_name, "DDL"), False, *paras)
 		event.id = row[0]
 		result.append(event)
 	return tuple(result)

@@ -99,14 +99,15 @@ class Emitter(QObject):
 		out = ("create_event", name, True, *args)
 		self.create_event_signal.emit(out)
 
-	def send_modify_event_signal(self, name, *args):
+	def send_modify_event_signal(self, id, name, *args):
 		"""
 		发送修改事件的信号
+		id 为修改事件的id
 		name为event类型如 DDL
 		*args代表name_event类对应的参数列表（元组）
 		"""
-		log.info(f"send modify event signal，事件类型为{name}，参数为{args}")
-		out = ("modify_event", name, False, *args)
+		log.info(f"发送修改事件的信号，事件ID为{id}，事件类型为{name}，参数为{args}")
+		out = ("modify_event", id, name, *args)
 		self.modify_event_signal.emit(out)
 
 	def send_delete_event_signal(self, event_id: int, event_table_type: str):

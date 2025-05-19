@@ -412,26 +412,30 @@ class MainWindow(QMainWindow):
 				# Emitter.instance().dynamic_signal.connect(self.schedule.receive_signal)
 				# Emitter.instance().send_dynamic_signal(date)
 				self.schedule.receive_date(date)
-
+			if name != "Schedule":
+				self.schedule.theme_text_edit.clear()
+				self.schedule.text_edit.clear()
+				self.id = None
 			if name == 'Upcoming':
 				self.upcoming.refresh_upcoming()
 			elif name == "Schedule":
 				self.schedule.deadline_edit.setDateTime(QDateTime.currentDateTime())
 				self.schedule.reminder_edit.setDateTime(QDateTime.currentDateTime())
-
 			stack.setCurrentIndex(self.main_stack_map[name])
 			log.info(f"跳转到{name}页面，日期为{date.toString() if date else date}")
 		else:
 			raise RuntimeError(f"错误：未知页面 {name}")
 
 	def check_one_schedule(self, data:tuple):
-		event = data[0]
+		event:BaseEvent = data[0]
+		self.schedule.id = event.id
 		self.schedule.deadline_edit.setDateTime(QDateTime.fromString(event.datetime, "yyyy-MM-dd HH:mm"))
 		self.schedule.reminder_edit.setDateTime(QDateTime.fromString(event.advance_time, "yyyy-MM-dd HH:mm"))
 		self.schedule.theme_text_edit.setText(event.title)
 		self.schedule.text_edit.setPlainText(event.notes)	
 		self.main_stack.setCurrentIndex(self.main_stack_map["Schedule"])
-		self.schedule.save_btn.clicked.connect(lambda: self.upcoming.delete_one_item(event))
+		# self.schedule.save_btn.clicked.connect(lambda: self.upcoming.delete_one_item(event))
+
 	def setup_search_column_animation(self) -> None:
 		"""搜索结果栏展开动画设置"""
 		self.animations["search_column"] = QPropertyAnimation(self.search_column, b"maximumWidth")
