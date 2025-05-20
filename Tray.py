@@ -8,6 +8,7 @@ from PIL import Image
 
 log = logging.getLogger(__name__)
 
+
 class Tray(QObject):
 	show_main = Signal()
 	show_floating = Signal()
@@ -20,8 +21,8 @@ class Tray(QObject):
 		self.app = app or QApplication.instance()
 		self.icon_path = icon_path
 		self.notification_widgets = []
-		self.frame_index = 0			# 当前为动图第几帧
-		self.frames = []				# 存储动图
+		self.frame_index = 0  # 当前为动图第几帧
+		self.frames = []  # 存储动图
 		self._init_tray()
 		self._connect_signals()
 
@@ -87,7 +88,6 @@ class Tray(QObject):
 		"""安全创建菜单"""
 		menu = QMenu()
 
-
 		actions = [
 			("打开主窗口", lambda: self.show_main.emit()),
 			("打开悬浮窗", lambda: self.show_floating.emit()),
@@ -128,18 +128,21 @@ class Tray(QObject):
 		# 	path = f"{frame_folder}/frame_{i:02d}.png"
 		# 	img = Image.open(path).convert("RGBA")
 		# 	self.frames.append(img)
+		
 	@Slot(object)
-	def show_notification(self, data:tuple):
+	def show_notification(self, data: tuple):
 		"""显示通知"""
 		event = data[0]
 		if platform.system() == 'Windows':
 			self.tray.showMessage(event.title, event.notes, QSystemTrayIcon.Information, 2000)
-     # macOS菜单回调函数
+
+	# macOS菜单回调函数
 	def _pystray_show_main(self, icon, item):
 		self.show_main.emit()
+
 	def _pystray_show_floating(self, icon, item):
 		self.show_floating.emit()
-  
+
 	def _pystray_exit(self, icon, item):
 		self.exit_app.emit()
 

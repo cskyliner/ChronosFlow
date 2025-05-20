@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (QApplication, QStyleFactory, QMainWindow, QWidget
 							   QDialog, QTextEdit, QStyleOptionViewItem)
 from PySide6.QtCore import (QPropertyAnimation, QEasingCurve, Qt, QDate, QTime, QDateTime, Signal, Slot, QSize, QObject,
 							QPoint, QTimer, QEvent, QPointF, QPersistentModelIndex, QRect)
-from PySide6.QtGui import (QFont, QIcon, QAction, QPixmap, QColor, QLinearGradient, QPainter, QMouseEvent,
+from PySide6.QtGui import (QIcon, QAction, QPixmap, QColor, QLinearGradient, QPainter, QMouseEvent,
 						   QPainter, QFontMetrics, QTextCharFormat, QPen, QCursor)
 import logging
 import sys
