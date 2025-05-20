@@ -115,13 +115,9 @@ class Schedule(QWidget):
 		self.theme_text_edit = ContainerFrame(self)
 		group_layout.addWidget(self.theme_text_edit)
 
-		# 间隔
-		self.line = QLabel()
-		self.line.setFixedHeight(20)
-		group_layout.addWidget(self.line)
-
 		# 创建多行文本框
 		self.text_edit = QPlainTextEdit()
+		self.text_edit.setPlaceholderText("内容")
 		self.text_edit.setStyleSheet("""
     		QPlainTextEdit {
         		background: transparent;
