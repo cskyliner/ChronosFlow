@@ -69,7 +69,11 @@ class Notice(QObject):
 		elif tag == "update":
 			#说明后端有更新，需要重新获取最新消息
 			self.latest_event = latest_event_info[0]
-			log.info(f"tag：{tag} 最新DDLEvent：{self.latest_event.title}; 提醒时间{self.latest_event.advance_time}; 截止时间{self.latest_event.datetime}")			
+			if self.latest_event:
+				log.info(f"tag：{tag} 最新DDLEvent：{self.latest_event.title}; 提醒时间{self.latest_event.advance_time}; 截止时间{self.latest_event.datetime}")		
+			else:
+				log.info(f"暂无DDLEvent")
+				self.if_backend_exist_event = False	
 		elif tag == "get":
 			#说明因提醒消耗了新消息，现在正在获取下一条最新消息
 			if latest_event_info[0] is None:

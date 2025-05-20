@@ -150,7 +150,7 @@ class FloatingButton(QPushButton):
 class CustomListItem(QWidget):
 	"""一条日程"""
 	delete_me_signal: Signal = Signal(DDLEvent)
-	this_one_is_finished: Signal = Signal(DDLEvent)
+	finished_signal: Signal = Signal(DDLEvent)
 	view_and_edit_signal: Signal = Signal(DDLEvent)
 	def __init__(self, event: DDLEvent, parent=None):
 		super().__init__(parent)
@@ -173,6 +173,7 @@ class CustomListItem(QWidget):
 
 		# 是否完成的复选框
 		self.finish_checkbox = QCheckBox()
+		self.finish_checkbox.setChecked(bool(self.nevent.done))
 		self.finish_checkbox.toggled.connect(partial(self.this_one_is_finished))
 		layout.addWidget(self.finish_checkbox)
 
@@ -206,10 +207,13 @@ class CustomListItem(QWidget):
 		"""查看后发信号"""
 		self.view_and_edit_signal.emit(self.nevent)
 
-	def this_one_is_finished(self):
+	def this_one_is_finished(self,checked:bool):
 		"""打勾后发信号"""
-		# TODO
-		pass
+		self.nevent.done = checked
+		if isinstance(self.nevent, DDLEvent):
+			Emitter.instance().send_modify_event_signal(self.nevent.id, "DDL", *self.nevent.to_args())
+		else:
+			log.error(f"{type(self.nevent)}事件未实现")
 
 
 class Upcoming(QListWidget):
@@ -309,7 +313,7 @@ class Upcoming(QListWidget):
 		else:
 			self.addItem(date_item)
 		self.index_of_date_label[date] = QPersistentModelIndex(self.indexFromItem(date_item))
-		self.index_of_date_label = dict(sorted(self.index_of_date_label.items()))  # 保证日期标签按升序排列，仅支持python3.7及以上
+		self.index_of_date_label = dict(sorted(self.index_of_date_label.items())) # 保证日期标签按升序排列，仅支持python3.7及以上
 
 	def get_data(self, data: tuple[BaseEvent] = None):
 		"""从后端加载数据"""
@@ -345,7 +349,8 @@ class Upcoming(QListWidget):
 			custom_widget.delete_me_signal.connect(self.delete_one_item)
 			custom_widget.view_and_edit_signal.connect(self.view_and_edit_one_item)
 		else:
-			self.insertItem(self.index_of_date_label[event.datetime[:10]].row() + 1, item)
+			last_index = self.items_of_one_date[event.datetime[:10]][-1][1].row()
+			self.insertItem(last_index + 1 + 1, item)
 			self.setItemWidget(item, custom_widget)
 			self.items_of_one_date[event.datetime[:10]].append(
 				(event.id, QPersistentModelIndex(self.indexFromItem(item))))

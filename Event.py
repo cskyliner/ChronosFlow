@@ -142,7 +142,8 @@ class DDLEvent(BaseEvent):
 			"importance": self.importance,
 			"done": self.done,
 		}
-
+	def to_args(self) -> tuple:
+		return (self.title, self.datetime, self.notes, self.advance_time, self.importance, self.done)
 
 class TaskEvent(BaseEvent):
 	"""
