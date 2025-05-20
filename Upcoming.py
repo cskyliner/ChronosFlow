@@ -1,3 +1,5 @@
+from operator import truediv
+
 from common import *
 from Emitter import Emitter
 from functools import partial
@@ -214,6 +216,28 @@ class CustomListItem(QWidget):
 		self.unfinished_signal.emit(self.nevent)
 
 
+class Record:
+	"""记录放到Upcoming里的日程"""
+	#TODO：现在没用
+	def __init__(self, id, pos, date, finished):
+		self.id = id
+		self.pos = pos  # 在Upcoming里的位置
+		self.date = date  # 格式："yyyy-MM-dd HH:mm"
+		self.finished = finished  # 是否完成
+
+	def __lt__(self, other):
+		if self.finished:
+			if other.finished:
+				return self.date < other.date
+			else:
+				return False
+		else:
+			if other.finished:
+				return True
+			else:
+				return self.date < other.date
+
+
 class Upcoming(QListWidget):
 	"""
 	容纳多个SingleUpcoming，有滚动等功能
@@ -314,8 +338,8 @@ class Upcoming(QListWidget):
 					 "\n".join(f"- {event.title} @ {event.datetime}" for event in data))
 			self.events_used_to_update = data
 			self.event_num += len(data)
-			#if len(data) < self.page_num:#TODO：应对奇怪的问题
-			#	self.no_more_events = True
+		# if len(data) < self.page_num:#TODO：应对奇怪的问题
+		#	self.no_more_events = True
 		else:
 			log.info("接受数据为空，无更多数据")
 			# 数据加载完毕
@@ -389,6 +413,7 @@ class Upcoming(QListWidget):
 		custom_widget.view_and_edit_signal.connect(self.view_and_edit_one_item)
 		custom_widget.finished_signal.connect(self.finish_one_item)
 		custom_widget.unfinished_signal.connect(self.make_one_item_unfinished)
+		log.info(f"{event.title}插入完成")
 
 	def view_and_edit_one_item(self, event: BaseEvent):
 		"""查看和编辑事件"""

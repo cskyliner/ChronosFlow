@@ -408,10 +408,6 @@ class MainWindow(QMainWindow):
 		'''
 		if name in self.main_stack_map:
 			# 向Schedule传输date
-			if not date is None:
-				# Emitter.instance().dynamic_signal.connect(self.schedule.receive_signal)
-				# Emitter.instance().send_dynamic_signal(date)
-				self.schedule.receive_date(date)
 			if name != "Schedule":
 				self.schedule.theme_text_edit.clear()
 				self.schedule.text_edit.clear()

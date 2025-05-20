@@ -83,6 +83,9 @@ class ContainerFrame(QFrame):
 	def clear(self):
 		self.line_edit.clear()
 
+	def setText(self,content):
+		self.line_edit.setText(content)
+
 
 class Schedule(QWidget):
 	def __init__(self, parent=None):
@@ -245,6 +248,8 @@ class Schedule(QWidget):
 		"""
 		theme = self.theme_text_edit.text()
 		content = self.text_edit.toPlainText()
+		self.theme_text_edit.clear()
+		self.text_edit.clear()
 		deadline = self.deadline_edit.dateTime().toString("yyyy-MM-dd HH:mm")
 		reminder = self.reminder_edit.dateTime().toString("yyyy-MM-dd HH:mm")
 		notify_time = self.reminder_edit.dateTime()
