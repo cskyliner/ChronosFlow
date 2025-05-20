@@ -72,7 +72,7 @@ class Emitter(QObject):
 
 	def send_storage_path(self, path):
 		"""发送存储路径"""
-		log.info(f"send storage path signal，存储路径为{path}")
+		log.info(f"发送存储路径信号，存储路径为{path}")
 		out = ("storage_path", path)
 		self.storage_path_signal.emit(out)
 
@@ -83,18 +83,19 @@ class Emitter(QObject):
 		True代表是否添加到数据库（后端可能需要临时创建不添加到数据库的事件）
 		最后和为元组形式
 		"""
-		log.info(f"send create event signal，事件类型为{name}，参数为{args}")
+		log.info(f"发送创建事件或修改事件信号，事件类型为{name}，参数为{args}")
 		out = ("create_event", name, True, *args)
 		self.create_event_signal.emit(out)
 
-	def send_modify_event_signal(self, name, *args):
+	def send_modify_event_signal(self, id, name, *args):
 		"""
 		发送修改事件的信号
+		id 为修改事件的id
 		name为event类型如 DDL
 		*args代表name_event类对应的参数列表（元组）
 		"""
-		log.info(f"send modify event signal，事件类型为{name}，参数为{args}")
-		out = ("modify_event", name, False, *args)
+		log.info(f"发送修改事件的信号，事件ID为{id}，事件类型为{name}，参数为{args}")
+		out = ("modify_event", id, name, *args)
 		self.modify_event_signal.emit(out)
 
 	def send_delete_event_signal(self, event_id: int, event_table_type: str):
@@ -103,7 +104,7 @@ class Emitter(QObject):
 		event_id为事件ID
 		event_type为事件类型
 		"""
-		log.info(f"send delete event signal，事件ID为{event_id}，事件表名为{event_table_type}")
+		log.info(f"发送删除事件的信号，事件ID为{event_id}，事件表名为{event_table_type}")
 		out = ("delete_event", (event_id, event_table_type))
 		self.delete_event_signal.emit(out)
 
@@ -114,7 +115,7 @@ class Emitter(QObject):
 		向后端发送搜索全局事件的请求
 		keyword为搜索关键字，字符串元组
 		"""
-		log.info(f"request search all event，搜索关键字为{keyword}")
+		log.info(f"向后端发送搜索全局事件的请求，搜索关键字为{keyword}")
 		out = ("search_all", keyword)
 		self.search_all_event_signal.emit(out)
 
@@ -122,7 +123,7 @@ class Emitter(QObject):
 		"""
 		向后端发送更新upcoming的请求
 		"""
-		log.info(f"request update upcoming event，参数为start_pos:{start_pos}，event_num:{event_num}")
+		log.info(f"向后端发送更新upcoming的请求，参数为start_pos:{start_pos}，event_num:{event_num}")
 		out = ("update_upcoming", (start_pos, event_num))
 		self.update_upcoming_event_signal.emit(out)
 
@@ -131,7 +132,7 @@ class Emitter(QObject):
 		向后端发送搜索时间范围内事件的请求
 		start_time和end_time为时间范围，字符串元组
 		"""
-		log.info(f"request search time event，搜索时间范围为{start_time}到{end_time}")
+		log.info(f"向后端发送搜索时间范围内事件的请求，搜索时间范围为{start_time}到{end_time}")
 		out = ("search_time", (start_time, end_time))
 		self.search_some_columns_event_signal.emit(out)
 
@@ -139,17 +140,16 @@ class Emitter(QObject):
 		"""
 		向后端发送搜索部分列中事件的请求
 		"""
-		log.info(f"request search some columns event，搜索列为{columns}，关键字为{keyword}")
+		log.info(f"向后端发送搜索部分列中事件的请求，搜索列为{columns}，关键字为{keyword}")
 		out = ("search_some_columns", (columns, keyword))
 		self.search_some_columns_event_signal.emit(out)
 
 	def request_latest_event_signal(self, now_time: QDateTime):
 		"""
 		向后端发送需要更新最新的事件
-		向后端发送需要更新最新的事件
 		"""
 		formatted_time = now_time.toString("yyyy-MM-dd HH:mm")
-		log.info(f"request latest event，当前时间为{formatted_time}")
+		log.info(f"向后端发送需要更新最新的事件，当前时间为{formatted_time}")
 		out = ("latest_event", (formatted_time,))
 		self.latest_event_signal.emit(out)
 		out = ("latest_event", (formatted_time,))

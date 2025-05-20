@@ -10,8 +10,7 @@ from FloatingWindow import FloatingWindow
 from Notice import Notice
 from Upcoming import Upcoming, FloatingButton
 from FontSetting import set_font
-from Event import DDLEvent, get_events_in_month
-
+from Event import DDLEvent, get_events_in_month, BaseEvent
 
 log = logging.getLogger(__name__)
 
@@ -409,27 +408,37 @@ class MainWindow(QMainWindow):
 		'''
 		if name in self.main_stack_map:
 			# 向Schedule传输date
-			if name == "Schedule":
+			if not date is None:
+				# Emitter.instance().dynamic_signal.connect(self.schedule.receive_signal)
+				# Emitter.instance().send_dynamic_signal(date)
+				self.schedule.receive_date(date)
+			if name != "Schedule":
+				self.schedule.theme_text_edit.clear()
+				self.schedule.text_edit.clear()
+				self.id = None
+			if name == 'Upcoming':
+				self.upcoming.refresh_upcoming()
+			elif name == "Schedule":
 				if not date is None:
 					self.schedule.receive_date(date)
 				else:
 					self.schedule.deadline_edit.setDateTime(QDateTime.currentDateTime())
 					self.schedule.reminder_edit.setDateTime(QDateTime.currentDateTime())
-			elif name == 'Upcoming':
-				self.upcoming.refresh_upcoming()
 			stack.setCurrentIndex(self.main_stack_map[name])
 			log.info(f"跳转到{name}页面，日期为{date.toString() if date else date}")
 		else:
 			raise RuntimeError(f"错误：未知页面 {name}")
 
 	def check_one_schedule(self, data: tuple):
-		event = data[0]
+		event: BaseEvent = data[0]
+		self.schedule.id = event.id
 		self.schedule.deadline_edit.setDateTime(QDateTime.fromString(event.datetime, "yyyy-MM-dd HH:mm"))
 		self.schedule.reminder_edit.setDateTime(QDateTime.fromString(event.advance_time, "yyyy-MM-dd HH:mm"))
 		self.schedule.theme_text_edit.setText(event.title)
 		self.schedule.text_edit.setPlainText(event.notes)
 		self.main_stack.setCurrentIndex(self.main_stack_map["Schedule"])
-		self.schedule.save_btn.clicked.connect(lambda: self.upcoming.delete_one_item(event))
+
+	# self.schedule.save_btn.clicked.connect(lambda: self.upcoming.delete_one_item(event))
 
 	def setup_search_column_animation(self) -> None:
 		"""搜索结果栏展开动画设置"""
@@ -570,7 +579,8 @@ class MainWindow(QMainWindow):
 						self.toggle_search_column()
 
 		return super().eventFilter(obj, event)
+
 	def get_events_in_month_from_backend(self, cur_year: int, cur_month: int):
 		"""获取当前月份的事件"""
-		events:list[DDLEvent] = get_events_in_month(cur_year, cur_month)
+		events: list[DDLEvent] = get_events_in_month(cur_year, cur_month)
 		self.load_event_in_calendar(events)

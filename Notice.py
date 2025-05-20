@@ -27,10 +27,10 @@ class Notice(QObject):
 		Emitter.instance().notice_signal.connect(self.update_latest_event)
 
 	def check_notice(self):
-		if not self.if_backend_exist_event:
-			"""如果后端没有存储任何事件，不进行提醒"""
-			log.info(f"后端没有储存任何事件，不进行提醒")
-			return
+		# if not self.if_backend_exist_event:
+		# 	"""如果后端没有存储任何事件，不进行提醒"""
+		# 	log.info(f"后端没有储存任何事件，不进行提醒")
+		# 	return
 		current = QDateTime.currentDateTime()
 		if self.latest_event:
 
@@ -52,8 +52,9 @@ class Notice(QObject):
 				self.request_latest_event(current)
 
 		else:
-			log.info(f"当前Notice没有储存事件，正调用request_latest_event获取事件")
-			self.request_latest_event(current)
+			# log.info(f"当前Notice没有储存事件，正调用request_latest_event获取事件")
+			# self.request_latest_event(current)
+			pass
 
 	def update_latest_event(self, latest_event_info: tuple):
 		tag = latest_event_info[1]
