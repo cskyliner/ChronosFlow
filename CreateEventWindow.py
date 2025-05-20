@@ -122,6 +122,9 @@ class Schedule(QWidget):
 		self.status_label = QLabel()
 		layout.addWidget(self.status_label)
 
+		# 如果用于修改事件，储存事件ID
+		self.id = None
+
 	def receive_date(self, date: QDate):
 		"""
 		接收date，并进行格式转化
@@ -141,8 +144,6 @@ class Schedule(QWidget):
 		"""
 		theme = self.theme_text_edit.text()
 		content = self.text_edit.toPlainText()
-		self.theme_text_edit.clear()
-		self.text_edit.clear()
 		deadline = self.deadline_edit.dateTime().toString("yyyy-MM-dd HH:mm")
 		reminder = self.reminder_edit.dateTime().toString("yyyy-MM-dd HH:mm")
 		notify_time = self.reminder_edit.dateTime()
@@ -155,13 +156,21 @@ class Schedule(QWidget):
 		test_advance_time_str = test_advance_time.toString("yyyy-MM-dd HH:mm")
   		"""
 		if theme and content and deadline and reminder:
-			# 这里可以添加保存事件的逻辑
-			log.info(
-				f"创建新事件，标题：{theme}, 截止时间：{deadline}, 内容：{content}, 提前提醒时间：{reminder}, 重要程度：Great"),
-			# DDL参数(标题，截止时间，具体内容，提前提醒时间，重要程度)
-			Emitter.instance().send_create_event_signal("DDL", theme, deadline, content, reminder, "Great")
-			QMessageBox.information(self, "保存成功",
-									f"主题: {theme}\n内容: {content}\n截止时间: {deadline}\n提醒时间: {reminder}")
+			if self.id is None:
+				# 新建事件
+				log.info(
+					f"创建新事件，标题：{theme}, 截止时间：{deadline}, 内容：{content}, 提前提醒时间：{reminder}, 重要程度：Great"),
+				# DDL参数(标题，截止时间，具体内容，提前提醒时间，重要程度)
+				Emitter.instance().send_create_event_signal("DDL", theme, deadline, content, reminder, "Great")
+				QMessageBox.information(self, "保存成功",
+										f"主题: {theme}\n内容: {content}\n截止时间: {deadline}\n提醒时间: {reminder}")
+			else:
+				log.info(
+				f"修改事件，事件ID: {self.id} 标题：{theme}, 截止时间：{deadline}, 内容：{content}, 提前提醒时间：{reminder}, 重要程度：Great"),
+				# DDL参数(标题，截止时间，具体内容，提前提醒时间，重要程度)
+				Emitter.instance().send_modify_event_signal(self.id, "DDL", theme, deadline, content, reminder, "Great")
+				QMessageBox.information(self, f"修改事件{self.id}成功",
+										f"主题: {theme}\n内容: {content}\n截止时间: {deadline}\n提醒时间: {reminder}")
 		else:
 			QMessageBox.warning(self, "警告", "请填写所有信息")
 
