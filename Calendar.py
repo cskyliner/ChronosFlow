@@ -1,6 +1,8 @@
 from common import *
+from PySide6.QtGui import QFont
 from Event import DDLEvent, get_events_in_month
 log = logging.getLogger(__name__)
+
 
 class CalendarDelegate(QStyledItemDelegate):
 	def __init__(self, calendar=None, parent=None):
@@ -122,7 +124,7 @@ class CalendarDelegate(QStyledItemDelegate):
 					truncated_title = event.title[:4] + "..." if len(event.title) > 4 else event.title
 					painter.drawText(
 						option.rect.x() + (
-									option.rect.width() - self.font_metrics.horizontalAdvance(event.title)) / 2 ,
+								option.rect.width() - self.font_metrics.horizontalAdvance(event.title)) / 2 - 8,
 						# 左侧缩进5px
 						y_pos + i * line_height,  # 垂直位置逐行增加
 						f"• {truncated_title}"

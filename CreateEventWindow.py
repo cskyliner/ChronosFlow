@@ -1,7 +1,90 @@
 from common import *
 from Emitter import Emitter
+from FontSetting import set_font
 
 log = logging.getLogger(__name__)
+
+
+class StrictDynamicLineEdit(QLineEdit):
+	def __init__(self, parent=None):
+		super().__init__(parent)
+		self._parent = parent
+		self.update_limits()
+
+		# 禁止影响父控件布局
+		self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+
+		# 设置占位提示文字
+		self.setPlaceholderText("标题")
+		set_font(self)
+
+		# 初始宽度
+		self.setFixedWidth(self._min_width)
+		self.setFixedHeight(50)
+
+		self.setStyleSheet("""QLineEdit {
+			border: none;
+			border-bottom: 1px solid palette(text);
+			background: transparent;
+		}""")
+
+		# 监听文本变化
+		self.textChanged.connect(self.adjust_width)
+
+	def update_limits(self):
+		"""从父控件获取当前允许的宽度范围"""
+		if self._parent:
+			self._min_width = int(self._parent.width() * 0.4)
+			self._max_width = self._parent.width()
+
+	def adjust_width(self):
+		"""根据内容调整宽度，限制在父控件范围内"""
+		# 确保使用最新的宽度限制
+		self.update_limits()
+
+		# 计算文本实际需要的宽度（包括边距）
+		text_width = self.fontMetrics().boundingRect(self.text()).width() + 20
+
+		# 严格限制宽度范围
+		new_width = max(self._min_width, min(text_width, self._max_width))
+
+		# 关键点：先解除固定宽度限制，再设置新宽度
+		self.setMinimumWidth(0)
+		self.setMaximumWidth(self._max_width)
+		self.setFixedWidth(new_width)
+
+	def resizeEvent(self, event):
+		"""父控件大小改变时重新调整"""
+		self.update_limits()
+		self.adjust_width()
+		super().resizeEvent(event)
+
+
+class ContainerFrame(QFrame):
+	"""隔离层，确保布局变化不会传递到主窗口"""
+
+	def __init__(self, parent=None):
+		super().__init__(parent)
+		self.setFixedHeight(50)
+		self.setFrameShape(QFrame.NoFrame)
+		layout = QVBoxLayout(self)
+		layout.setContentsMargins(0, 0, 0, 0)
+
+		# 添加动态文本框
+		self.line_edit = StrictDynamicLineEdit(self)
+		layout.addWidget(self.line_edit, 0, Qt.AlignLeft)
+
+		# 添加伸缩项固定布局
+		layout.addStretch()
+
+	def text(self):
+		return self.line_edit.text()
+
+	def clear(self):
+		self.line_edit.clear()
+
+	def setText(self,content):
+		self.line_edit.setText(content)
 
 
 class Schedule(QWidget):
@@ -11,26 +94,47 @@ class Schedule(QWidget):
 		self.date = ['0000', '00', '00']  # 日期
 		self.datetime = ['00', '00']  # TODO:调整具体时间（小时，分钟）
 		layout = QVBoxLayout(self)
+		layout.setSpacing(0)
 
-		# 字体
-		font = QFont()
-		font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
-		font.setPointSize(12)
+		# 创建框
+		group_box = QGroupBox("添加日程")
+		group_box.setStyleSheet("""
+			QGroupBox {
+				border: 1px solid palette(mid);
+				border-radius: 10px;
+				margin-top: 1.5ex;
+				padding: 5px;
+			}
+			QGroupBox::title {
+				subcontrol-origin: margin;
+				left: 10px;
+				padding: 0 3px;
+			}
+			""")
+		set_font(group_box)
+		group_layout = QVBoxLayout()
 
-		# 单行文本框
-		self.theme_text_edit = QLineEdit()
-		self.theme_text_edit.setFont(QFont("Arial", 12))
-		self.theme_text_edit.setPlaceholderText("主题")
-		self.theme_text_edit.setFont(font)
-		self.theme_text_edit.setFixedHeight(50)
-		layout.addWidget(self.theme_text_edit)
+		# 动态调整宽度的主题文本框
+		self.theme_text_edit = ContainerFrame(self)
+		group_layout.addWidget(self.theme_text_edit)
 
 		# 创建多行文本框
 		self.text_edit = QPlainTextEdit()
-		self.text_edit.setFont(QFont("Arial", 12))
 		self.text_edit.setPlaceholderText("内容")
-		self.text_edit.setFont(font)
-		layout.addWidget(self.text_edit)
+		self.text_edit.setStyleSheet("""
+    		QPlainTextEdit {
+        		background: transparent;
+        		border: none;
+			}
+			QScrollBar {
+				background: transparent;
+			}
+		""")
+		set_font(self.text_edit)
+		group_layout.addWidget(self.text_edit)
+
+		group_box.setLayout(group_layout)
+		layout.addWidget(group_box)
 
 		# 截止、提醒时间选择框
 		deadline_and_reminder_label_layout = QHBoxLayout()
@@ -38,11 +142,11 @@ class Schedule(QWidget):
 		# 截止时间选择框
 		deadline_layout = QVBoxLayout()
 		self.deadline_label = QLabel("截止时间:")
-		self.deadline_label.setFont(font)
+		set_font(self.deadline_label)
 		deadline_layout.addWidget(self.deadline_label)
 
 		self.deadline_edit = QDateTimeEdit()
-		self.deadline_edit.setFont(font)
+		set_font(self.deadline_edit)
 		self.deadline_edit.setDisplayFormat("yyyy-MM-dd HH:mm")
 		self.deadline_edit.setDateTime(QDateTime.currentDateTime())
 		self.deadline_edit.setCalendarPopup(True)  # 在点击时弹出日历
@@ -67,11 +171,11 @@ class Schedule(QWidget):
 		# 提醒时间选择框
 		reminder_layout = QVBoxLayout()
 		self.reminder_label = QLabel("提醒时间:")
-		self.reminder_label.setFont(font)
+		set_font(self.reminder_label)
 		reminder_layout.addWidget(self.reminder_label)
 
 		self.reminder_edit = QDateTimeEdit()
-		self.reminder_edit.setFont(font)
+		set_font(self.reminder_edit)
 		self.reminder_edit.setDisplayFormat("yyyy-MM-dd HH:mm")
 		self.reminder_edit.setDateTime(QDateTime.currentDateTime())
 		self.reminder_edit.setCalendarPopup(True)
@@ -97,12 +201,12 @@ class Schedule(QWidget):
 		button_layout = QHBoxLayout()
 		layout.addLayout(button_layout)
 
-		self.save_btn = QPushButton("Save")
+		self.save_btn = QPushButton("保存")
 		self.save_btn.clicked.connect(self.create_new_event)
 		self.save_btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
-                    border: 1px solid #d0d0d0;
+                    border: 1px solid palette(mid);
                 	border-radius: 4px;
                     padding: 25px;
                     text-align: center;
@@ -115,12 +219,15 @@ class Schedule(QWidget):
 					background-color: palette(mid);
 				}
 							""")
-		self.save_btn.setFont(font)
+		set_font(self.save_btn)
 		button_layout.addWidget(self.save_btn)
 
 		# 状态栏
 		self.status_label = QLabel()
 		layout.addWidget(self.status_label)
+
+		# 如果用于修改事件，储存事件ID
+		self.id = None
 
 	def receive_date(self, date: QDate):
 		"""
@@ -155,13 +262,21 @@ class Schedule(QWidget):
 		test_advance_time_str = test_advance_time.toString("yyyy-MM-dd HH:mm")
   		"""
 		if theme and content and deadline and reminder:
-			# 这里可以添加保存事件的逻辑
-			log.info(
-				f"创建新事件，标题：{theme}, 截止时间：{deadline}, 内容：{content}, 提前提醒时间：{reminder}, 重要程度：Great"),
-			# DDL参数(标题，截止时间，具体内容，提前提醒时间，重要程度)
-			Emitter.instance().send_create_event_signal("DDL", theme, deadline, content, reminder, "Great")
-			QMessageBox.information(self, "保存成功",
-									f"主题: {theme}\n内容: {content}\n截止时间: {deadline}\n提醒时间: {reminder}")
+			if self.id is None:
+				# 新建事件
+				log.info(
+					f"创建新事件，标题：{theme}, 截止时间：{deadline}, 内容：{content}, 提前提醒时间：{reminder}, 重要程度：Great"),
+				# DDL参数(标题，截止时间，具体内容，提前提醒时间，重要程度)
+				Emitter.instance().send_create_event_signal("DDL", theme, deadline, content, reminder, "Great")
+				QMessageBox.information(self, "保存成功",
+										f"主题: {theme}\n内容: {content}\n截止时间: {deadline}\n提醒时间: {reminder}")
+			else:
+				log.info(
+				f"修改事件，事件ID: {self.id} 标题：{theme}, 截止时间：{deadline}, 内容：{content}, 提前提醒时间：{reminder}, 重要程度：Great"),
+				# DDL参数(标题，截止时间，具体内容，提前提醒时间，重要程度)
+				Emitter.instance().send_modify_event_signal(self.id, "DDL", theme, deadline, content, reminder, "Great")
+				QMessageBox.information(self, f"修改事件{self.id}成功",
+										f"主题: {theme}\n内容: {content}\n截止时间: {deadline}\n提醒时间: {reminder}")
 		else:
 			QMessageBox.warning(self, "警告", "请填写所有信息")
 

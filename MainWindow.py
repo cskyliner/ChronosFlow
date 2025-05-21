@@ -9,7 +9,8 @@ from Tray import Tray
 from FloatingWindow import FloatingWindow
 from Notice import Notice
 from Upcoming import Upcoming, FloatingButton
-from Event import BaseEvent, DDLEvent, get_events_in_month
+from FontSetting import set_font
+from Event import DDLEvent, get_events_in_month, BaseEvent
 
 log = logging.getLogger(__name__)
 
@@ -64,11 +65,6 @@ class MainWindow(QMainWindow):
 		# 通过名称记录页面，使用字典双向映射
 		self.main_stack_map = {}  # 名称→索引
 
-		# 字体
-		self.button_font = QFont()
-		self.button_font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
-		self.button_font.setPointSize(18)
-
 		# 设置 main_stack各页面的内容，注意初始化顺序
 		self.setup_main_window()  # 日历窗口（主界面）
 		self.setup_create_event_window()  # 日程填写窗口
@@ -106,11 +102,12 @@ class MainWindow(QMainWindow):
 		"""
 		self.main_window = QWidget()
 		main_window_layout = QVBoxLayout()  # 内容区域布局
-		main_window_layout.setSpacing(0)  # 设置相邻控件间距为0
+		main_window_layout.setSpacing(5)  # 设置相邻控件间距为0
 		main_window_layout.setContentsMargins(20, 5, 20, 20)
 		self.main_window.setLayout(main_window_layout)
 
 		upper_layout = QHBoxLayout()
+		upper_layout.setSpacing(0)
 		# 添加'<'按钮
 		sidebar_btn = QPushButton("<")
 		sidebar_btn.setStyleSheet("""
@@ -129,21 +126,19 @@ class MainWindow(QMainWindow):
 									color: #05974C;
 								}
 				            """)
-		sidebar_btn.setFont(self.button_font)
+		set_font(sidebar_btn, 1)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 添加search文本框
 		# 左侧文本框
 		self.search_edit = QLineEdit()
 		self.search_edit.setPlaceholderText("搜索")
-		_font = QFont()
-		_font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
-		self.search_edit.setFont(_font)
+		set_font(self.search_edit)
 		self.search_edit.setStyleSheet("""
 								    QLineEdit {
 								    background: transparent;
 						            padding: 8px;
-					                border: 1px solid #ccc;
+					                border: 1px solid palette(mid);
 					                border-top-left-radius: 19px;     /* 左上角 */
     								border-top-right-radius: 0px;    /* 右上角 */
     								border-bottom-left-radius: 19px;  /* 左下角 */
@@ -152,7 +147,7 @@ class MainWindow(QMainWindow):
 						            }
 							    """)
 		self.search_edit.setFixedHeight(38)
-		
+
 		# 回车触发搜索功能
 		self.search_edit.returnPressed.connect(self.get_search_result)
 
@@ -162,11 +157,11 @@ class MainWindow(QMainWindow):
 		btn.setStyleSheet("""
 					QPushButton {
 		                background-color: transparent;
-		                border: 1px solid #d0d0d0;
+		                border: 1px solid palette(mid);
 		                border-top-left-radius: 0px;     /* 左上角 */
-    					      border-top-right-radius: 19px;    /* 右上角 */
-    					      border-bottom-left-radius: 0px;  /* 左下角 */
-    					      border-bottom-right-radius: 19px; /* 右下角 */
+    					border-top-right-radius: 19px;    /* 右上角 */
+    					border-bottom-left-radius: 0px;  /* 左下角 */
+    					border-bottom-right-radius: 19px; /* 右下角 */
 		                padding: 25px;
 		                text-align: center;
 		            }
@@ -204,6 +199,12 @@ class MainWindow(QMainWindow):
 		middle_layout.addWidget(self.search_column)
 		main_window_layout.addLayout(middle_layout)
 
+		# 创建悬浮按钮
+		float_btn = FloatingButton(self.main_window)
+		float_btn.move(50, 50)  # 初始位置
+		float_btn.raise_()  # 确保在最上层
+		float_btn.clicked.connect(partial(self.navigate_to, "Schedule", self.main_stack))
+
 		self.add_page(self.main_stack, self.main_window, "Calendar")  # main_window是日历，故名为Calendar
 
 	def setup_create_event_window(self):
@@ -237,7 +238,7 @@ class MainWindow(QMainWindow):
 								color: #05974C;
 								}
 								""")
-		sidebar_btn.setFont(self.button_font)
+		set_font(sidebar_btn)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 返回按钮，回到calendar
@@ -258,7 +259,7 @@ class MainWindow(QMainWindow):
 								color: rgb(189,41,29);
 								}
 						        """)
-		return_btn.setFont(self.button_font)
+		set_font(return_btn, 1)
 		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
 
 		btn_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -297,7 +298,7 @@ class MainWindow(QMainWindow):
 								color: #05974C;
 								}
 						            """)
-		sidebar_btn.setFont(self.button_font)
+		set_font(sidebar_btn)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 返回按钮，回到calendar
@@ -318,7 +319,7 @@ class MainWindow(QMainWindow):
 								color: rgb(189,41,29);
 								}
 				            """)
-		return_btn.setFont(self.button_font)
+		set_font(return_btn, 1)
 		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
 
 		btn_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -357,7 +358,7 @@ class MainWindow(QMainWindow):
 								color: #05974C;
 								}
 								""")
-		sidebar_btn.setFont(self.button_font)
+		set_font(sidebar_btn, 1)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 返回按钮，回到calendar
@@ -378,7 +379,7 @@ class MainWindow(QMainWindow):
 								color: rgb(189,41,29);
 								}
 								""")
-		return_btn.setFont(self.button_font)
+		set_font(return_btn, 1)
 		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
 
 		btn_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -408,30 +409,34 @@ class MainWindow(QMainWindow):
 		'''
 		if name in self.main_stack_map:
 			# 向Schedule传输date
-			if not date is None:
-				# Emitter.instance().dynamic_signal.connect(self.schedule.receive_signal)
-				# Emitter.instance().send_dynamic_signal(date)
-				self.schedule.receive_date(date)
-
+			if name != "Schedule":
+				self.schedule.theme_text_edit.clear()
+				self.schedule.text_edit.clear()
+				self.id = None
 			if name == 'Upcoming':
 				self.upcoming.refresh_upcoming()
 			elif name == "Schedule":
-				self.schedule.deadline_edit.setDateTime(QDateTime.currentDateTime())
-				self.schedule.reminder_edit.setDateTime(QDateTime.currentDateTime())
-
+				if not date is None:
+					self.schedule.receive_date(date)
+				else:
+					self.schedule.deadline_edit.setDateTime(QDateTime.currentDateTime())
+					self.schedule.reminder_edit.setDateTime(QDateTime.currentDateTime())
 			stack.setCurrentIndex(self.main_stack_map[name])
 			log.info(f"跳转到{name}页面，日期为{date.toString() if date else date}")
 		else:
 			raise RuntimeError(f"错误：未知页面 {name}")
 
-	def check_one_schedule(self, data:tuple):
-		event = data[0]
+	def check_one_schedule(self, data: tuple):
+		event: BaseEvent = data[0]
+		self.schedule.id = event.id
 		self.schedule.deadline_edit.setDateTime(QDateTime.fromString(event.datetime, "yyyy-MM-dd HH:mm"))
 		self.schedule.reminder_edit.setDateTime(QDateTime.fromString(event.advance_time, "yyyy-MM-dd HH:mm"))
 		self.schedule.theme_text_edit.setText(event.title)
-		self.schedule.text_edit.setPlainText(event.notes)	
+		self.schedule.text_edit.setPlainText(event.notes)
 		self.main_stack.setCurrentIndex(self.main_stack_map["Schedule"])
-		self.schedule.save_btn.clicked.connect(lambda: self.upcoming.delete_one_item(event))
+
+	# self.schedule.save_btn.clicked.connect(lambda: self.upcoming.delete_one_item(event))
+
 	def setup_search_column_animation(self) -> None:
 		"""搜索结果栏展开动画设置"""
 		self.animations["search_column"] = QPropertyAnimation(self.search_column, b"maximumWidth")
@@ -450,7 +455,6 @@ class MainWindow(QMainWindow):
 
 	def toggle_search_column(self):
 		"""处理search_column的变化"""
-
 		self.search_column_visible = not self.search_column_visible
 
 		if self.search_column_visible:
@@ -572,7 +576,8 @@ class MainWindow(QMainWindow):
 						self.toggle_search_column()
 
 		return super().eventFilter(obj, event)
+
 	def get_events_in_month_from_backend(self, cur_year: int, cur_month: int):
 		"""获取当前月份的事件"""
-		events:list[DDLEvent] = get_events_in_month(cur_year, cur_month)
+		events: list[DDLEvent] = get_events_in_month(cur_year, cur_month)
 		self.load_event_in_calendar(events)
