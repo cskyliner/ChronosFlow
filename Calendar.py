@@ -106,7 +106,7 @@ class CalendarDelegate(QStyledItemDelegate):
 			date_obj = datetime.strptime(events[0].datetime, "%Y-%m-%d %H:%M")
 			month = date_obj.month
 			month_int = int(month)
-			if abs(pos - date.day()) < 20:
+			if abs(pos - date.day()) < 20 and index.column() > 0:
 				painter.save()
 				painter.setFont(self.base_font)
 				painter.setPen(QColor("#333333"))
@@ -118,12 +118,14 @@ class CalendarDelegate(QStyledItemDelegate):
 				line_height = self.font_metrics.height() + 1  # 每行高度（含间距）
 
 				for i, event in enumerate(events[:]):
+						# 截取前四个字符
+					truncated_title = event.title[:4] + "..." if len(event.title) > 4 else event.title
 					painter.drawText(
 						option.rect.x() + (
-									option.rect.width() - self.font_metrics.horizontalAdvance(event.title)) / 2 - 8,
+									option.rect.width() - self.font_metrics.horizontalAdvance(event.title)) / 2 ,
 						# 左侧缩进5px
 						y_pos + i * line_height,  # 垂直位置逐行增加
-						f"• {event.title}"
+						f"• {truncated_title}"
 					)
 
 				painter.restore()
