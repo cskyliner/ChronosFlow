@@ -166,8 +166,8 @@ class CustomListItem(QWidget):
 		# 设置消息布局
 		layout = QHBoxLayout(self)
 		layout.setContentsMargins(5, 2, 5, 2)  # 边距：左、上、右、下
-		self.setStyleSheet("""CustomListItem {background-color: palette(light);border-radius: 15px;}
-				CustomListItem:hover {background-color: palette(midlight); /*轻微高亮*/}""")
+		self.setStyleSheet("""CustomListItem {background-color: rgba(255, 255, 255, 0.6);border-radius: 15px;}
+				CustomListItem:hover {background-color: rgba(255, 255, 255, 0.8); /*轻微高亮*/}""")
 
 		# 是否完成的复选框
 		self.finish_checkbox = QCheckBox()
@@ -182,6 +182,9 @@ class CustomListItem(QWidget):
 
 		# 展示主题的标签
 		self.theme_display_label = QLabel(f"{event.title}")
+		self.theme_display_label.setStyleSheet("""
+				color: palette(text);
+		""")
 		if event.done == 0:
 			set_font(self.theme_display_label)
 		else:
@@ -257,6 +260,25 @@ class Upcoming(QListWidget):
         			/* 控制行间距（相邻项的间隔） */
         			margin: 5px;  
         	}
+        	QScrollBar:vertical {
+				background: transparent;
+				width: 8px;
+				margin: 2px;
+			}
+			
+			QScrollBar::handle:vertical {
+				background: #808080;
+				min-height: 30px;
+				border-radius: 4px;
+			}
+			
+			QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+				height: 0px;
+			}
+			
+			QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+				background: none;
+			}
 			""")
 
 		self.kind = kind  # 0:Upcoming页面的Upcoming；1:Calendar页面的search_column；2:某个日期的Upcoming

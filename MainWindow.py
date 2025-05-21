@@ -49,15 +49,14 @@ class MainWindow(QMainWindow):
 
 		# 主窗口（设计为堆叠窗口，有多个界面）
 		self.main_stack = QStackedWidget()
-		# TODO:背景添加
-		# self.main_stack.setStyleSheet("""
-		# QStackedWidget {
-		#	background-image: url("地址");  /* 图片路径 */
-		#	background-position: center;    /* 居中 */
-		#	background-repeat: no-repeat;   /* 不重复 */
-		#	background-size: contain;       /* 保持比例 */
-		# }
-		# """)
+		self.main_stack.setStyleSheet("""
+							QStackedWidget{
+									background-image: url("local_data/1.jpg");  /* 图片路径 */
+									background-position: center;    /* 居中 */
+									background-repeat: no-repeat;   /* 不重复 */
+									background-size: contain;       /* 保持比例 */
+									}
+								""")
 		self.main_layout.addWidget(self.main_stack)
 
 		# 连接sidebar的信号
@@ -212,6 +211,7 @@ class MainWindow(QMainWindow):
 		创建 create_event_window
 		"""
 		self.create_event_window = QWidget()
+
 		schedule_layout = QVBoxLayout()  # 内容区域布局
 		schedule_layout.setSpacing(0)
 		schedule_layout.setContentsMargins(20, 5, 20, 20)
@@ -332,6 +332,7 @@ class MainWindow(QMainWindow):
 	def setup_upcoming_window(self):
 		"""日程展示窗口"""
 		self.upcoming_window = QWidget()
+
 		layout = QVBoxLayout()  # 内容区域布局
 		layout.setSpacing(0)
 		layout.setContentsMargins(20, 5, 20, 20)

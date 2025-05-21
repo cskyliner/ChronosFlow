@@ -166,6 +166,9 @@ class Calendar(QCalendarWidget):
 
 		self.add_holiday(*holidays_2025)
 		self.setStyleSheet("""
+					QCalendarWidget{
+						background-color: transparent;
+					}
 					Calendar QAbstractItemView:enabled {     /*禁用选中高亮效果*/
 						selection-background-color: transparent;  /* 透明背景 */
 						selection-color: palette(text);        /* 使用正常文本颜色 */
