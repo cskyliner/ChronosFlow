@@ -395,6 +395,7 @@ class MainWindow(QMainWindow):
 		float_btn.move(50, 50)  # 初始位置
 		float_btn.raise_()  # 确保在最上层
 		float_btn.clicked.connect(partial(self.navigate_to, "Schedule", self.main_stack))
+		
 
 	def add_page(self, stack: QStackedWidget, widget: QWidget, name: str):
 		'''
