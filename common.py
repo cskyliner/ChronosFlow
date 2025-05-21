@@ -4,9 +4,9 @@ from PySide6.QtWidgets import (QApplication, QStyleFactory, QMainWindow, QWidget
 							   QSystemTrayIcon, QMenu, QListWidget, QListWidgetItem, QSpacerItem,
 							   QSizePolicy, QFrame, QDateTimeEdit, QGraphicsDropShadowEffect, QCalendarWidget,
 							   QScrollBar, QStyledItemDelegate, QTableView, QInputDialog, QHeaderView, QScrollArea,
-							   QDialog, QTextEdit, QStyleOptionViewItem)
+							   QDialog, QTextEdit, QStyleOptionViewItem, QStyle,QAbstractItemView)
 from PySide6.QtCore import (QPropertyAnimation, QEasingCurve, Qt, QDate, QTime, QDateTime, Signal, Slot, QSize, QObject,
-							QPoint, QTimer, QEvent, QPointF, QPersistentModelIndex, QRect)
+							QPoint, QTimer, QEvent, QPointF, QPersistentModelIndex, QRect, QModelIndex)
 from PySide6.QtGui import (QIcon, QAction, QPixmap, QColor, QLinearGradient, QPainter, QMouseEvent,
 						   QPainter, QFontMetrics, QTextCharFormat, QPen, QCursor)
 import logging
