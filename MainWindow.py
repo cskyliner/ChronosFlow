@@ -187,7 +187,7 @@ class MainWindow(QMainWindow):
 		self.main_window_calendar = Calendar()
 		self.main_window_calendar.setGridVisible(False)
 		self.main_window_calendar.clicked.connect(
-			lambda date: self.navigate_to("Schedule", self.main_stack, date))  # 点击日历时跳转到 schedule
+			lambda date: self.navigate_to("Upcoming", self.main_stack, date))  # 点击日历时跳转到当天所有日程
 		# 右侧搜索栏
 		self.search_column = Upcoming(1)
 		self.search_column.setMaximumWidth(0)
@@ -385,7 +385,7 @@ class MainWindow(QMainWindow):
 		btn_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
 		btn_layout.addWidget(return_btn, alignment=Qt.AlignmentFlag.AlignRight)
 
-		self.upcoming = Upcoming()
+		self.upcoming = Upcoming(0)
 		Emitter.instance().view_and_edit_schedule_signal.connect(self.check_one_schedule)
 		layout.addWidget(self.upcoming)
 		self.add_page(self.main_stack, self.upcoming_window, "Upcoming")
@@ -414,7 +414,10 @@ class MainWindow(QMainWindow):
 				self.schedule.text_edit.clear()
 				self.id = None
 			if name == 'Upcoming':
-				self.upcoming.refresh_upcoming()
+				if date is not None:
+					self.upcoming.show_specific_date(date)
+				else:
+					self.upcoming.refresh_upcoming()
 			elif name == "Schedule":
 				if not date is None:
 					self.schedule.receive_date(date)
