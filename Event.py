@@ -200,6 +200,7 @@ class EventFactory:
 						log.info(f"EventFactory.create:没有最新的DDL事件，添加新事件:title：{n_event.title}; notes:{n_event.notes}")
 						latest_ddlevent = n_event
 						Emitter.instance().send_notice_signal((n_event,"create"))
+						Emitter.instance().send_notice_signal((n_event,"create"))
 					elif n_event.datetime < latest_ddlevent.datetime:
 						log.info(f"EventFactory.create:添加新事件比最新事件更早，更新最新事件为新事件:title：{n_event.title}; notes:{n_event.notes}")
 						latest_ddlevent = n_event
