@@ -411,10 +411,11 @@ class MainWindow(QMainWindow):
 			if name != "Schedule":
 				self.schedule.theme_text_edit.clear()
 				self.schedule.text_edit.clear()
-				self.id = None
+				self.schedule.id = None
 			if name == 'Upcoming':
 				self.upcoming.refresh_upcoming()
 			elif name == "Schedule":
+				self.schedule.group_box.setTitle("添加日程")
 				if not date is None:
 					self.schedule.receive_date(date)
 				else:
@@ -432,6 +433,7 @@ class MainWindow(QMainWindow):
 		self.schedule.reminder_edit.setDateTime(QDateTime.fromString(event.advance_time, "yyyy-MM-dd HH:mm"))
 		self.schedule.theme_text_edit.setText(event.title)
 		self.schedule.text_edit.setPlainText(event.notes)
+		self.schedule.group_box.setTitle("编辑日程")
 		self.main_stack.setCurrentIndex(self.main_stack_map["Schedule"])
 
 	def setup_search_column_animation(self) -> None:
