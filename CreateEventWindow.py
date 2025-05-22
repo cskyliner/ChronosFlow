@@ -130,25 +130,16 @@ class Schedule(QWidget):
 		        border: 1px solid palette(shadow);
 		        border-radius: 4px;
 		    }
-
-		    /* 暗色主题适配 - 由系统自动处理 */
-		    QPlainTextEdit[theme="dark"] {
-		        background-color: rgba(0, 0, 0, 0.4);  /* 暗色主题半透明 */
-		    }
-
 		    QScrollBar:vertical {
 		        background: transparent;
 		        width: 8px;
 		    }
-
 		    QScrollBar::handle:vertical {
 		        background: palette(mid);
 		        min-height: 20px;
 		        border-radius: 4px;
 		    }
 		""")
-		# 启用系统主题感知
-		self.text_edit.setAttribute(Qt.WA_StyledBackground, True)
 		set_font(self.text_edit)
 		group_layout.addWidget(self.text_edit)
 

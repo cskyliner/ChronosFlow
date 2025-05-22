@@ -12,9 +12,7 @@ class Emitter(QObject):
 	dynamic_signal: Signal = Signal(object)  # 可接收任意参数
 	page_change_signal: Signal = Signal(str)  # 向 main_stack发送改变页面的信号
 	refresh_upcoming_signal: Signal = Signal()  # 在切换到Upcoming时更新
-	refresh_upcoming_signal: Signal = Signal()  # 在切换到Upcoming时更新
 	create_event_signal: Signal = Signal(object)  # 发送创建事件的信号
-	search_signal: Signal = Signal(str)  # 发送sidebar搜索文本框的信息
 	search_signal: Signal = Signal(str)  # 发送sidebar搜索文本框的信息
 	modify_event_signal: Signal = Signal(object)  # 发送修改事件的信号
 	storage_path_signal: Signal = Signal(object)  # 发送存储路径的信号
@@ -25,9 +23,7 @@ class Emitter(QObject):
 	search_some_columns_event_signal: Signal = Signal(object)  # 向后端发送搜索部分列事件的信号
 	search_time_event_signal: Signal = Signal(object)  # 向后端发送搜索时间范围内事件的信号
 	backend_data_to_frontend_signal: Signal = Signal(object)  # 向前端发送后端数据的信号
-	backend_data_to_frontend_signal: Signal = Signal(object)  # 向前端发送后端数据的信号
 	notice_signal: Signal = Signal(object)  # 向通知栏发送最新数据
-	latest_event_signal: Signal = Signal(object)  # 处理前端通知更新最新数据
 	latest_event_signal: Signal = Signal(object)  # 处理前端通知更新最新数据
 
 	@staticmethod
@@ -146,6 +142,7 @@ class Emitter(QObject):
 
 	def request_latest_event_signal(self, now_time: QDateTime):
 		"""
+		向后端发送需要更新最新的事件
 		向后端发送需要更新最新的事件
 		"""
 		formatted_time = now_time.toString("yyyy-MM-dd HH:mm")
