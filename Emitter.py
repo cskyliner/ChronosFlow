@@ -122,7 +122,13 @@ class Emitter(QObject):
 		log.info(f"向后端发送更新upcoming的请求，参数为start_pos:{start_pos}，event_num:{event_num}")
 		out = ("update_upcoming", (start_pos, event_num))
 		self.update_upcoming_event_signal.emit(out)
-
+	def request_update_specific_date_upcoming_event_signal(self, date:QDate):
+		"""
+		向后端发送更新某日的upcoming的请求
+		"""
+		log.info(f"向后端发送更新specific_date_upcoming的请求，参数为日期:{date}")
+		out = ("update_specific_date_upcoming", (date, ))
+		self.update_upcoming_event_signal.emit(out)		
 	def request_search_time_event_signal(self, start_time: str, end_time: str):
 		"""
 		向后端发送搜索时间范围内事件的请求
