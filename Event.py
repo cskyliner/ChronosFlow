@@ -290,6 +290,10 @@ def request_signal(recieve_data: tuple) -> None:
 		event_num = recieve_data[1][1]
 		result = get_data_time_order("ddlevents", start_pos, event_num)
 		log.info(f"request_signal:接收{signal_name}请求信号成功，获取事件")
+	elif signal_name == "update_specific_date_upcoming":
+		date = recieve_data[1][0]
+		result = get_specific_date_events("ddlevents", date)
+		log.info(f"request_signal:接收{signal_name}请求信号成功，获取事件")
 	elif signal_name == "search_time":
 		raise NotImplementedError("时间范围搜索功能尚未实现")
 	elif signal_name == "search_some_columns":
@@ -326,6 +330,7 @@ def get_latest_ddlevent(now_time:str) -> DDLEvent:
 	log.info(f"get_latest_ddlevent:获取最新的DDL事件成功，事件为{event.title} @ {event.advance_time}")
 	latest_ddlevent = event
 	return event
+
 def get_events_in_month(year: int, month: int) -> list[DDLEvent]:
     """
     获取指定年份和月份的所有 DDL 事件（基于 advance_time 字段匹配年月）。
@@ -367,6 +372,7 @@ def get_events_in_month(year: int, month: int) -> list[DDLEvent]:
 
     log.info(f"get_events_in_month:找到 {len(events)} 个事件（{year}年{month}月）")
     return events
+
 def search_all(keyword: tuple[str]) -> list[BaseEvent]:
 	"""
 	多关键词模糊性全局搜索（AND关系）
@@ -421,6 +427,41 @@ def search_time(start_time: str, end_time: str) -> list[BaseEvent]:
 			result.append(event)
 	return result
 
+
+
+def get_specific_date_events(table_name:str, date: QDate) -> tuple[BaseEvent]:
+    '''
+    从数据库中找到指定 QDate 当天的全部日程事件
+    '''
+    # 将 QDate 转换为 ISO 格式字符串（如 "2023-10-05"）
+    target_date = date.toString("yyyy-MM-dd")
+	# 查找对应表
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+    tables = [row[0] for row in cursor.fetchall()]
+
+    if table_name not in tables:
+        log.error(f"事件表 {table_name} 不存在")
+        return []
+	# 查找指定时间的事件
+    query = f"""
+        SELECT * FROM {table_name}
+        WHERE date(datetime) = ?
+        ORDER BY datetime ASC  -- 按时间升序排列
+    """
+    cursor.execute(query, (target_date,))
+    rows = cursor.fetchall()
+    log.info(f"get_specific_date_events:找到 {len(rows)} 条 {target_date} 的事件记录")
+
+    # 转换为 BaseEvent 对象
+    events = []
+    for row in rows:
+        event_id = row[0]
+        paras = row[1:]
+        event_type = TABLE_MAP.get(table_name, "DDL")
+        event = EventFactory.create(event_id,event_type,False,*paras)
+        events.append(event)
+
+    return tuple(events) 						
 
 def get_data_time_order(table_name: str, start_pos: int, event_num: int) -> tuple[BaseEvent]:
 	'''
