@@ -62,15 +62,14 @@ class MainWindow(QMainWindow):
 
 		# 主窗口（设计为堆叠窗口，有多个界面）
 		self.main_stack = QStackedWidget()
-		# TODO:背景添加
-		# self.main_stack.setStyleSheet("""
-		# QStackedWidget {
-		#	background-image: url("地址");  /* 图片路径 */
-		#	background-position: center;    /* 居中 */
-		#	background-repeat: no-repeat;   /* 不重复 */
-		#	background-size: contain;       /* 保持比例 */
-		# }
-		# """)
+		#self.main_stack.setStyleSheet("""
+		#					QStackedWidget{
+		#							background-image: url("local_data/1.jpg");  /* 图片路径 */
+		#							background-position: center;    /* 居中 */
+		#							background-repeat: no-repeat;   /* 不重复 */
+		#							background-size: contain;       /* 保持比例 */
+		#							}
+		#						""")
 		self.main_layout.addWidget(self.main_stack)
 
 		# 连接sidebar的信号
@@ -154,7 +153,7 @@ class MainWindow(QMainWindow):
 								    QLineEdit {
 								    background: transparent;
 						            padding: 8px;
-					                border: 1px solid palette(mid);
+					                border: 1px solid palette(midlight);
 					                border-top-left-radius: 19px;     /* 左上角 */
     								border-top-right-radius: 0px;    /* 右上角 */
     								border-bottom-left-radius: 19px;  /* 左下角 */
@@ -173,7 +172,7 @@ class MainWindow(QMainWindow):
 		btn.setStyleSheet("""
 					QPushButton {
 		                background-color: transparent;
-		                border: 1px solid palette(mid);
+		                border: 1px solid palette(midlight);
 		                border-top-left-radius: 0px;     /* 左上角 */
     					border-top-right-radius: 19px;    /* 右上角 */
     					border-bottom-left-radius: 0px;  /* 左下角 */
@@ -228,6 +227,7 @@ class MainWindow(QMainWindow):
 		创建 create_event_window
 		"""
 		self.create_event_window = QWidget()
+
 		schedule_layout = QVBoxLayout()  # 内容区域布局
 		schedule_layout.setSpacing(0)
 		schedule_layout.setContentsMargins(20, 5, 20, 20)
@@ -348,6 +348,7 @@ class MainWindow(QMainWindow):
 	def setup_upcoming_window(self):
 		"""日程展示窗口"""
 		self.upcoming_window = QWidget()
+
 		layout = QVBoxLayout()  # 内容区域布局
 		layout.setSpacing(0)
 		layout.setContentsMargins(20, 5, 20, 20)
@@ -411,7 +412,6 @@ class MainWindow(QMainWindow):
 		self.upcoming.float_btn.move(50, 50)  # 初始位置
 		self.upcoming.float_btn.raise_()  # 确保在最上层
 		self.upcoming.float_btn.clicked.connect(partial(self.navigate_to, "Schedule", self.main_stack))
-		
 
 	def add_page(self, stack: QStackedWidget, widget: QWidget, name: str):
 		'''
