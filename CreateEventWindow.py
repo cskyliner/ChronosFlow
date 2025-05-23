@@ -98,21 +98,22 @@ class Schedule(QWidget):
 		layout.setSpacing(0)
 
 		# 创建框
-		group_box = QGroupBox("添加日程")
-		group_box.setStyleSheet("""
-			QGroupBox {
-				border: 1px solid palette(mid);
-				border-radius: 10px;
-				margin-top: 1.5ex;
-				padding: 5px;
-			}
-			QGroupBox::title {
-				subcontrol-origin: margin;
-				left: 10px;
-				padding: 0 3px;
-			}
-			""")
-		set_font(group_box)
+		self.group_box = QGroupBox("添加日程")
+		self.group_box.setStyleSheet("""
+    		QGroupBox {
+                border: 1px solid palette(mid);
+                border-radius: 10px;
+                margin-top: 1.5ex;
+                padding: 5px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 3px;
+            }
+        """)
+		set_font(self.group_box)
+
 		group_layout = QVBoxLayout()
 
 		# 动态调整宽度的主题文本框
@@ -143,8 +144,8 @@ class Schedule(QWidget):
 		set_font(self.text_edit)
 		group_layout.addWidget(self.text_edit)
 
-		group_box.setLayout(group_layout)
-		layout.addWidget(group_box)
+		self.group_box.setLayout(group_layout)
+		layout.addWidget(self.group_box)
 
 		# 截止、提醒时间选择框
 		deadline_and_reminder_label_layout = QHBoxLayout()
@@ -258,8 +259,6 @@ class Schedule(QWidget):
 		"""
 		theme = self.theme_text_edit.text()
 		content = self.text_edit.toPlainText()
-		self.theme_text_edit.clear()
-		self.text_edit.clear()
 		deadline = self.deadline_edit.dateTime().toString("yyyy-MM-dd HH:mm")
 		reminder = self.reminder_edit.dateTime().toString("yyyy-MM-dd HH:mm")
 		notify_time = self.reminder_edit.dateTime()

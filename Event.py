@@ -142,7 +142,8 @@ class DDLEvent(BaseEvent):
 			"importance": self.importance,
 			"done": self.done,
 		}
-
+	def to_args(self) -> tuple:
+		return (self.title, self.datetime, self.notes, self.advance_time, self.importance, self.done)
 
 class TaskEvent(BaseEvent):
 	"""
@@ -329,6 +330,7 @@ def get_latest_ddlevent(now_time:str) -> DDLEvent:
 	log.info(f"get_latest_ddlevent:获取最新的DDL事件成功，事件为{event.title} @ {event.advance_time}")
 	latest_ddlevent = event
 	return event
+
 def get_events_in_month(year: int, month: int) -> list[DDLEvent]:
     """
     获取指定年份和月份的所有 DDL 事件（基于 advance_time 字段匹配年月）。
@@ -370,6 +372,7 @@ def get_events_in_month(year: int, month: int) -> list[DDLEvent]:
 
     log.info(f"get_events_in_month:找到 {len(events)} 个事件（{year}年{month}月）")
     return events
+
 def search_all(keyword: tuple[str]) -> list[BaseEvent]:
 	"""
 	多关键词模糊性全局搜索（AND关系）
@@ -432,16 +435,14 @@ def get_specific_date_events(table_name:str, date: QDate) -> tuple[BaseEvent]:
     '''
     # 将 QDate 转换为 ISO 格式字符串（如 "2023-10-05"）
     target_date = date.toString("yyyy-MM-dd")
-
-    # 检查表是否存在（类似原示例逻辑）
+	# 查找对应表
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
     tables = [row[0] for row in cursor.fetchall()]
-    
+
     if table_name not in tables:
         log.error(f"事件表 {table_name} 不存在")
         return []
-
-    # 使用参数化查询防止 SQL 注入
+	# 查找指定时间的事件
     query = f"""
         SELECT * FROM {table_name}
         WHERE date(datetime) = ?
@@ -455,22 +456,13 @@ def get_specific_date_events(table_name:str, date: QDate) -> tuple[BaseEvent]:
     events = []
     for row in rows:
         event_id = row[0]
-        paras = row[1:]  # 假设第1列之后是事件参数
-        
-        # 从全局映射表获取事件类型（类似原示例）
+        paras = row[1:]
         event_type = TABLE_MAP.get(table_name, "DDL")
-        
-        # 通过工厂创建事件对象
-        event = EventFactory.create(
-            None,
-            event_type,
-            False,
-            *paras
-        )
-        event.id = event_id
+        event = EventFactory.create(event_id,event_type,False,*paras)
         events.append(event)
 
-    return tuple(events) 						# 通过PR
+    return tuple(events) 						
+
 def get_data_time_order(table_name: str, start_pos: int, event_num: int) -> tuple[BaseEvent]:
 	'''
 	从指定数据库中按时间顺序获取数据，从start_pos开始，取num个返回
