@@ -1,6 +1,7 @@
 from common import *
 from SideBar import SideBar
 from Calendar import Calendar
+from NewCalendar import CalendarView
 from functools import partial
 from CreateEventWindow import Schedule
 from Emitter import Emitter
@@ -11,7 +12,6 @@ from Notice import Notice
 from Upcoming import Upcoming, FloatingButton
 from FontSetting import set_font
 from Event import DDLEvent, get_events_in_month, BaseEvent
-
 log = logging.getLogger(__name__)
 
 
@@ -21,6 +21,19 @@ class MainWindow(QMainWindow):
 		super().__init__()
 		self.setWindowTitle("ChronosFlow")
 		# self.main_window_calendar = None
+
+		# === App 菜单栏（仅 macOS 显示）===
+		if sys.platform == "darwin":
+			menubar = self.menuBar()
+			app_menu = menubar.addMenu("ChronosFlow")
+
+			about_action = QAction("About ChronosFlow", self)
+			about_action.triggered.connect(self.show_about_dialog)
+			app_menu.addAction(about_action)
+
+			quit_action = QAction("Quit", self)
+			quit_action.triggered.connect(app.quit)
+			app_menu.addAction(quit_action)
 
 		# 获取屏幕尺寸，设置主窗口位置
 		self.resize(width, height)
@@ -70,11 +83,11 @@ class MainWindow(QMainWindow):
 		self.setup_create_event_window()  # 日程填写窗口
 		self.setup_setting_window()  # 设置界面
 		self.setup_upcoming_window()  # 日程展示窗口
-
+		self.navigate_to("Calendar",self.main_stack)
 		# TODO:更改日历加载事件逻辑，通过向后端发送时间端请求事件，不要耦合upcoming完成
 		cur_month = QDate.currentDate().month()
 		cur_year = QDate.currentDate().year()
-		self.get_events_in_month_from_backend(cur_year, cur_month)
+		# self.get_events_in_month_from_backend(cur_year, cur_month)
 		# self.load_event_in_calendar(self.upcoming.events)
 		# 初始化通知系统
 		self.notice_system = Notice()
@@ -95,6 +108,9 @@ class MainWindow(QMainWindow):
 
 	# 或许可以有
 	# self.setWindowIcon(QIcon(self._get_icon_path()))
+	# === App 菜单栏（仅 macOS 显示）===
+	def show_about_dialog(self):
+		QMessageBox.about(self, "About ChronosFlow", "This is ChronosFlow.\nA beautiful task planner.")
 
 	def setup_main_window(self):
 		"""
@@ -184,10 +200,10 @@ class MainWindow(QMainWindow):
 
 		middle_layout = QHBoxLayout()
 		# 创建日历界面
-		self.main_window_calendar = Calendar()
-		self.main_window_calendar.setGridVisible(False)
-		self.main_window_calendar.clicked.connect(
-			lambda date: self.navigate_to("Upcoming", self.main_stack, date))  # 点击日历时跳转到当天所有日程
+		self.main_window_calendar = CalendarView()
+		# self.main_window_calendar.setGridVisible(False)
+		self.main_window_calendar.double_clicked.connect(lambda date: self.navigate_to("Upcoming", self.main_stack, date))
+		self.main_window_calendar.view_single_day.connect(lambda date: self.navigate_to("Upcoming", self.main_stack, date))
 		# 右侧搜索栏
 		self.search_column = Upcoming(1)
 		self.search_column.setMaximumWidth(0)
@@ -391,10 +407,10 @@ class MainWindow(QMainWindow):
 		self.add_page(self.main_stack, self.upcoming_window, "Upcoming")
 
 		# 创建悬浮按钮
-		float_btn = FloatingButton(self.upcoming_window)
-		float_btn.move(50, 50)  # 初始位置
-		float_btn.raise_()  # 确保在最上层
-		float_btn.clicked.connect(partial(self.navigate_to, "Schedule", self.main_stack))
+		self.upcoming.float_btn = FloatingButton(self.upcoming_window)
+		self.upcoming.float_btn.move(50, 50)  # 初始位置
+		self.upcoming.float_btn.raise_()  # 确保在最上层
+		self.upcoming.float_btn.clicked.connect(partial(self.navigate_to, "Schedule", self.main_stack))
 		
 
 	def add_page(self, stack: QStackedWidget, widget: QWidget, name: str):
@@ -412,20 +428,24 @@ class MainWindow(QMainWindow):
 			if name != "Schedule":
 				self.schedule.theme_text_edit.clear()
 				self.schedule.text_edit.clear()
-				self.id = None
+				self.schedule.id = None
 			if name == 'Upcoming':
+				self.upcoming.float_btn.clicked.disconnect()
 				if date is not None:
 					self.upcoming.show_specific_date(date)
+					self.upcoming.float_btn.clicked.connect(partial(self.navigate_to,"Schedule",self.main_stack,date))
 				else:
 					self.upcoming.refresh_upcoming()
+					self.upcoming.float_btn.clicked.connect(partial(self.navigate_to,"Schedule",self.main_stack))
 			elif name == "Schedule":
+				self.schedule.group_box.setTitle("添加日程")
 				if not date is None:
 					self.schedule.receive_date(date)
 				else:
 					self.schedule.deadline_edit.setDateTime(QDateTime.currentDateTime())
 					self.schedule.reminder_edit.setDateTime(QDateTime.currentDateTime())
 			elif name == "Calendar":
-				self.get_events_in_month_from_backend(QDate.currentDate().year(), QDate.currentDate().month())
+				self.main_window_calendar.refresh()
 			stack.setCurrentIndex(self.main_stack_map[name])
 			log.info(f"跳转到{name}页面，日期为{date.toString() if date else date}")
 		else:
@@ -438,9 +458,8 @@ class MainWindow(QMainWindow):
 		self.schedule.reminder_edit.setDateTime(QDateTime.fromString(event.advance_time, "yyyy-MM-dd HH:mm"))
 		self.schedule.theme_text_edit.setText(event.title)
 		self.schedule.text_edit.setPlainText(event.notes)
+		self.schedule.group_box.setTitle("编辑日程")
 		self.main_stack.setCurrentIndex(self.main_stack_map["Schedule"])
-
-	# self.schedule.save_btn.clicked.connect(lambda: self.upcoming.delete_one_item(event))
 
 	def setup_search_column_animation(self) -> None:
 		"""搜索结果栏展开动画设置"""

@@ -13,9 +13,16 @@ class SideBar(QFrame):
 		layout = QVBoxLayout()
 		layout.setContentsMargins(10, 10, 10, 20)
 
-		name_label = QLabel("ChronosFlow\n————————")
+		name_label = QLabel("ChronosFlow")
 		name_label.setAlignment(Qt.AlignCenter)
-		set_font(name_label, 2)
+		font = QFont("Helvetica Neue", 24, QFont.Bold)  # 更具未来感的字体
+		name_label.setFont(font)
+		name_label.setStyleSheet("""
+		    color: #1E90FF; /* 蓝色字体 */
+		    font-size: 24px;
+		    letter-spacing: 2px; /* 增加字母间距 */
+		    font-family: 'Helvetica Neue', sans-serif;
+		""")
 		layout.addWidget(name_label)
 
 		# 把sidebar撑开

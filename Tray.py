@@ -124,11 +124,11 @@ class Tray(QObject):
 		path = f"{frame_folder}/icon_bar.png"
 		img = Image.open(path).convert("RGBA")
 		self.frames.append(img)
-
-	# for i in range(frame_count):
-	# 	path = f"{frame_folder}/frame_{i:02d}.png"
-	# 	img = Image.open(path).convert("RGBA")
-	# 	self.frames.append(img)
+		# for i in range(frame_count):
+		# 	path = f"{frame_folder}/frame_{i:02d}.png"
+		# 	img = Image.open(path).convert("RGBA")
+		# 	self.frames.append(img)
+		
 	@Slot(object)
 	def show_notification(self, data: tuple):
 		"""显示通知"""
