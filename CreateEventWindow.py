@@ -276,6 +276,7 @@ class Schedule(QWidget):
 				Emitter.instance().send_modify_event_signal(self.id, "DDL", theme, deadline, content, reminder, "Great")
 				QMessageBox.information(self, f"修改事件{self.id}成功",
 										f"主题: {theme}\n内容: {content}\n截止时间: {deadline}\n提醒时间: {reminder}")
+				self.id = None
 		else:
 			QMessageBox.warning(self, "警告", "请填写所有信息")
 

@@ -425,6 +425,8 @@ class MainWindow(QMainWindow):
 				else:
 					self.schedule.deadline_edit.setDateTime(QDateTime.currentDateTime())
 					self.schedule.reminder_edit.setDateTime(QDateTime.currentDateTime())
+			elif name == "Calendar":
+				self.get_events_in_month_from_backend(QDate.currentDate().year(), QDate.currentDate().month())
 			stack.setCurrentIndex(self.main_stack_map[name])
 			log.info(f"跳转到{name}页面，日期为{date.toString() if date else date}")
 		else:
@@ -583,4 +585,5 @@ class MainWindow(QMainWindow):
 	def get_events_in_month_from_backend(self, cur_year: int, cur_month: int):
 		"""获取当前月份的事件"""
 		events: list[DDLEvent] = get_events_in_month(cur_year, cur_month)
+		self.main_window_calendar.schedules.clear()
 		self.load_event_in_calendar(events)
