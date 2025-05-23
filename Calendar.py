@@ -246,7 +246,7 @@ class Calendar(QCalendarWidget):
 		self.init_ui()
 		# 连接信号到槽函数
 		self.currentPageChanged.connect(self.handle_page_changed)
-	"""def viewportEvent(self, event):
+		"""def viewportEvent(self, event):
 		if event.type() == QEvent.MouseMove:
 			pos = event.position().toPoint()  # PySide6 特殊处理
 			new_index = self.indexAt(pos)
@@ -311,6 +311,7 @@ class Calendar(QCalendarWidget):
 		date = QDate.fromString(event.datetime.split(" ")[0], "yyyy-MM-dd")
 		self.schedules[date].append(event)
 		self.updateCells()
+
 	def handle_page_changed(self, year: int, month: int):
 		"""月份或年份变化时的回调"""
 		#month += 1  # 注意：month 的范围是0~11
