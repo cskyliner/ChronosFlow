@@ -62,14 +62,14 @@ class MainWindow(QMainWindow):
 
 		# 主窗口（设计为堆叠窗口，有多个界面）
 		self.main_stack = QStackedWidget()
-		self.main_stack.setStyleSheet("""
-							QStackedWidget{
-									background-image: url("local_data/1.jpg");  /* 图片路径 */
-									background-position: center;    /* 居中 */
-									background-repeat: no-repeat;   /* 不重复 */
-									background-size: contain;       /* 保持比例 */
-									}
-								""")
+		#self.main_stack.setStyleSheet("""
+		#					QStackedWidget{
+		#							background-image: url("local_data/1.jpg");  /* 图片路径 */
+		#							background-position: center;    /* 居中 */
+		#							background-repeat: no-repeat;   /* 不重复 */
+		#							background-size: contain;       /* 保持比例 */
+		#							}
+		#						""")
 		self.main_layout.addWidget(self.main_stack)
 
 		# 连接sidebar的信号
@@ -153,7 +153,7 @@ class MainWindow(QMainWindow):
 								    QLineEdit {
 								    background: transparent;
 						            padding: 8px;
-					                border: 1px solid palette(mid);
+					                border: 1px solid palette(midlight);
 					                border-top-left-radius: 19px;     /* 左上角 */
     								border-top-right-radius: 0px;    /* 右上角 */
     								border-bottom-left-radius: 19px;  /* 左下角 */
@@ -172,7 +172,7 @@ class MainWindow(QMainWindow):
 		btn.setStyleSheet("""
 					QPushButton {
 		                background-color: transparent;
-		                border: 1px solid palette(mid);
+		                border: 1px solid palette(midlight);
 		                border-top-left-radius: 0px;     /* 左上角 */
     					border-top-right-radius: 19px;    /* 右上角 */
     					border-bottom-left-radius: 0px;  /* 左下角 */
