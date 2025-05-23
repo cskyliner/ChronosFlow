@@ -23,8 +23,10 @@ logging.basicConfig(
 )
 
 if __name__ == "__main__":
-	app = QApplication([])
+	app = QApplication(sys.argv)
 	init_platform_style(app)
+	app.setApplicationName("ChronosFlow")
+	app.setApplicationDisplayName("ChronosFlow")
 	app.setWindowIcon(QIcon("pic/todolist.png"))
 	connect_event_signal()  # 连接前后端信号
 	main_window = MainWindow(app, 1000, 600)

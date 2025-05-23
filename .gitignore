@@ -6,3 +6,7 @@ __pycache__/
 *.pyc
 local_data/
 docs/framework_draft.md
+# 忽略打包生成文件夹
+build/
+dist/
+ChronosFlow.spec
