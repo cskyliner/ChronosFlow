@@ -166,8 +166,8 @@ class CustomListItem(QWidget):
 		# 设置消息布局
 		layout = QHBoxLayout(self)
 		layout.setContentsMargins(5, 2, 5, 2)  # 边距：左、上、右、下
-		self.setStyleSheet("""CustomListItem {background-color: palette(light);border-radius: 15px;}
-				CustomListItem:hover {background-color: palette(midlight); /*轻微高亮*/}""")
+		self.setStyleSheet("""CustomListItem {background-color: rgba(255, 255, 255, 0.6);border-radius: 15px;}
+				CustomListItem:hover {background-color: rgba(255, 255, 255, 0.8); /*轻微高亮*/}""")
 
 		# 是否完成的复选框
 		self.finish_checkbox = QCheckBox()
@@ -181,6 +181,9 @@ class CustomListItem(QWidget):
 
 		# 展示主题的标签
 		self.theme_display_label = QLabel(f"{event.title}")
+		self.theme_display_label.setStyleSheet("""
+				color: palette(text);
+		""")
 		if event.done == 0:
 			set_font(self.theme_display_label)
 		else:
@@ -229,7 +232,8 @@ class CustomListItem(QWidget):
 
 class Record:
 	"""记录放到Upcoming里的日程"""
-	#TODO：现在没用
+
+	# TODO：现在没用
 	def __init__(self, id, pos, date, finished):
 		self.id = id
 		self.pos = pos  # 在Upcoming里的位置
@@ -258,15 +262,34 @@ class Upcoming(QListWidget):
 		super().__init__(parent)
 
 		self.setStyleSheet("""
-			QListWidget::item:selected {
+		    QListWidget::item:selected {
+		        background: transparent;
+		        border: none;
+		        color: palette(text)
+		    }
+		    QListWidget { background: transparent; }
+		    QListWidget::item {
+        			/* 控制行间距（相邻项的间隔） */
+        			margin: 5px;  
+        	}
+        	QScrollBar:vertical {
 				background: transparent;
-				border: none;
-				color: palette(text)
+				width: 8px;
+				margin: 2px;
 			}
-			QListWidget { background: transparent; }
-			QListWidget::item {
-					/* 控制行间距（相邻项的间隔） */
-					margin: 5px;  
+			
+			QScrollBar::handle:vertical {
+				background: #808080;
+				min-height: 30px;
+				border-radius: 4px;
+			}
+			
+			QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+				height: 0px;
+			}
+			
+			QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+				background: none;
 			}
 			""")
 
@@ -361,6 +384,7 @@ class Upcoming(QListWidget):
 		if hasattr(self, "loading_item"):
 			self.takeItem(self.row(self.loading_item))
 			del self.loading_item
+
 	def get_data(self, data: tuple[BaseEvent] = None):
 		"""从后端加载数据"""
 		if data is not None and len(data) > 0:
@@ -563,7 +587,7 @@ class Upcoming(QListWidget):
 		# 显示加载标签
 		self.show_loading_label()
 		# 发送请求信号
-		#Emitter.instance().request_update_upcoming_event_signal(self.event_num, self.page_num)
+		# Emitter.instance().request_update_upcoming_event_signal(self.event_num, self.page_num)
 		Emitter.instance().request_update_specific_date_upcoming_event_signal(date)
 		# 断开接收信号连接
 		Emitter.instance().backend_data_to_frontend_signal.disconnect(self.get_specific_date_data)
@@ -608,19 +632,14 @@ class Upcoming(QListWidget):
 		✨ 点击下方 + 号添加首个日程"""
 
 		# 设置字体样式
-		font = QFont()
-		font.setItalic(False)  # 斜体
-		font.setPixelSize(20)  # 统一字号
-		self.notify_item.setFont(font)
+		set_font(self.notify_item,4)
 
 		# 设置文字颜色（使用QColor）
 		self.notify_item.setForeground(QColor("#6c757d"))  # 中性灰文字
 
-
-
 		# 交互限制
 		self.notify_item.setFlags(Qt.ItemFlag.NoItemFlags)  # 禁止交互
-		self.notify_item.setSizeHint(QSize(200, 100))       # 合适的高度
+		self.notify_item.setSizeHint(QSize(200, 100))  # 合适的高度
 		self.notify_item.setText(notice_text)
 
 		self.addItem(self.notify_item)

@@ -23,9 +23,10 @@ class StrictDynamicLineEdit(QLineEdit):
 		self.setFixedHeight(50)
 
 		self.setStyleSheet("""QLineEdit {
+			background-color: rgba(255, 255, 255, 0.4);  /* 亮色主题半透明 */
+		    color: palette(text);  /* 使用系统文本颜色 */
 			border: none;
-			border-bottom: 1px solid palette(text);
-			background: transparent;
+			border-bottom: 1px solid palette(shadow);
 		}""")
 
 		# 监听文本变化
@@ -122,14 +123,23 @@ class Schedule(QWidget):
 		# 创建多行文本框
 		self.text_edit = QPlainTextEdit()
 		self.text_edit.setPlaceholderText("内容")
+		# 设置半透明和自适应主题的样式表
 		self.text_edit.setStyleSheet("""
-    		QPlainTextEdit {
-        		background: transparent;
-        		border: none;
-			}
-			QScrollBar {
-				background: transparent;
-			}
+		    QPlainTextEdit {
+		        background-color: rgba(255, 255, 255, 0.4);  /* 亮色主题半透明 */
+		        color: palette(text);  /* 使用系统文本颜色 */
+		        border: 1px solid palette(shadow);
+		        border-radius: 4px;
+		    }
+		    QScrollBar:vertical {
+		        background: transparent;
+		        width: 8px;
+		    }
+		    QScrollBar::handle:vertical {
+		        background: palette(mid);
+		        min-height: 20px;
+		        border-radius: 4px;
+		    }
 		""")
 		set_font(self.text_edit)
 		group_layout.addWidget(self.text_edit)
@@ -206,18 +216,18 @@ class Schedule(QWidget):
 		self.save_btn.clicked.connect(self.create_new_event)
 		self.save_btn.setStyleSheet("""
                 QPushButton {
-                    background-color: transparent;
+                    background-color: rgba(255, 255, 255, 0.4);
                     border: 1px solid palette(mid);
                 	border-radius: 4px;
                     padding: 25px;
                     text-align: center;
                 }
                 QPushButton:hover {
-                    background-color: palette(midlight); /*轻微高亮*/
+                    background-color: rgba(255, 255, 255, 0.6); /*轻微高亮*/
                     border-radius: 4px;
                 }
                 QPushButton:pressed {
-					background-color: palette(mid);
+					background-color: rgba(255, 255, 255, 0.8);
 				}
 							""")
 		set_font(self.save_btn)

@@ -283,9 +283,9 @@ class Calendar(QCalendarWidget):
 			# 设置垂直表头（周数列）样式
 			table_view.verticalHeader().setStyleSheet("""
 				QHeaderView::section {
-					background-color: #F0F0F0;  /* 浅灰色背景 */
-					color: #666666;             /* 深灰色文字 */
-					border-right: 1px solid #D3D3D3; /* 右侧分隔线 */
+					background-color: transparent;  /* 浅灰色背景 */
+					color: palette(text);             /* 深灰色文字 */
+					border-right: 1px solid palette(text); /* 右侧分隔线 */
 					padding: 5px;
 					min-width: 30px;
 				}
