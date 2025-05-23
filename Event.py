@@ -156,13 +156,29 @@ class TaskEvent(BaseEvent):
 
 class ActivityEvent(BaseEvent):
 	"""
-	TODO:事件段
+	TODO:事件段1
+	输入：标题，开始事件，截止时间，笔记，提醒时间，重要程度
 	"""
 
-	def __init__(self, title,):
+	def __init__(self, title:str, start_time:str, end_time:str, notes:str, advance_time:str, importance:str):
 		super().__init__(title)
+		self.start_time = start_time
+		self.end_time = end_time
+		self.notes = notes
+		self.advance_time = advance_time
+		self.importance = importance
 
-
+	def to_dict(self) -> dict:
+		return {
+			"title": self.title,
+			"start_time": self.start_time,
+			"end_time": self.end_time,
+			"notes": self.notes,
+			"advance_time": self.advance_time,
+			"importance": self.importance,
+		}
+	def to_args(self) -> tuple:
+		return (self.title, self.datetime, self.notes, self.advance_time, self.importance, self.done)
 class EventFactory:
 	"""
 	事件工厂
@@ -215,7 +231,6 @@ class EventFactory:
 		except TypeError as e:
 			log.error(f"EventFactory.create:创建event失败，创建使用参数为{args}，Error:{e}")
 			return None
-
 
 def receive_signal(recieve_data: tuple) -> None:
 	"""
