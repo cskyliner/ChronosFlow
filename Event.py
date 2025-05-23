@@ -289,6 +289,10 @@ def request_signal(recieve_data: tuple) -> None:
 		event_num = recieve_data[1][1]
 		result = get_data_time_order("ddlevents", start_pos, event_num)
 		log.info(f"request_signal:接收{signal_name}请求信号成功，获取事件")
+	elif signal_name == "update_specific_date_upcoming":
+		date = recieve_data[1][0]
+		result = get_specific_date_events("ddlevents", date)
+		log.info(f"request_signal:接收{signal_name}请求信号成功，获取事件")
 	elif signal_name == "search_time":
 		raise NotImplementedError("时间范围搜索功能尚未实现")
 	elif signal_name == "search_some_columns":
@@ -421,6 +425,52 @@ def search_time(start_time: str, end_time: str) -> list[BaseEvent]:
 	return result
 
 
+
+def get_specific_date_events(table_name:str, date: QDate) -> tuple[BaseEvent]:
+    '''
+    从数据库中找到指定 QDate 当天的全部日程事件
+    '''
+    # 将 QDate 转换为 ISO 格式字符串（如 "2023-10-05"）
+    target_date = date.toString("yyyy-MM-dd")
+
+    # 检查表是否存在（类似原示例逻辑）
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+    tables = [row[0] for row in cursor.fetchall()]
+    
+    if table_name not in tables:
+        log.error(f"事件表 {table_name} 不存在")
+        return []
+
+    # 使用参数化查询防止 SQL 注入
+    query = f"""
+        SELECT * FROM {table_name}
+        WHERE date(datetime) = ?
+        ORDER BY datetime ASC  -- 按时间升序排列
+    """
+    cursor.execute(query, (target_date,))
+    rows = cursor.fetchall()
+    log.info(f"get_specific_date_events:找到 {len(rows)} 条 {target_date} 的事件记录")
+
+    # 转换为 BaseEvent 对象
+    events = []
+    for row in rows:
+        event_id = row[0]
+        paras = row[1:]  # 假设第1列之后是事件参数
+        
+        # 从全局映射表获取事件类型（类似原示例）
+        event_type = TABLE_MAP.get(table_name, "DDL")
+        
+        # 通过工厂创建事件对象
+        event = EventFactory.create(
+            None,
+            event_type,
+            False,
+            *paras
+        )
+        event.id = event_id
+        events.append(event)
+
+    return tuple(events) 						# 通过PR
 def get_data_time_order(table_name: str, start_pos: int, event_num: int) -> tuple[BaseEvent]:
 	'''
 	从指定数据库中按时间顺序获取数据，从start_pos开始，取num个返回
