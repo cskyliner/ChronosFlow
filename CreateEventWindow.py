@@ -84,7 +84,7 @@ class ContainerFrame(QFrame):
 	def clear(self):
 		self.line_edit.clear()
 
-	def setText(self,content):
+	def setText(self, content):
 		self.line_edit.setText(content)
 
 
@@ -95,7 +95,7 @@ class Schedule(QWidget):
 		self.date = ['0000', '00', '00']  # 日期
 		self.datetime = ['00', '00']  # TODO:调整具体时间（小时，分钟）
 		layout = QVBoxLayout(self)
-		layout.setSpacing(0)
+		layout.setSpacing(5)
 
 		# 创建框
 		self.group_box = QGroupBox("添加日程")
@@ -147,68 +147,41 @@ class Schedule(QWidget):
 		self.group_box.setLayout(group_layout)
 		layout.addWidget(self.group_box)
 
-		# 截止、提醒时间选择框
-		deadline_and_reminder_label_layout = QHBoxLayout()
-		layout.addLayout(deadline_and_reminder_label_layout)
-		# 截止时间选择框
-		deadline_layout = QVBoxLayout()
-		self.deadline_label = QLabel("截止时间:")
-		set_font(self.deadline_label)
-		deadline_layout.addWidget(self.deadline_label)
+		# 存储两种类型的对应选项
+		two_types_layout = QVBoxLayout()
+		layout.addLayout(two_types_layout)
+		# 类型选择框(DDL,日程)
+		type_choose_layout = QHBoxLayout()
+		two_types_layout.addLayout(type_choose_layout)
 
-		self.deadline_edit = QDateTimeEdit()
-		set_font(self.deadline_edit)
-		self.deadline_edit.setDisplayFormat("yyyy-MM-dd HH:mm")
-		self.deadline_edit.setDateTime(QDateTime.currentDateTime())
-		self.deadline_edit.setCalendarPopup(True)  # 在点击时弹出日历
-		calendar = self.deadline_edit.calendarWidget()  # 获取日历控件（QCalendarWidget）
-		calendar.setStyleSheet("""
-					Calendar QAbstractItemView:enabled {     /*禁用选中高亮效果*/
-		            	selection-background-color: transparent;  /* 透明背景 */
-		            	selection-color: palette(text);        /* 使用正常文本颜色 */
-		            }
-		            QCalendarWidget QAbstractItemView {   /*消除边框*/
-		                border: none;
-		                outline: 0;
-		                selection-background-color: transparent;
-		            }
-		            QCalendarWidget QAbstractItemView:item:hover {  /*鼠标悬停*/
-		                background-color: palette(midlight);
-		            }
-					""")  # 设置日历样式
-		deadline_layout.addWidget(self.deadline_edit)
-		deadline_and_reminder_label_layout.addLayout(deadline_layout)
+		type_label = QLabel("类型：")
+		set_font(type_label)
+		type_choose_layout.addWidget(type_label)
 
-		# 提醒时间选择框
-		reminder_layout = QVBoxLayout()
-		self.reminder_label = QLabel("提醒时间:")
-		set_font(self.reminder_label)
-		reminder_layout.addWidget(self.reminder_label)
+		self.type_choose_combo = QComboBox()
+		self.type_choose_combo.addItems(("DDL", "日程"))
+		self.type_choose_combo.currentTextChanged.connect(self.update_dynamic_widgets)  # 信号
+		type_choose_layout.addWidget(self.type_choose_combo)
 
-		self.reminder_edit = QDateTimeEdit()
-		set_font(self.reminder_edit)
-		self.reminder_edit.setDisplayFormat("yyyy-MM-dd HH:mm")
-		self.reminder_edit.setDateTime(QDateTime.currentDateTime())
-		self.reminder_edit.setCalendarPopup(True)
-		calendar = self.reminder_edit.calendarWidget()  # 获取日历控件（QCalendarWidget）
-		calendar.setStyleSheet("""
-				    Calendar QAbstractItemView:enabled {     /*禁用选中高亮效果*/
-		                selection-background-color: transparent;  /* 透明背景 */
-		                selection-color: palette(text);        /* 使用正常文本颜色 */
-		            }
-		            QCalendarWidget QAbstractItemView {   /*消除边框*/
-		                border: none;
-		                outline: 0;
-		                selection-background-color: transparent;
-		            }
-		            QCalendarWidget QAbstractItemView:item:hover {  /*鼠标悬停*/
-		                background-color: palette(midlight);
-		            }
-				    """)  # 设置日历样式
-		reminder_layout.addWidget(self.reminder_edit)
-		deadline_and_reminder_label_layout.addLayout(reminder_layout)
+		type_choose_layout.addSpacerItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
 
-		# 创建按钮
+		# 根据类型动态调整
+		self.dynamic_widget_container = QWidget()
+		self.dynamic_layout = QHBoxLayout(self.dynamic_widget_container)
+		self.dynamic_layout.setSpacing(0)
+		layout.addWidget(self.dynamic_widget_container)
+
+		# 存储所有动态创建的部件
+		self.ddl_widgets = self.create_ddl_widgets()
+		self.schedule_widgets = self.create_schedule_widgets()
+
+		# 连接信号槽
+		self.type_choose_combo.currentTextChanged.connect(self.update_dynamic_widgets)
+
+		# 初始显示ddl
+		self.update_dynamic_widgets("DDL")
+
+		# 创建保存按钮
 		button_layout = QHBoxLayout()
 		layout.addLayout(button_layout)
 
@@ -253,16 +226,11 @@ class Schedule(QWidget):
 
 	def create_new_event(self):
 		"""
-		保存内容，暂时后端只做了DDL类 TODO:支持不同形式event的储存
-		传送内容为event类别（DDL），该类别所需参数
 		TODO:向Notice的schedule_notice发信号，重要程度的选择
 		"""
+		_type = self.type_choose_combo.currentText()
 		theme = self.theme_text_edit.text()
 		content = self.text_edit.toPlainText()
-		deadline = self.deadline_edit.dateTime().toString("yyyy-MM-dd HH:mm")
-		reminder = self.reminder_edit.dateTime().toString("yyyy-MM-dd HH:mm")
-		notify_time = self.reminder_edit.dateTime()
-		log.info(f"notify_time是{notify_time}")
 		"""
 		time = QTime(int(self.datetime[0]), int(self.datetime[1]))
 		datetime = QDateTime(self.standard_date, time)
@@ -270,28 +238,215 @@ class Schedule(QWidget):
 		test_advance_time = datetime.addDays(-1)
 		test_advance_time_str = test_advance_time.toString("yyyy-MM-dd HH:mm")
   		"""
-		if theme and content and deadline and reminder:
-			if self.id is None:
-				# 新建事件
-				log.info(
-					f"创建新事件，标题：{theme}, 截止时间：{deadline}, 内容：{content}, 提前提醒时间：{reminder}, 重要程度：Great"),
-				# DDL参数(标题，截止时间，具体内容，提前提醒时间，重要程度)
-				Emitter.instance().send_create_event_signal("DDL", theme, deadline, content, reminder, "Great")
-				QMessageBox.information(self, "保存成功",
-										f"主题: {theme}\n内容: {content}\n截止时间: {deadline}\n提醒时间: {reminder}")
-			else:
-				log.info(
-				f"修改事件，事件ID: {self.id} 标题：{theme}, 截止时间：{deadline}, 内容：{content}, 提前提醒时间：{reminder}, 重要程度：Great"),
-				# DDL参数(标题，截止时间，具体内容，提前提醒时间，重要程度)
-				Emitter.instance().send_modify_event_signal(self.id, "DDL", theme, deadline, content, reminder, "Great")
-				QMessageBox.information(self, f"修改事件{self.id}成功",
-										f"主题: {theme}\n内容: {content}\n截止时间: {deadline}\n提醒时间: {reminder}")
-				self.id = None
+		if theme:
+			if _type == "DDL":
+				self.theme_text_edit.clear()
+				self.text_edit.clear()
+				deadline = self.deadline_edit.dateTime().toString("yyyy-MM-dd HH:mm")
+				reminder = self.reminder_edit.dateTime().toString("yyyy-MM-dd HH:mm")
+				log.info(f"notify_time是{self.reminder_edit.dateTime()}")
+				if deadline and reminder:
+					if self.id is None:
+						# 新建事件
+						log.info(
+							f"创建新事件，标题：{theme}, 截止时间：{deadline}, 内容：{content}, 提前提醒时间：{reminder}, 重要程度：Great"),
+						# DDL参数(标题，截止时间，具体内容，提前提醒时间，重要程度)
+						Emitter.instance().send_create_event_signal("DDL", theme, deadline, content, reminder, "Great")
+						QMessageBox.information(self, "保存成功",
+												f"主题: {theme}\n内容: {content}\n截止时间: {deadline}\n提醒时间: {reminder}")
+					else:
+						log.info(
+							f"修改事件，事件ID: {self.id} 标题：{theme}, 截止时间：{deadline}, 内容：{content}, 提前提醒时间：{reminder}, 重要程度：Great"),
+						# DDL参数(标题，截止时间，具体内容，提前提醒时间，重要程度)
+						Emitter.instance().send_modify_event_signal(self.id, "DDL", theme, deadline, content, reminder,
+																	"Great")
+						QMessageBox.information(self, f"修改事件{self.id}成功",
+												f"主题: {theme}\n内容: {content}\n截止时间: {deadline}\n提醒时间: {reminder}")
+						self.id = None
+
+			elif _type == "日程":
+				start_date = self.start_date_edit.dateTime().toString("yyyy-MM-dd")
+				start_time = self.start_time_edit.dateTime().toString("HH:mm")
+				end_date = self.end_date_edit.dateTime().toString("yyyy-MM-dd")
+				end_time = self.end_time_edit.dateTime().toString("HH:mm")
+
+				if start_date > end_date:
+					QMessageBox.warning(self, "警告", "开始日期晚于结束日期")
+					return
+				if start_date == end_date:
+					if start_time > end_time:
+						QMessageBox.warning(self, "警告", "开始时间晚于结束时间")
+						return
+
+				self.theme_text_edit.clear()
+				self.text_edit.clear()
+				repeat=self.repeat_combo.currentText()
+				#TODO：传参
+
 		else:
-			QMessageBox.warning(self, "警告", "请填写所有信息")
+			QMessageBox.warning(self, "警告", "请填写标题")
 
 	def get_selected_times(self):
 		"""返回用户选择的截止时间和提醒时间"""
 		deadline = self.deadline_edit.dateTime().toString("yyyy-MM-dd HH:mm")
 		reminder = self.reminder_edit.dateTime().toString("yyyy-MM-dd HH:mm")
 		return deadline, reminder
+
+	def create_ddl_widgets(self):
+		"""创建选项1的所有部件并返回列表"""
+		widgets = []
+
+		# 截止时间选择框
+		deadline_label = QLabel("截止时间:")
+		set_font(deadline_label)
+		self.dynamic_layout.addWidget(deadline_label)
+		widgets.append(deadline_label)
+
+		# 选择截止时间
+		self.deadline_edit = QDateTimeEdit()
+		set_font(self.deadline_edit)
+		self.deadline_edit.setDisplayFormat("yyyy-MM-dd HH:mm")
+		self.deadline_edit.setDateTime(QDateTime.currentDateTime())
+		self.deadline_edit.setCalendarPopup(True)  # 在点击时弹出日历
+		calendar = self.deadline_edit.calendarWidget()  # 获取日历控件（QCalendarWidget）
+		calendar.setStyleSheet("""
+										            QCalendarWidget QAbstractItemView:item:hover {  /*鼠标悬停*/
+										                background-color: palette(midlight);
+										            }
+													""")  # 设置日历样式
+		self.dynamic_layout.addWidget(self.deadline_edit)
+		widgets.append(self.deadline_edit)
+
+		ddl_spacer = QWidget()
+		ddl_spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
+		self.dynamic_layout.addWidget(ddl_spacer)
+		widgets.append(ddl_spacer)
+
+		# 提醒时间选择框
+		reminder_label = QLabel("提醒时间:")
+		set_font(reminder_label)
+		self.dynamic_layout.addWidget(reminder_label)
+		widgets.append(reminder_label)
+
+		self.reminder_edit = QDateTimeEdit()
+		set_font(self.reminder_edit)
+		self.reminder_edit.setDisplayFormat("yyyy-MM-dd HH:mm")
+		self.reminder_edit.setDateTime(QDateTime.currentDateTime())
+		self.reminder_edit.setCalendarPopup(True)
+		calendar = self.reminder_edit.calendarWidget()  # 获取日历控件（QCalendarWidget）
+		calendar.setStyleSheet("""
+							            QCalendarWidget QAbstractItemView:item:hover {  /*鼠标悬停*/
+							                background-color: palette(midlight);
+							            }
+									    """)  # 设置日历样式
+		self.dynamic_layout.addWidget(self.reminder_edit)
+		widgets.append(self.reminder_edit)
+
+		return widgets
+
+	def create_schedule_widgets(self):
+		"""创建选项2的所有部件并返回列表"""
+		widgets = []
+
+		# 起止时间
+		start_and_end_label = QLabel("起止日期：")
+		set_font(start_and_end_label)
+		self.dynamic_layout.addWidget(start_and_end_label)
+		widgets.append(start_and_end_label)
+		# 起始日期
+		self.start_date_edit = QDateTimeEdit()
+		self.start_date_edit.setDisplayFormat("yyyy-MM-dd")
+		self.start_date_edit.setDate(QDate.currentDate())
+		self.start_date_edit.setCalendarPopup(True)
+		calendar = self.start_date_edit.calendarWidget()  # 获取日历控件（QCalendarWidget）
+		calendar.setStyleSheet("""
+						            QCalendarWidget QAbstractItemView:item:hover {  /*鼠标悬停*/
+						                background-color: palette(midlight);
+						            }
+								    """)  # 设置日历样式
+		set_font(self.start_date_edit)
+		self.dynamic_layout.addWidget(self.start_date_edit)
+		widgets.append(self.start_date_edit)
+
+		# 起始时间
+		self.start_time_edit = QDateTimeEdit()
+		self.start_time_edit.setDisplayFormat("HH:mm")
+		self.start_time_edit.setTime(QTime.currentTime())
+		set_font(self.start_time_edit)
+		self.dynamic_layout.addWidget(self.start_time_edit)
+		widgets.append(self.start_time_edit)
+
+		# '~'标签
+		to_label = QLabel("~")
+		set_font(to_label)
+		self.dynamic_layout.addWidget(to_label)
+		widgets.append(to_label)
+
+		# 结束日期
+		self.end_date_edit = QDateTimeEdit()
+		self.end_date_edit.setDisplayFormat("yyyy-MM-dd")
+		self.end_date_edit.setDate(QDate.currentDate())
+		self.end_date_edit.setCalendarPopup(True)
+		calendar = self.end_date_edit.calendarWidget()  # 获取日历控件（QCalendarWidget）
+		calendar.setStyleSheet("""
+								    QCalendarWidget QAbstractItemView:item:hover {  /*鼠标悬停*/
+							            background-color: palette(midlight);
+						            }
+								    """)
+		set_font(self.end_date_edit)
+		self.dynamic_layout.addWidget(self.end_date_edit)
+		widgets.append(self.end_date_edit)
+
+		# 结束时间
+		self.end_time_edit = QDateTimeEdit()
+		self.end_time_edit.setDisplayFormat("HH:mm")
+		self.end_time_edit.setTime(QTime.currentTime())
+		set_font(self.end_time_edit)
+		self.dynamic_layout.addWidget(self.end_time_edit)
+		widgets.append(self.end_time_edit)
+
+		schedule_spacer = QWidget()
+		schedule_spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
+		self.dynamic_layout.addWidget(schedule_spacer)
+		widgets.append(schedule_spacer)
+
+		# 重复标签
+		repeat_label = QLabel("重复：")
+		set_font(repeat_label)
+		self.dynamic_layout.addWidget(repeat_label)
+		widgets.append(repeat_label)
+
+		# 每周几重复
+		self.repeat_combo = QComboBox()
+		set_font(self.repeat_combo)
+		repeat_days = (
+			"无", "每周一", "每周二", "每周三", "每周四", "每周五", "每周六", "每周日", "每两周周一", "每两周周二",
+			"每两周周三", "每两周周四", "每两周周五", "每两周周六", "每两周周日")
+		self.repeat_combo.addItems(repeat_days)
+		self.dynamic_layout.addWidget(self.repeat_combo)
+		widgets.append(self.repeat_combo)
+
+		return widgets
+
+	def hide_all_dynamic_widgets(self):
+		"""隐藏所有动态部件"""
+		for widget in self.ddl_widgets:
+			widget.hide()
+		for widget in self.schedule_widgets:
+			widget.hide()
+
+	def update_dynamic_widgets(self, selected_text):
+		"""根据主选项显示/隐藏动态部件"""
+		# 首先隐藏所有部件
+		self.hide_all_dynamic_widgets()
+
+		if selected_text == "DDL":
+			# 显示选项1的部件
+			for widget in self.ddl_widgets:
+				widget.show()
+		elif selected_text == "日程":
+			# 显示选项2的部件
+			for widget in self.schedule_widgets:
+				widget.show()
+		else:
+			log.error("警告：选择了除DDL和日程以外的种类")

@@ -125,23 +125,25 @@ class MainWindow(QMainWindow):
 		upper_layout.setSpacing(0)
 		# 添加'<'按钮
 		sidebar_btn = QPushButton("<")
+		sidebar_btn.setFixedSize(35,30)
 		sidebar_btn.setStyleSheet("""
 				                QPushButton {
 				                    background-color: transparent;
 				                    border: none;
-				                    padding: 0;
+				                    border-radius: 5px;
+				                    padding: 5;
 		    						margin: 0;
 				                    text-align: center;
-				                    color: #a0a0a0;
+				                    color: palette(text);
 				                }
 				                QPushButton:hover {
-				                    color: #07C160;
+				                    background-color: palette(midlight);
 				                }
 				                QPushButton:pressed {
-									color: #05974C;
+									background-color: palette(mid);
 								}
 				            """)
-		set_font(sidebar_btn, 1)
+		set_font(sidebar_btn, 4)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 添加search文本框
@@ -153,11 +155,12 @@ class MainWindow(QMainWindow):
 								    QLineEdit {
 								    background: transparent;
 						            padding: 8px;
-					                border: 1px solid palette(midlight);
+					                border: 1px solid palette(text);
 					                border-top-left-radius: 19px;     /* 左上角 */
     								border-top-right-radius: 0px;    /* 右上角 */
     								border-bottom-left-radius: 19px;  /* 左下角 */
     								border-bottom-right-radius: 0px; /* 右下角 */
+    								border-right: none;
 					                font-size: 14px;
 						            }
 							    """)
@@ -172,7 +175,7 @@ class MainWindow(QMainWindow):
 		btn.setStyleSheet("""
 					QPushButton {
 		                background-color: transparent;
-		                border: 1px solid palette(midlight);
+		                border: 1px solid palette(text);
 		                border-top-left-radius: 0px;     /* 左上角 */
     					border-top-right-radius: 19px;    /* 右上角 */
     					border-bottom-left-radius: 0px;  /* 左下角 */
@@ -238,43 +241,46 @@ class MainWindow(QMainWindow):
 		schedule_layout.addLayout(btn_layout)
 
 		sidebar_btn = QPushButton("<")
+		sidebar_btn.setFixedSize(35, 30)
 		sidebar_btn.setStyleSheet("""
-								QPushButton {
-								background-color: transparent;
-								border: none;
-								padding: 0;
-								margin: 0;
-								text-align: center;
-								color: #a0a0a0;
+				                QPushButton {
+				                    background-color: transparent;
+				                    border: none;
+				                    border-radius: 5px;
+				                    padding: 5;
+		    						margin: 0;
+				                    text-align: center;
+				                    color: palette(text);
+				                }
+				                QPushButton:hover {
+				                    background-color: palette(midlight);
+				                }
+				                QPushButton:pressed {
+									background-color: palette(mid);
 								}
-								QPushButton:hover {
-								color: #07C160;
-								}
-								QPushButton:pressed {
-								color: #05974C;
-								}
-								""")
-		set_font(sidebar_btn)
+				            """)
+		set_font(sidebar_btn,4)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 返回按钮，回到calendar
 		return_btn = QPushButton("✕")
+		return_btn.setFixedSize(35,30)
 		return_btn.setStyleSheet("""
-						        QPushButton {
-						        background-color: transparent;
-						        border: none;
-						        padding: 0;
-				    			margin: 0;
-						        text-align: center;
-						        color: #a0a0a0;
-						        }
-						        QPushButton:hover {
-								color: rgb(235,51,36);
+				                QPushButton {
+				                    background-color: transparent;
+				                    border-radius: 5px;
+				                    padding: 5;
+		    						margin: 0;
+				                    text-align: center;
+				                    color: palette(text);
+				                }
+				                QPushButton:hover {
+				                	color: #E61B23;
+				                }
+				                QPushButton:pressed {
+									color: #B8281C;
 								}
-								QPushButton:pressed {
-								color: rgb(189,41,29);
-								}
-						        """)
+				            """)
 		set_font(return_btn, 1)
 		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
 
@@ -298,41 +304,44 @@ class MainWindow(QMainWindow):
 		setting_layout.addLayout(btn_layout)
 
 		sidebar_btn = QPushButton("<")
+		sidebar_btn.setFixedSize(35, 30)
 		sidebar_btn.setStyleSheet("""
-								QPushButton {
-								background-color: transparent;
-								border: none;
-								padding: 0;
-								margin: 0;
-								text-align: center;
-								color: #a0a0a0;
+				                QPushButton {
+				                    background-color: transparent;
+				                    border: none;
+				                    border-radius: 5px;
+				                    padding: 5;
+		    						margin: 0;
+				                    text-align: center;
+				                    color: palette(text);
+				                }
+				                QPushButton:hover {
+				                    background-color: palette(midlight);
+				                }
+				                QPushButton:pressed {
+									background-color: palette(mid);
 								}
-								QPushButton:hover {
-								color: #07C160;
-								}
-								QPushButton:pressed {
-								color: #05974C;
-								}
-						            """)
-		set_font(sidebar_btn)
+				            """)
+		set_font(sidebar_btn,4)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 返回按钮，回到calendar
 		return_btn = QPushButton("✕")
+		return_btn.setFixedSize(35, 30)
 		return_btn.setStyleSheet("""
 				                QPushButton {
 				                    background-color: transparent;
-				                    border: none;
-				                    padding: 0;
+				                    border-radius: 5px;
+				                    padding: 5;
 		    						margin: 0;
 				                    text-align: center;
-				                    color: #a0a0a0;
+				                    color: palette(text);
 				                }
 				                QPushButton:hover {
-								color: rgb(235,51,36);
-								}
-								QPushButton:pressed {
-								color: rgb(189,41,29);
+				                	color: #E61B23;
+				                }
+				                QPushButton:pressed {
+									color: #B8281C;
 								}
 				            """)
 		set_font(return_btn, 1)
@@ -359,43 +368,46 @@ class MainWindow(QMainWindow):
 		layout.addLayout(btn_layout)
 
 		sidebar_btn = QPushButton("<")
+		sidebar_btn.setFixedSize(35, 30)
 		sidebar_btn.setStyleSheet("""
-								QPushButton {
-								background-color: transparent;
-								border: none;
-								padding: 0;
-								margin: 0;
-								text-align: center;
-								color: #a0a0a0;
+				                QPushButton {
+				                    background-color: transparent;
+				                    border: none;
+				                    border-radius: 5px;
+				                    padding: 5;
+		    						margin: 0;
+				                    text-align: center;
+				                    color: palette(text);
+				                }
+				                QPushButton:hover {
+				                    background-color: palette(midlight);
+				                }
+				                QPushButton:pressed {
+									background-color: palette(mid);
 								}
-								QPushButton:hover {
-								color: #07C160;
-								}
-								QPushButton:pressed {
-								color: #05974C;
-								}
-								""")
-		set_font(sidebar_btn, 1)
+				            """)
+		set_font(sidebar_btn, 4)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 返回按钮，回到calendar
 		return_btn = QPushButton("✕")
+		return_btn.setFixedSize(35, 30)
 		return_btn.setStyleSheet("""
-								 QPushButton {
-								background-color: transparent;
-								border: none;
-								padding: 0;
-								margin: 0;
-								text-align: center;
-								color: #a0a0a0;
+				                QPushButton {
+				                    background-color: transparent;
+				                    border-radius: 5px;
+				                    padding: 5;
+		    						margin: 0;
+				                    text-align: center;
+				                    color: palette(text);
+				                }
+				                QPushButton:hover {
+				                	color: #E61B23;
+				                }
+				                QPushButton:pressed {
+									color: #B8281C;
 								}
-								QPushButton:hover {
-								color: rgb(235,51,36);
-								}
-								QPushButton:pressed {
-								color: rgb(189,41,29);
-								}
-								""")
+				            """)
 		set_font(return_btn, 1)
 		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
 

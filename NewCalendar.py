@@ -85,7 +85,7 @@ class CalendarDayItem(QObject, QGraphicsRectItem):
 		btn_color = palette.color(QPalette.Button)  # 按钮背景色
 		light_color = palette.color(QPalette.Highlight)
 		if self._selected:  # 选中
-			painter.setBrush(QBrush(btn_color))
+			painter.setBrush(QBrush(light_color))
 		elif self._hovering:  # 悬浮
 			painter.setBrush(QBrush(light_color))
 		else:
@@ -284,12 +284,6 @@ class CalendarView(QWidget):
 		day_width = w / 7
 		day_height = h / 6
 		self.draw_month(self.current_year, self.current_month, day_width, day_height)
-
-	def clear_selection(self):
-		for item in self.scene.items():
-			if isinstance(item, CalendarDayItem):
-				item._selected = False
-				item.update()
 
 	def draw_month(self, year, month, day_width=None, day_height=None):
 		self.scene.clear()
