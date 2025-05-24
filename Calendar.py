@@ -1,413 +1,323 @@
 from common import *
-from PySide6.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsRectItem, QGraphicsItem, QSizePolicy
-from PySide6.QtCore import QRectF
-from PySide6.QtGui import QShortcut, QKeySequence
-from Event import BaseEvent, get_events_in_month
-
+from PySide6.QtGui import QFont
+from Event import DDLEvent, get_events_in_month
 log = logging.getLogger(__name__)
 
 
-def get_month_range(year: int, month: int):
-	"""
-	获取每页的起止时间
-	"""
-	first_day = QDate(year, month, 1)
-	start_offset = first_day.dayOfWeek() - 1  # 从开始的第一周的周一
-	start_date = first_day.addDays(-start_offset)
-	end_date = start_date.addDays(41)  # 到最后补齐42个格
-	return start_date, end_date
+class CalendarDelegate(QStyledItemDelegate):
+	def __init__(self, calendar=None, parent=None):
+		super().__init__(parent)
+		self.calendar = calendar
+		self.base_font = QFont()
+		self.base_font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
+		self.base_font.setPointSize(12)
+		self.date_font = QFont()  # 日期字体
+		self.date_font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
+		self.date_font.setBold(True)
+		self.date_font.setPointSize(14)
+		self.font_metrics = QFontMetrics(self.base_font)
+		self.date_font_metrics = QFontMetrics(self.date_font)
 
+		# 设置周末格式
+		self.weekend_format = QTextCharFormat()
+		self.weekend_format.setForeground(QColor("red"))
 
-class CalendarDayItem(QObject, QGraphicsRectItem):
-	"""
-	单元格
-	"""
-	clicked = Signal(QDate)
-	right_clicked = Signal(QDate, QPoint)
-	double_clicked = Signal(QDate)
+		self.event: list[DDLEvent] = []
+		self.event_num = 0
+		#self.hovered_row = -1
+		#self.hovered_col = -1
+		self.hovered_index = QModelIndex()  # 记录当前悬停的单元格索引
+		# 连接视图的悬停信号
+		if isinstance(parent, QAbstractItemView):
+			parent.entered.connect(self.on_cell_entered)
+			parent.viewportEntered.connect(self.on_viewport_entered)
+	def on_cell_entered(self, index):
+		self.hovered_index = index
+		self.parent().update(index)
 
-	def __init__(self, rect: QRectF, date: QDate, is_current_month: bool, is_today: bool, events: list[BaseEvent]):
-		QObject.__init__(self)
-		QGraphicsRectItem.__init__(self, rect)
-		self.date = date
-		self.is_current_month = is_current_month
-		self.is_today = is_today
-		self.setFlag(QGraphicsItem.ItemIsSelectable)
-		self.setAcceptHoverEvents(True)
-		self._hovering = False
-		self._selected = False
-		self.event: list[BaseEvent] = events
-
-	def hoverEnterEvent(self, event):
-		self._hovering = True
-		self.update()
-
-	def hoverLeaveEvent(self, event):
-		self._hovering = False
-		self.update()
-
-	def mousePressEvent(self, event):
-		self._pressed_inside = self.contains(event.pos())
-		super().mousePressEvent(event)
-
-	def mouseDoubleClickEvent(self, event):
-		if event.button() == Qt.LeftButton:
-			self.double_clicked.emit(self.date)
-		super().mouseDoubleClickEvent(event)
-
-	def mouseReleaseEvent(self, event):
-		if event.button() == Qt.LeftButton and getattr(self, "_pressed_inside", False) and self.contains(event.pos()):
-			view = self.scene().views()[0]
-		modifiers = QApplication.keyboardModifiers()
-		shift_pressed = modifiers & Qt.ShiftModifier
-
-		if not shift_pressed:
-			# 不按Shift，清除其他选中，只选中当前
-			if hasattr(view, "clear_selection"):
-				view.clear_selection()
-			self._selected = True
+	def on_viewport_entered(self):
+		# 鼠标进入视图但未指向特定单元格时
+		if self.hovered_index.isValid():
+			old_index = self.hovered_index
+			self.hovered_index = QModelIndex()
+			self.parent().update(old_index)
+	def paint(self, painter, option, index):
+		#super().paint(painter, option, index)  # 先进行常规绘制
+# 创建并初始化样式选项
+		opt = QStyleOptionViewItem(option)
+		opt.initFrom(option.widget)  # 继承控件状态
+		#self.initStyleOption(opt, index)  # 继承基础样式
+		opt.rect = option.rect
+		original_state = opt.state
+		if index == self.calendar.hoverIndex() and index.isValid():
+			opt.state |= QStyle.State_MouseOver  # 添加悬停标记
 		else:
-			# 按住Shift，切换当前选中状态
-			self._selected = not self._selected
-			self._selected = True
-		self.update()
-		super().mouseReleaseEvent(event)
+			opt.state &= ~QStyle.State_MouseOver  # 清除悬停标记	
+   	
+		# 正确绘制背景（含悬停效果）
+		style = opt.widget.style() if opt.widget else QApplication.style()
+		style.drawControl(
+			QStyle.ControlElement.CE_ItemViewItem,
+			opt,
+			painter,
+			opt.widget  # 传递控件实例确保样式生效
+		)
+		opt.state = original_state
+	
 
-	def contextMenuEvent(self, event):
-		global_pos = event.screenPos()
-		self.right_clicked.emit(self.date, global_pos)
-		log.info("用户点击右键，弹出菜单")
+		#painter.setPen(QColor(0, 0, 0))  # 强制设置为黑色
+		row = index.row()
+		col = index.column()
+		rect = option.rect
 
-	def paint(self, painter, option, widget=None):
-		palette = QApplication.palette()  # 获取主题
-		# 根据主题设置颜色
-		background_color = palette.color(QPalette.Base)  # 背景色（适配主题）
-		btn_color = palette.color(QPalette.Button)  # 按钮背景色
-		light_color = palette.color(QPalette.Highlight)
-		if self._selected:  # 选中
-			painter.setBrush(QBrush(light_color))
-		elif self._hovering:  # 悬浮
-			painter.setBrush(QBrush(light_color))
+		# 绘制最左边一列单元格为灰色
+		if col == 0 or row == 0:
+			painter.fillRect(rect, QColor(230, 225, 210))  # 浅灰色
+
+		# 绘制最上面一栏显示周一到周日
+		if row == 0 and col > 0:
+			weekday_names = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+			text = weekday_names[col - 1]
+			painter.setPen(Qt.black)
+			painter.drawText(rect, Qt.AlignCenter, text)
+		# 处理日期单元格（非表头和左侧列）
+		#if row > 0 and col > 0:
+			# 鼠标悬停时的高亮效果
+		#	if index == self.hovered_index:
+		#		painter.fillRect(rect, QColor(230, 230, 230))  # 浅灰色（悬停）
+		#	else:
+		#		painter.fillRect(rect, Qt.white)  # 白色背景
+		# 获取日期数据
+		date = self.calendar.dateFromIndex(index)
+		if not date.isValid():  # 表头或无效日期（如灰色的跨月日期）不处理
+			return
+		# 获取当前日历显示月份
+		current_month = self.calendar.get_current_displayed_month()
+
+		# 计算日期文本的精确位置和大小
+		day_text = str(date.day())
+		#week_text = int(date.day())
+		text_width = self.date_font_metrics.horizontalAdvance(day_text)
+		text_height = self.date_font_metrics.height()
+
+		# 计算文本居中的矩形区域
+		text_rect = QRect(
+			option.rect.x() + (option.rect.width() - text_width) // 2,
+			option.rect.y() + (option.rect.height() - text_height) // 2,
+			text_width,
+			text_height
+		)
+
+		# 仅覆盖日期文本区域
+		#painter.save()
+		#painter.fillRect(text_rect, option.palette.base())
+		#painter.restore()
+
+		# 仅在第一列添加"周"字
+		if index.column() == 0:  # 第一列（周数列）
+			painter.save()
+			painter.setFont(self.date_font)
+			painter.setPen(QColor("#666666"))  # 灰色文字
+			painter.drawText(text_rect, Qt.AlignCenter, "周")
+			painter.restore()
+
+		# painter.fillRect(option.rect, option.palette.base())  # 用背景色覆盖默认日期位置
+		painter.save()
+		# 绘制日期（自定义位置）
+		painter.setFont(self.date_font)
+
+		if index.column() > 5:  # 周末
+			painter.setPen(QColor("red"))
 		else:
-			painter.setBrush(QBrush(background_color) if self.is_current_month else QBrush(btn_color))
+			painter.setPen(option.palette.text().color())
 
-		text_color = palette.color(QPalette.Text)
-		mid_color = palette.color(QPalette.Mid)
-		painter.setPen(QPen(mid_color)) #边框颜色
-		painter.drawRect(self.rect())
-		painter.setPen(QColor("#08B9FF") if self.is_today else QPen(text_color))  # 日期的颜色
-		if self.date.day() == 1:
-			rect = self.rect()
-			# 月份字体较大
-			font_month = painter.font()
-			font_month.setPointSizeF(font_month.pointSizeF() * 1.4)
-			font_month.setBold(True)
-			month_text = f"{self.date.month()}月"
-			painter.setFont(font_month)
-			month_metrics = QFontMetrics(font_month)
-			month_width = month_metrics.horizontalAdvance(month_text)
-			# 日期字体较小
-			font_day = painter.font()
-			font_day.setPointSizeF(font_day.pointSizeF() * 0.7)
-			font_day.setBold(False)
-			painter.setFont(font_day)
-			day_text = "1"
-			day_metrics = QFontMetrics(font_day)
-			day_width = day_metrics.horizontalAdvance(day_text)
-			# 使日号“1”居中
-			x_day = rect.x() + (rect.width() - day_width) / 2
-			x_month = x_day - month_width - 4
-			# 水平对齐基准线
-			y_base_month = rect.y() + 6 + month_metrics.ascent()
-			y_base_day = rect.y() + 6 + day_metrics.ascent()
-			y_base = max(y_base_month, y_base_day)
+		# 绘制节假日标志
+		if date in self.calendar.holidays:
+			painter.save()
+			painter.setPen(QColor("#4CAF50"))
+			painter.setFont(QFont("Microsoft YaHei", 8, QFont.Bold))
+			# 计算文本宽度，动态调整偏移（避免硬编码）
 
-			painter.setFont(font_month)
-			painter.drawText(QPointF(x_month, y_base), month_text)
-			painter.setFont(font_day)
-			painter.drawText(QPointF(x_day, y_base), day_text)
-		else:
-			text = str(self.date.day())
-			rect = self.rect().adjusted(0, 10, 0, 0)  # 顶部留一定间距以求美观
-			painter.drawText(rect, Qt.AlignHCenter | Qt.AlignTop, text)
+			text_width = self.font_metrics.horizontalAdvance("休")
+			x_offset = 5  # 向左移动5像素（可调整）
+			painter.drawText(
+				option.rect.x() + option.rect.width() - 15,  # 左边界 + 偏移
+				option.rect.y() + 2,  # 顶部偏移
+				option.rect.width() - text_width - x_offset,  # 剩余宽度
+				option.rect.height(),
+				Qt.AlignTop,  # 仅顶部对齐，左对齐默认
+				"休"
+			)
+			painter.restore()
 
-		# 绘制事件列表，最多3条
-		max_events_to_show = 3
-		event_area_rect = self.rect().adjusted(4, 24, -4, -4)
+		# 在单元格顶部绘制日期
+		date_rect = QRect(
+			option.rect.x() + (option.rect.width() - self.date_font_metrics.horizontalAdvance(day_text)) / 2,
+			option.rect.y() + 2,
+			self.date_font_metrics.horizontalAdvance(day_text),
+			self.date_font_metrics.height()
+		)
+		painter.drawText(date_rect, Qt.AlignCenter, day_text)
+		painter.restore()
 
-		# 根据格子高度动态调整字体大小
-		cell_height = self.rect().height()
-		dynamic_font_size = max(6, min(12, int(cell_height * 0.13)))
+		# 绘制日程（从日期下方开始）
+		events = self.calendar.schedules.get(date, [])
 
-		font = painter.font()
-		font.setPointSize(dynamic_font_size)
-		painter.setFont(font)
-		painter.setPen(QPen(text_color))  # 日程颜色
+		if events:
+			pos = (index.row() - 1) * 7 + index.column() - 1
+			date_obj = datetime.strptime(events[0].datetime, "%Y-%m-%d %H:%M")
+			month = date_obj.month
+			month_int = int(month)
+			if abs(pos - date.day()) < 20 and index.column() > 0:
+				painter.save()
+				painter.setFont(self.base_font)
+				painter.setPen(QColor("#333333"))
 
-		font_metrics = QFontMetrics(font)
-		line_height = font_metrics.lineSpacing()
+				# 计算日程起始位置（从日期文本的下一行开始）
+				date_bottom = option.rect.y() + 2 + self.date_font_metrics.height()  # 日期底部坐标
+				y_pos = date_bottom + 10  # 日程顶部与日期底部保持10px间距
 
-		x = event_area_rect.left()
-		y = event_area_rect.top() + line_height
+				line_height = self.font_metrics.height() + 1  # 每行高度（含间距）
 
-		for i, event in enumerate(self.event[:max_events_to_show]):
-			elided = font_metrics.elidedText(event.title, Qt.ElideRight, int(event_area_rect.width()))
-			painter.drawText(QPointF(x, y + i * line_height), elided)
-		event_count = len(self.event)
-		# 超过三条显示更多
-		metrics = QFontMetrics(font)
-		line_h = metrics.lineSpacing()
-		if event_count > max_events_to_show:
-			more_font = QFont(font)
-			more_font.setPointSize(font.pointSize() - 1)
-			more_font.setItalic(True)
-			painter.setFont(more_font)
-			painter.setPen(QPen(text_color))  # "更多"的颜色
+				for i, event in enumerate(events[:]):
+						# 截取前四个字符
+					truncated_title = event.title[:4] + "..." if len(event.title) > 4 else event.title
+					painter.drawText(
+						option.rect.x() + 5,
+	  					#(option.rect.width() - self.font_metrics.horizontalAdvance(truncated_title)) / 2 - 8,
+						y_pos + i * line_height,  # 垂直位置逐行增加
+						f"• {truncated_title}"
+					)
 
-			text = f"更多 ({event_count - max_events_to_show})..."
-			r = QRectF(event_area_rect.left(), event_area_rect.top() + max_events_to_show * line_h,
-					   event_area_rect.width(), line_h)
-			painter.drawText(r, Qt.AlignRight | Qt.AlignVCenter, text)
+				painter.restore()
+		# 绘制边框
+		painter.save()
+		painter.setPen(QPen(QColor("#bbdefb"), 1))
+		painter.drawRect(option.rect.adjusted(0, 0, -1, -1))
+		painter.restore()
+
+	def sizeHint(self, option, index):
+		size = super().sizeHint(option, index)
+		date = self.calendar.dateFromIndex(index)
+
+		if isinstance(date, QDate) and date.isValid():
+			events = self.calendar.schedules.get(date, [])
+			line_height = self.font_metrics.height() + 1  # 增加行间距
+			# size.setHeight(max(80, 20 + self.date_font_metrics.height() + min(len(events), 10) * line_height))
+			size.setHeight(max(80, 20 + self.date_font_metrics.height() + len(events) * line_height))
+		return size
 
 
-class CalendarView(QWidget):
-	"""
-	新日历
-	"""
-	double_clicked = Signal(QDate)
-	view_single_day = Signal(QDate)
+class Calendar(QCalendarWidget):
+	def __init__(self, parent=None):
+		super().__init__(parent)
+		self._hover_index = QModelIndex()  # 初始化为无效索引
 
-	def __init__(self):
-		super().__init__()
-		# 日程信息
+		self.hover_date = QDate()
+		self.setMouseTracking(True)
+
+		self.holidays = set()
+		holidays_2025 = [
+			QDate(2025, 1, 28), QDate(2025, 1, 29), QDate(2025, 1, 30), QDate(2025, 1, 31),
+			QDate(2025, 2, 1), QDate(2025, 2, 2), QDate(2025, 2, 3), QDate(2025, 2, 4),  # 春节
+			QDate(2025, 4, 4),  # 清明节
+			QDate(2025, 5, 31), QDate(2025, 6, 1), QDate(2025, 6, 2),  # 端午节
+			QDate(2025, 10, 1), QDate(2025, 10, 2), QDate(2025, 10, 3), QDate(2025, 10, 4),
+			QDate(2025, 10, 5), QDate(2025, 10, 6), QDate(2025, 10, 7),  # 国庆节
+			QDate(2025, 10, 6), QDate(2025, 10, 7), QDate(2025, 10, 8)  # 中秋节
+		]
 		self.schedules = defaultdict(list)
 
-		layout = QVBoxLayout(self)  # 整体
-		layout.setContentsMargins(0, 0, 0, 0)
-		layout.setSpacing(0)
-		title_layout = QHBoxLayout()  # 标题布局
-		self.title_label = QLabel()  # 显示当前年月
-		self.title_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-		# 设置标题初始字体
-		font = QFont()
-		font.setPointSize(18)
-		font.setBold(True)
-		self.title_label.setFont(font)
-		btn_layout = QHBoxLayout()  # 切换月份按钮布局
-		common_btn_style = """
-            QPushButton {
-                border: none;
-                background-color: palette(midlight);
-                padding: 4px 12px;
-                border-radius: 4px;
-            }
-            QPushButton:hover {
-                background-color: palette(mid);
-            }
-            QPushButton:pressed {
-                background-color: palette(mid);
-            }
-        """
-		self.prev_btn = QPushButton("〈")
-		self.today_btn = QPushButton("Today")
-		self.next_btn = QPushButton("〉")
-		self.prev_btn.setStyleSheet(common_btn_style)
-		self.today_btn.setStyleSheet(common_btn_style)
-		self.next_btn.setStyleSheet(common_btn_style)
-		self.prev_btn.clicked.connect(self.go_to_prev_month)
-		self.today_btn.clicked.connect(self.go_to_today)
-		self.next_btn.clicked.connect(self.go_to_next_month)
+		self.add_holiday(*holidays_2025)
+		#self.setStyleSheet("""
+		#			Calendar QAbstractItemView:enabled {     /*禁用选中高亮效果*/
+		#				selection-background-color: transparent;  /* 透明背景 */
+		#				selection-color: palette(text);        /* 使用正常文本颜色 */
+		#			}
+		#			QCalendarWidget QAbstractItemView {   /*消除边框*/
+		#				border: none;
+		#				outline: 0;
+		#				selection-background-color: transparent;
+		#			}
+		#			QCalendarWidget QAbstractItemView:item:hover {  /*鼠标悬停*/
+		#				background-color: palette(midlight);
+		#			}
+		#		""")
+		self.init_ui()
+		# 连接信号到槽函数
+		self.currentPageChanged.connect(self.handle_page_changed)
+		"""def viewportEvent(self, event):
+		if event.type() == QEvent.MouseMove:
+			pos = event.position().toPoint()  # PySide6 特殊处理
+			new_index = self.indexAt(pos)
+			if new_index != self._hover_index:
+				self._hover_index = new_index
+				self.viewport().update()  # 触发重绘
+		return super().viewportEvent(event)"""
+	def mouseMoveEvent(self, event):
+		pos_in_view = self.table_view.viewport().mapFromParent(event.pos())
+		index = self.table_view.indexAt(pos_in_view)
+		if index != self._hover_index:
+			old_index = self._hover_index
+			self._hover_index = index
+			if old_index.isValid():
+				old_rect = self.table_view.visualRect(old_index)
+				self.table_view.viewport().update(old_rect)
+			if index.isValid():
+				new_rect = self.table_view.visualRect(index)
+				self.table_view.viewport().update(new_rect)
+		return super().mouseMoveEvent(event)
+	def hoverIndex(self):
+		return self._hover_index
+	def get_current_displayed_month(self):
+		return self.selectedDate().month()
 
-		btn_layout.addWidget(self.prev_btn)
-		btn_layout.addWidget(self.today_btn)
-		btn_layout.addWidget(self.next_btn)
+	def init_ui(self):
+		# 配置视图
+		self.table_view = self.findChild(QTableView)
+		table_view = self.table_view
+		if table_view:
+			#table_view.setDelegate(CalendarDelegate(calendar=self, parent=self))
+			table_view.setItemDelegate(CalendarDelegate(self))
+			table_view.verticalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+			# 设置垂直表头（周数列）样式
+			table_view.verticalHeader().setStyleSheet("""
+				QHeaderView::section {
+					background-color: transparent;  /* 浅灰色背景 */
+					color: palette(text);             /* 深灰色文字 */
+					border-right: 1px solid palette(text); /* 右侧分隔线 */
+					padding: 5px;
+					min-width: 30px;
+				}
+			""")
+			table_view.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+			table_view.setMouseTracking(True)
+	def dateFromIndex(self, index):
+		""" 安全获取日期的方法 """
+		year = self.yearShown()
+		month = self.monthShown()
+		day = index.data(Qt.DisplayRole)
 
-		title_layout.addWidget(self.title_label)
-		title_layout.addStretch()
-		title_layout.addLayout(btn_layout)
-		layout.addLayout(title_layout)
+		if isinstance(day, int) and 1 <= day <= 31:
+			return QDate(year, month, day)
+		return QDate()
 
-		self.view = QGraphicsView()
-		self.view.setFrameStyle(QFrame.NoFrame)
-		self.view.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-		self.scene = QGraphicsScene()
-		self.view.setScene(self.scene)
-		self.view.setRenderHints(self.view.renderHints() | QPainter.Antialiasing)
-		self.view.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
-		self.view.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-		self.view.clear_selection = self.clear_selection
-		self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+	def add_holiday(self, *dates):
+		for date in dates:
+			self.holidays.add(date)
+		self.updateCells()
 
-		layout.addLayout(btn_layout)
-		layout.addWidget(self.view)
-
-		self.current_year = QDate.currentDate().year()
-		self.current_month = QDate.currentDate().month()
-		self.update_title()
-		self.handle_page_changed(self.current_year, self.current_month)
-		self.draw_month(self.current_year, self.current_month)
-
-		# 快捷键绑定
-		QShortcut(QKeySequence(Qt.Key_Left), self.view, activated=self.go_to_prev_month)
-		QShortcut(QKeySequence(Qt.Key_Right), self.view, activated=self.go_to_next_month)
-		QShortcut(QKeySequence(Qt.Key_Home), self.view, activated=self.go_to_today)
-
-	def update_title(self):
-		self.title_label.setText(f"{self.current_year}年{self.current_month}月")
-
-	def resizeEvent(self, event):
-		super().resizeEvent(event)
-		# 更新标题字体
-		base_width = 700
-		scale = max(min(self.width() / base_width, 2.0), 0.6)  # 缩放范围限制
-		font_size = int(16 * scale)
-		font_size = max(12, min(font_size, 28))  # 限定字号范围
-
-		font = QFont()
-		font.setPointSize(font_size)
-		font.setBold(True)
-		self.title_label.setFont(font)
-
-		# 动态设置按钮字体大小
-		btn_font_size = int(12 * scale)
-		btn_font_size = max(10, min(btn_font_size, 20))
-		btn_font = QFont()
-		btn_font.setPointSize(btn_font_size)
-		self.prev_btn.setFont(btn_font)
-		self.today_btn.setFont(btn_font)
-		self.next_btn.setFont(btn_font)
-
-		# 更新日历栏大小
-		btn_height = 40  # 顶部按钮栏高度
-		w = self.width()
-		h = self.height() - btn_height
-		day_width = w / 7
-		day_height = h / 6
-		self.draw_month(self.current_year, self.current_month, day_width, day_height)
-
-	def draw_month(self, year, month, day_width=None, day_height=None):
-		self.scene.clear()
-		start_date, end_date = get_month_range(year, month)
-
-		if day_width is None:
-			day_width = self.view.width() / 7
-		if day_height is None:
-			day_height = self.view.height() / 6
-		col = 0
-		row = 0
-		today = QDate.currentDate()
-
-		current = QDate(start_date)
-		while current < end_date.addDays(1):
-			rect = QRectF(col * day_width, row * day_height, day_width - 2, day_height - 2)
-			item = CalendarDayItem(
-				rect=rect,
-				date=current,
-				is_current_month=(current.month() == month),
-				is_today=(current == today),
-				events=self.schedules[current]
-			)
-			# item.clicked.connect(self.date_clicked.emit)
-			item.right_clicked.connect(self.handle_right_click)
-			item.double_clicked.connect(self.double_clicked.emit)
-			self.scene.addItem(item)
-			col += 1
-			if col == 7:
-				col = 0
-				row += 1
-			current = current.addDays(1)
-		total_cols = 7
-		total_rows = 6  # 万年历标准排布（固定42格）
-
-		self.scene.setSceneRect(0, 0, total_cols * day_width, total_rows * day_height)
-
-	def go_to_month(self, year: int, month: int):
-		self.current_year = year
-		self.current_month = month
-		self.handle_page_changed(self.current_year, self.current_month)
-		self.draw_month(year, month)
-		self.update_title()
-
-	def go_to_prev_month(self):
-		if self.current_month == 1:
-			self.current_month = 12
-			self.current_year -= 1
-		else:
-			self.current_month -= 1
-		self.handle_page_changed(self.current_year, self.current_month)
-		self.draw_month(self.current_year, self.current_month)
-		self.update_title()
-
-	def go_to_next_month(self):
-		if self.current_month == 12:
-			self.current_month = 1
-			self.current_year += 1
-		else:
-			self.current_month += 1
-		self.handle_page_changed(self.current_year, self.current_month)
-		self.draw_month(self.current_year, self.current_month)
-		self.update_title()
-
-	def go_to_today(self):
-		today = QDate.currentDate()
-		self.current_year = today.year()
-		self.current_month = today.month()
-		self.handle_page_changed(today.year(), today.month())
-		self.go_to_month(today.year(), today.month())
-
-	def clear_selection(self):
-		for item in self.scene.items():
-			if isinstance(item, CalendarDayItem):
-				item._selected = False
-				item.update()
-
-	def add_schedule(self, event: BaseEvent):
+	def add_schedule(self, event: DDLEvent):	
 		date = QDate.fromString(event.datetime.split(" ")[0], "yyyy-MM-dd")
 		self.schedules[date].append(event)
+		self.updateCells()
 
 	def handle_page_changed(self, year: int, month: int):
 		"""月份或年份变化时的回调"""
+		#month += 1  # 注意：month 的范围是0~11
 		log.info(f"页面切换至: {year}年{month}月")
 		events = get_events_in_month(year, month)
 		self.schedules.clear()
 		for event in events:
 			self.add_schedule(event)
 
-	def handle_right_click(self, date: QDate, pos: QPoint):
-		# 找出触发右键的单元格
-		clicked_item = None
-		for item in self.scene.items():
-			if isinstance(item, CalendarDayItem) and item.date == date:
-				clicked_item = item
-				break
-
-		# 如果单元格未被选中，就单独选中它
-		if clicked_item and not clicked_item._selected:
-			self.clear_selection()
-			clicked_item._selected = True
-			clicked_item.update()
-
-		# 收集当前所有选中项
-		selected_items = [
-			item for item in self.scene.items()
-			if isinstance(item, CalendarDayItem) and item._selected
-		]
-		selected_dates = [item.date for item in selected_items]
-
-		# 构造右键菜单
-		menu = QMenu()
-		if len(selected_dates) == 1:
-			menu.addAction("查看当天日程", lambda: self.view_single_day.emit(date))
-			# TODO:
-			menu.addAction("删除该日全部事件", lambda: self.delete_events_for_day(selected_dates[0]))
-		else:
-			# TODO:
-			menu.addAction(f"删除所选 {len(selected_dates)} 天事件", lambda: self.delete_multiple_days(selected_dates))
-
-		menu.exec(pos)
-
-	def refresh(self):
-		log.info("刷新日历页面")
-		self.handle_page_changed(self.current_year, self.current_month)
-		self.draw_month(self.current_year, self.current_month)
-		self.update_title()

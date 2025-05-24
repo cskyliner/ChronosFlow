@@ -1,6 +1,6 @@
 from common import *
 from SideBar import SideBar
-from Calendar import CalendarView
+from NewCalendar import CalendarView
 from functools import partial
 from CreateEventWindow import Schedule
 from Emitter import Emitter
