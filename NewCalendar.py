@@ -85,7 +85,7 @@ class CalendarDayItem(QObject, QGraphicsRectItem):
 		btn_color = palette.color(QPalette.Button)  # 按钮背景色
 		light_color = palette.color(QPalette.Highlight)
 		if self._selected:  # 选中
-			painter.setBrush(QBrush(btn_color))
+			painter.setBrush(QBrush(light_color))
 		elif self._hovering:  # 悬浮
 			painter.setBrush(QBrush(light_color))
 		else:

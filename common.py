@@ -4,11 +4,13 @@ from PySide6.QtWidgets import (QApplication, QStyleFactory, QMainWindow, QWidget
 							   QSystemTrayIcon, QMenu, QListWidget, QListWidgetItem, QSpacerItem,
 							   QSizePolicy, QFrame, QDateTimeEdit, QGraphicsDropShadowEffect, QCalendarWidget,
 							   QScrollBar, QStyledItemDelegate, QTableView, QInputDialog, QHeaderView, QScrollArea,
-							   QDialog, QTextEdit, QStyleOptionViewItem, QStyle,QAbstractItemView)
+							   QDialog, QTextEdit, QStyleOptionViewItem, QStyle, QAbstractItemView)
 from PySide6.QtCore import (QPropertyAnimation, QEasingCurve, Qt, QDate, QTime, QDateTime, Signal, Slot, QSize, QObject,
-							QPoint, QTimer, QEvent, QPointF, QPersistentModelIndex, QRect, QModelIndex)
+							QPoint, QTimer, QEvent, QPointF, QPersistentModelIndex, QRect, QModelIndex, QFile,
+							QFileInfo)
 from PySide6.QtGui import (QIcon, QAction, QPixmap, QColor, QLinearGradient, QPainter, QMouseEvent,
-						   QPainter, QFontMetrics, QTextCharFormat, QPen, QCursor,QFont,QPalette,QBrush)
+						   QPainter, QFontMetrics, QTextCharFormat, QPen, QCursor, QFont, QPalette, QBrush,
+						   QImageReader)
 import logging
 import sys
 import os
