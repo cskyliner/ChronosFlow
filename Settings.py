@@ -33,7 +33,6 @@ class SettingsPage(QWidget):
 						padding: 0 3px;
 					}
 					""")
-
 		path_layout = QHBoxLayout()
 		path_label = QLabel("数据存储目录:")
 		set_font(path_label)
@@ -119,24 +118,25 @@ class SettingsPage(QWidget):
 					}
 					""")
 		set_font(notification_group)
-		notification_layout = QVBoxLayout()
+		notification_layout = QHBoxLayout()
 
 		# 启用通知复选框
 		self.notify_checkbox = QCheckBox("启用通知")
 		set_font(self.notify_checkbox)
 		notification_layout.addWidget(self.notify_checkbox)
 
+		spacer = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
+		notification_layout.addItem(spacer)
+
 		# 通知类型
-		notify_type_layout = QHBoxLayout()
 		notify_type_label = QLabel("通知类型:")
 		set_font(notify_type_label)
-		notify_type_layout.addWidget(notify_type_label)
+		notification_layout.addWidget(notify_type_label)
 
 		self.notify_type_combo = QComboBox()
 		self.notify_type_combo.addItems(["系统通知", "声音提醒", "两者都使用"])
 		set_font(self.notify_type_combo)
-		notify_type_layout.addWidget(self.notify_type_combo)
-		notification_layout.addLayout(notify_type_layout)
+		notification_layout.addWidget(self.notify_type_combo)
 
 		notification_group.setLayout(notification_layout)
 
@@ -173,6 +173,62 @@ class SettingsPage(QWidget):
 		volume_layout.addWidget(self.volume_label)
 		volume_group.setLayout(volume_layout)
 
+		# 壁纸路径
+		wallpaper_group = QGroupBox("壁纸")
+		wallpaper_group.setStyleSheet("""
+							QGroupBox {
+								border: 1px solid palette(mid);
+								border-radius: 10px;
+								margin-top: 1.5ex;
+								padding: 5px;
+							}
+							QGroupBox::title {
+								subcontrol-origin: margin;
+								left: 10px;
+								padding: 0 3px;
+							}
+							""")
+		set_font(wallpaper_group)
+		wallpaper_layout = QHBoxLayout()
+		wallpaper_label = QLabel("壁纸路径:")
+		set_font(wallpaper_label)
+		wallpaper_layout.addWidget(wallpaper_label)
+
+		self.wallpaper_path_edit = QLineEdit()
+		self.wallpaper_path_edit.setFixedHeight(35)
+		self.wallpaper_path_edit.setStyleSheet("""QLineEdit {
+					border-radius: 5px;
+					border:1px solid palette(mid);
+					background:transparent
+				}""")
+		self.wallpaper_path_edit.setPlaceholderText("请选择壁纸路径")
+		set_font(self.wallpaper_path_edit)
+		wallpaper_layout.addWidget(self.wallpaper_path_edit)
+
+		wallpaper_btn = QPushButton("浏览...")
+		wallpaper_btn.setFixedSize(80, 35)
+		wallpaper_btn.setStyleSheet("""
+		                QPushButton {
+		                    background-color: transparent;
+		                    border: 1px solid palette(mid);
+		                    border-radius: 4px;
+		                    padding: 0px;
+		                    text-align: center;
+		                }
+		                QPushButton:hover {
+		                    background-color: palette(midlight); /*轻微高亮*/
+		                    border-radius: 4px;
+		                }
+		                QPushButton:pressed {
+							background-color: palette(mid);
+						}
+		            """)
+		set_font(wallpaper_btn)
+		wallpaper_btn.clicked.connect(self.select_wallpaper_path)
+		wallpaper_layout.addWidget(wallpaper_btn)
+
+		wallpaper_group.setLayout(wallpaper_layout)
+
 		# 保存按钮
 		save_btn = QPushButton("保存设置")
 		save_btn.setStyleSheet("""
@@ -200,6 +256,7 @@ class SettingsPage(QWidget):
 		layout.addWidget(theme_group)
 		layout.addWidget(notification_group)
 		layout.addWidget(volume_group)
+		layout.addWidget(wallpaper_group)
 		layout.addStretch()
 		layout.addWidget(save_btn, alignment=Qt.AlignRight)
 		self.setLayout(layout)
@@ -237,6 +294,22 @@ class SettingsPage(QWidget):
 	# os.makedirs(path, exist_ok=True)
 	# self.config_path_cpy : str = os.path.join(path, "settings_cpy.json")
 
+	def select_wallpaper_path(self):
+		"""选择壁纸文件"""
+		if sys.platform == 'darwin':
+			file_filter = "Images (*.jpg *.png)"
+			file_path, _ = QFileDialog.getOpenFileName(self, "选择壁纸文件", "", file_filter)
+		else:
+			root = tk.Tk()
+			root.withdraw()
+			file_path = filedialog.askopenfilename(
+				title="选择壁纸文件",
+				filetypes=[("图片文件", "*.jpg *.jpeg *.png *.bmp")]
+			)
+		if file_path:
+			log.info(f"用户选择的壁纸文件: {file_path}")
+			self.wallpaper_path_edit.setText(file_path)  # 假设有另一个输入框
+
 	def get_config_path(self) -> str:
 		"""获取配置文件路径"""
 		# 获取默认存储路径
@@ -269,6 +342,10 @@ class SettingsPage(QWidget):
 					self.volume_slider.setValue(volume)
 					self.update_volume_label(volume)
 
+					# 加载壁纸路径
+					self.wallpaper_path = settings.get('wallpaper_path','')
+					self.wallpaper_path_edit.setText(self.wallpaper_path)
+
 					log.info(f"加载设置: {settings}")
 					# 发送信号通知储存路径
 					Emitter.instance().send_storage_path(
@@ -283,7 +360,8 @@ class SettingsPage(QWidget):
 				"theme": "系统默认",
 				"notifications_enabled": True,
 				"notification_type": "系统通知",
-				"volume": 50
+				"volume": 50,
+				"wallpaper_path": "无壁纸"
 			}
 			try:
 				with open(config_path, 'w', encoding='utf-8') as f:
@@ -296,6 +374,7 @@ class SettingsPage(QWidget):
 				volume = default_settings['volume']
 				self.volume_slider.setValue(volume)
 				self.update_volume_label(volume)
+				self.wallpaper_path_edit.setText(default_settings["wallpaper_path"])
 
 				self.save_settings(reminder=False)
 				log.info(f"创建默认设置: {default_settings}")
@@ -313,6 +392,7 @@ class SettingsPage(QWidget):
 			'notifications_enabled': self.notify_checkbox.isChecked(),
 			'notification_type': self.notify_type_combo.currentText(),
 			'volume': self.volume_slider.value(),
+			'wallpaper_path': self.wallpaper_path_edit.text(),
 			'last_modified': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 		}
 
@@ -359,6 +439,7 @@ class SettingsPage(QWidget):
     通知设置: {'启用' if settings['notifications_enabled'] else '禁用'}
     通知类型: {settings['notification_type']}
     音量级别: {settings['volume']}%
+    壁纸路径: {settings['wallpaper_path']}%
     最后修改: {settings['last_modified']}
 
     === 原始JSON数据 ===

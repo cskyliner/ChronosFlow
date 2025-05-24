@@ -1,7 +1,6 @@
 from common import *
 from SideBar import SideBar
-from Calendar import Calendar
-from NewCalendar import CalendarView
+from Calendar import CalendarView
 from functools import partial
 from CreateEventWindow import Schedule
 from Emitter import Emitter
@@ -12,6 +11,8 @@ from Notice import Notice
 from Upcoming import Upcoming, FloatingButton
 from FontSetting import set_font
 from Event import DDLEvent, get_events_in_month, BaseEvent
+import re
+
 log = logging.getLogger(__name__)
 
 
@@ -62,14 +63,6 @@ class MainWindow(QMainWindow):
 
 		# 主窗口（设计为堆叠窗口，有多个界面）
 		self.main_stack = QStackedWidget()
-		#self.main_stack.setStyleSheet("""
-		#					QStackedWidget{
-		#							background-image: url("local_data/1.jpg");  /* 图片路径 */
-		#							background-position: center;    /* 居中 */
-		#							background-repeat: no-repeat;   /* 不重复 */
-		#							background-size: contain;       /* 保持比例 */
-		#							}
-		#						""")
 		self.main_layout.addWidget(self.main_stack)
 
 		# 连接sidebar的信号
@@ -82,7 +75,7 @@ class MainWindow(QMainWindow):
 		self.setup_create_event_window()  # 日程填写窗口
 		self.setup_setting_window()  # 设置界面
 		self.setup_upcoming_window()  # 日程展示窗口
-		self.navigate_to("Calendar",self.main_stack)
+		self.navigate_to("Calendar", self.main_stack)
 		# TODO:更改日历加载事件逻辑，通过向后端发送时间端请求事件，不要耦合upcoming完成
 		cur_month = QDate.currentDate().month()
 		cur_year = QDate.currentDate().year()
@@ -99,6 +92,9 @@ class MainWindow(QMainWindow):
 
 		# 悬浮窗口初始化
 		self._init_floating_window()
+
+		# 设置壁纸
+		self.set_wallpaper(self.setting.wallpaper_path)
 
 		# 安装事件过滤器，处理Calendar页面的侧边栏的收放
 		self.main_stack.installEventFilter(self)
@@ -125,7 +121,7 @@ class MainWindow(QMainWindow):
 		upper_layout.setSpacing(0)
 		# 添加'<'按钮
 		sidebar_btn = QPushButton("<")
-		sidebar_btn.setFixedSize(35,30)
+		sidebar_btn.setFixedSize(35, 30)
 		sidebar_btn.setStyleSheet("""
 				                QPushButton {
 				                    background-color: transparent;
@@ -204,8 +200,10 @@ class MainWindow(QMainWindow):
 		# 创建日历界面
 		self.main_window_calendar = CalendarView()
 		# self.main_window_calendar.setGridVisible(False)
-		self.main_window_calendar.double_clicked.connect(lambda date: self.navigate_to("Upcoming", self.main_stack, date))
-		self.main_window_calendar.view_single_day.connect(lambda date: self.navigate_to("Upcoming", self.main_stack, date))
+		self.main_window_calendar.double_clicked.connect(
+			lambda date: self.navigate_to("Upcoming", self.main_stack, date))
+		self.main_window_calendar.view_single_day.connect(
+			lambda date: self.navigate_to("Upcoming", self.main_stack, date))
 		# 右侧搜索栏
 		self.search_column = Upcoming(1)
 		self.search_column.setMaximumWidth(0)
@@ -259,12 +257,12 @@ class MainWindow(QMainWindow):
 									background-color: palette(mid);
 								}
 				            """)
-		set_font(sidebar_btn,4)
+		set_font(sidebar_btn, 4)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 返回按钮，回到calendar
 		return_btn = QPushButton("✕")
-		return_btn.setFixedSize(35,30)
+		return_btn.setFixedSize(35, 30)
 		return_btn.setStyleSheet("""
 				                QPushButton {
 				                    background-color: transparent;
@@ -322,7 +320,7 @@ class MainWindow(QMainWindow):
 									background-color: palette(mid);
 								}
 				            """)
-		set_font(sidebar_btn,4)
+		set_font(sidebar_btn, 4)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 返回按钮，回到calendar
@@ -445,10 +443,11 @@ class MainWindow(QMainWindow):
 				self.upcoming.float_btn.clicked.disconnect()
 				if date is not None:
 					self.upcoming.show_specific_date(date)
-					self.upcoming.float_btn.clicked.connect(partial(self.navigate_to,"Schedule",self.main_stack,date))
+					self.upcoming.float_btn.clicked.connect(
+						partial(self.navigate_to, "Schedule", self.main_stack, date))
 				else:
 					self.upcoming.refresh_upcoming()
-					self.upcoming.float_btn.clicked.connect(partial(self.navigate_to,"Schedule",self.main_stack))
+					self.upcoming.float_btn.clicked.connect(partial(self.navigate_to, "Schedule", self.main_stack))
 			elif name == "Schedule":
 				self.schedule.group_box.setTitle("添加日程")
 				if not date is None:
@@ -618,3 +617,49 @@ class MainWindow(QMainWindow):
 		events: list[DDLEvent] = get_events_in_month(cur_year, cur_month)
 		self.main_window_calendar.schedules.clear()
 		self.load_event_in_calendar(events)
+
+	def is_valid_wallpaper(self, path: str) -> bool:
+		"""检查壁纸路径是否有效"""
+		# 1. 检查路径是否为空
+		if not path or path.strip() == "" or path == "无壁纸":
+			return False
+
+		# 2. 检查文件是否存在且可读
+		if not QFile(path).exists() or not QFile(path).permissions() & QFile.ReadUser:
+			return False
+
+		# 3. 检查文件格式是否被支持
+		supported_formats = QImageReader.supportedImageFormats()
+		file_suffix = QFileInfo(path).suffix().lower()
+		if file_suffix.encode() not in supported_formats:
+			return False
+
+		# 检查 Windows 下的合法路径格式
+		if sys.platform == "win32" and not re.match(r"^[a-zA-Z]:", path):
+			return False
+
+		# 检查 macOS 是否具有访问权限（沙盒环境下需要额外授权）
+		if sys.platform == "darwin" and not path.startswith("/Users/"):
+			log.error("警告：非用户目录可能无权限访问该壁纸路径")
+			return False
+
+		return True
+
+	def set_wallpaper(self, path: str):
+		"""安全设置壁纸背景"""
+		if self.is_valid_wallpaper(path):
+			# 处理路径格式
+			if " " in path:
+				path = f'"{path}"'  # 空格路径添加引号
+
+			# 更新样式表
+			self.main_stack.setStyleSheet(f"""
+				            QStackedWidget {{
+				                background-image: url({path});
+				                background-position: center;
+				                background-repeat: no-repeat;
+				                background-size: contain;
+				            }}
+				        """)
+		else:
+			log.error("警告：壁纸路径无效")

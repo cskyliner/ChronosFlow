@@ -174,7 +174,9 @@ class Schedule(QWidget):
 		# 存储所有动态创建的部件
 		self.ddl_widgets = self.create_ddl_widgets()
 		self.schedule_widgets = self.create_schedule_widgets()
-
+		#将汉语转为英语
+		self.chinese_to_english = {'周一': 'Monday', '周二': 'Tuesday', '周三': 'Wednesday', '周四': 'Thursday',
+								   '周五': 'Friday', '周六': 'Saturday', '周日': 'Sunday'}
 		# 连接信号槽
 		self.type_choose_combo.currentTextChanged.connect(self.update_dynamic_widgets)
 
@@ -187,12 +189,15 @@ class Schedule(QWidget):
 
 		self.save_btn = QPushButton("保存")
 		self.save_btn.clicked.connect(self.create_new_event)
+		self.save_btn.setMaximumHeight(100)
+		self.save_btn.setMaximumWidth(200)
+		# TODO:半透明
 		self.save_btn.setStyleSheet("""
                 QPushButton {
                     background-color: rgba(255, 255, 255, 0.4);
                     border: 1px solid palette(mid);
                 	border-radius: 4px;
-                    padding: 25px;
+                    padding: 10px;
                     text-align: center;
                 }
                 QPushButton:hover {
@@ -238,7 +243,7 @@ class Schedule(QWidget):
 		test_advance_time = datetime.addDays(-1)
 		test_advance_time_str = test_advance_time.toString("yyyy-MM-dd HH:mm")
   		"""
-		if theme:
+		if theme:  # 可以支持只有主题，没有内容，多行文本框会返回空字符串，没有问题
 			if _type == "DDL":
 				self.theme_text_edit.clear()
 				self.text_edit.clear()
@@ -265,10 +270,10 @@ class Schedule(QWidget):
 						self.id = None
 
 			elif _type == "日程":
-				start_date = self.start_date_edit.dateTime().toString("yyyy-MM-dd")
-				start_time = self.start_time_edit.dateTime().toString("HH:mm")
-				end_date = self.end_date_edit.dateTime().toString("yyyy-MM-dd")
-				end_time = self.end_time_edit.dateTime().toString("HH:mm")
+				start_date = self.start_date_edit.dateTime().toString("yyyy-MM-dd")  # 开始日期
+				start_time = self.start_time_edit.dateTime().toString("HH:mm")  # 开始时间
+				end_date = self.end_date_edit.dateTime().toString("yyyy-MM-dd")  # 结束日期
+				end_time = self.end_time_edit.dateTime().toString("HH:mm")  # 结束时间
 
 				if start_date > end_date:
 					QMessageBox.warning(self, "警告", "开始日期晚于结束日期")
@@ -280,9 +285,11 @@ class Schedule(QWidget):
 
 				self.theme_text_edit.clear()
 				self.text_edit.clear()
-				repeat=self.repeat_combo.currentText()
-				#TODO：传参
-
+				repeat = self.repeat_combo.currentText()#是否重复
+				repeat_day = None#哪天重复
+				if repeat != '不重复':
+					repeat_day = self.chinese_to_english[self.repeat_day_combo.currentText()]
+				# TODO：传参
 		else:
 			QMessageBox.warning(self, "警告", "请填写标题")
 
@@ -416,15 +423,21 @@ class Schedule(QWidget):
 		self.dynamic_layout.addWidget(repeat_label)
 		widgets.append(repeat_label)
 
-		# 每周几重复
+		# 重复
 		self.repeat_combo = QComboBox()
 		set_font(self.repeat_combo)
-		repeat_days = (
-			"无", "每周一", "每周二", "每周三", "每周四", "每周五", "每周六", "每周日", "每两周周一", "每两周周二",
-			"每两周周三", "每两周周四", "每两周周五", "每两周周六", "每两周周日")
+		repeat_days = ("不重复", "每周", "每两周")
 		self.repeat_combo.addItems(repeat_days)
 		self.dynamic_layout.addWidget(self.repeat_combo)
 		widgets.append(self.repeat_combo)
+		self.repeat_combo.currentTextChanged.connect(self.update_repeat_dynamic_widgets)
+
+		self.repeat_day_combo = QComboBox()
+		set_font(self.repeat_day_combo)
+		repeat_days = ("周一", "周二", "周三", "周四", "周五", "周六", "周日")
+		self.repeat_day_combo.addItems(repeat_days)
+		self.dynamic_layout.addWidget(self.repeat_day_combo)
+		widgets.append(self.repeat_day_combo)
 
 		return widgets
 
@@ -448,5 +461,13 @@ class Schedule(QWidget):
 			# 显示选项2的部件
 			for widget in self.schedule_widgets:
 				widget.show()
+			if self.repeat_combo.currentText() == '不重复':
+				self.repeat_day_combo.hide()
+
 		else:
 			log.error("警告：选择了除DDL和日程以外的种类")
+
+	def update_repeat_dynamic_widgets(self, selected_text):
+		self.repeat_day_combo.hide()
+		if not selected_text == "不重复":
+			self.repeat_day_combo.show()
