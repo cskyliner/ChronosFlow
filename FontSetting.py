@@ -21,6 +21,7 @@ delete_font.setPointSize(13)
 delete_font.setStrikeOut(True)
 
 one_day_font = QFont()  # 用于查看一天的日程时，没有日程的提示，4
+
 one_day_font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
 one_day_font.setPixelSize(20)
 one_day_font.setItalic(False)

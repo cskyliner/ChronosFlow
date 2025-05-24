@@ -285,6 +285,12 @@ class CalendarView(QWidget):
 		day_height = h / 6
 		self.draw_month(self.current_year, self.current_month, day_width, day_height)
 
+	def clear_selection(self):
+		for item in self.scene.items():
+			if isinstance(item, CalendarDayItem):
+				item._selected = False
+				item.update()
+
 	def draw_month(self, year, month, day_width=None, day_height=None):
 		self.scene.clear()
 		start_date, end_date = get_month_range(year, month)
