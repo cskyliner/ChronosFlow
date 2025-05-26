@@ -160,14 +160,14 @@ class CustomListItem(QWidget):
 	def __init__(self, event: DDLEvent, parent=None):
 		super().__init__(parent)
 		self.setAttribute(Qt.WA_StyledBackground, True)
+		self.setAutoFillBackground(False)
+		self.setMouseTracking(True)  # 启用鼠标跟踪
 		# 绑定item和对应的event
 		self.nevent = event
 
 		# 设置消息布局
 		layout = QHBoxLayout(self)
 		layout.setContentsMargins(5, 2, 5, 2)  # 边距：左、上、右、下
-		self.setStyleSheet("""CustomListItem {background-color: rgba(255, 255, 255, 0.6);border-radius: 15px;}
-				CustomListItem:hover {background-color: rgba(255, 255, 255, 0.8); /*轻微高亮*/}""")
 
 		# 是否完成的复选框
 		self.finish_checkbox = QCheckBox()
@@ -203,6 +203,34 @@ class CustomListItem(QWidget):
 		layout.addWidget(self.view_schedule_button)
 		layout.addWidget(self.delete_button)
 
+	def paintEvent(self, event):
+		#TODO:hover
+		painter = QPainter(self)
+		painter.setRenderHint(QPainter.Antialiasing)  # 抗锯齿
+
+		# 获取当前调色板的 Midlight 颜色
+		palette = self.palette()
+		base_color = palette.color(QPalette.Midlight)
+
+		# 如果鼠标悬停，使用更亮的颜色
+		if self.underMouse():
+			base_color = base_color.lighter(120)  # 增加20%亮度
+
+		# 设置 Alpha 透明度（180 = ~70% 透明度）
+		transparent_color = QColor(base_color)
+		transparent_color.setAlpha(180)
+
+		# 设置圆角半径（可以根据需要调整）
+		radius = 10.0
+
+		# 使用半透明颜色绘制圆角矩形
+		painter.setBrush(transparent_color)
+		painter.setPen(Qt.NoPen)  # 无边框
+
+		# 绘制圆角矩形
+		rect = self.rect().adjusted(1, 1, -1, -1)  # 稍微缩小一点以避免边缘裁剪
+		painter.drawRoundedRect(rect, radius, radius)
+
 	def this_one_is_deleted(self):
 		self.delete_me_signal.emit(self.nevent)
 
@@ -210,24 +238,24 @@ class CustomListItem(QWidget):
 		"""查看后发信号"""
 		self.view_and_edit_signal.emit(self.nevent)
 
-	def this_one_is_finished(self,checked:bool):
+	def this_one_is_finished(self, checked: bool):
 		"""打勾后发信号"""
 		self.nevent.done = checked
 		if isinstance(self.nevent, DDLEvent):
 			Emitter.instance().send_modify_event_signal(self.nevent.id, "DDL", *self.nevent.to_args())
 		else:
 			log.error(f"{type(self.nevent)}事件未实现")
-		# if checked:
-		# 	self.make_this_one_finished()
-		# else:
-		# 	self.make_this_one_unfinished()
+	# if checked:
+	# 	self.make_this_one_finished()
+	# else:
+	# 	self.make_this_one_unfinished()
 
-	# def make_this_one_finished(self):
-	# 	"""标记日程已完成"""
-	# 	self.finished_signal.emit(self.nevent)
+# def make_this_one_finished(self):
+# 	"""标记日程已完成"""
+# 	self.finished_signal.emit(self.nevent)
 
-	# def make_this_one_unfinished(self):
-	# 	self.unfinished_signal.emit(self.nevent)
+# def make_this_one_unfinished(self):
+# 	self.unfinished_signal.emit(self.nevent)
 
 
 class Record:
@@ -293,16 +321,16 @@ class Upcoming(QListWidget):
 			}
 			""")
 
-		self.kind = kind  										# 0:Upcoming页面的Upcoming；1:Calendar页面的search_column；2:某个日期的Upcoming
-		self.events_used_to_update: tuple[DDLEvent] = tuple()  	# 储存这次需要更新的至多10个数据
-		self.index_of_date_label = dict()  						# 储存显示日期的项的位置
-		self.items_of_one_date = dict()  						# 储存同一日期的项的位置,每个日期对应一个列表，列表中的项为tuple(id,位置)
-		self.loading = False  									# 是否正在加载
-		self.no_more_events = False  							# 是否显示全部数据
-		self.event_num = 0  									# 记录当前个数，传给后端提取数据
-		self.page_num = 10  									# 每页显示的事件数
-		self.loading_item = None  								# 加载标签
-		self.float_btn:FloatingButton = None 									# 悬浮按钮 
+		self.kind = kind  # 0:Upcoming页面的Upcoming；1:Calendar页面的search_column；2:某个日期的Upcoming
+		self.events_used_to_update: tuple[DDLEvent] = tuple()  # 储存这次需要更新的至多10个数据
+		self.index_of_date_label = dict()  # 储存显示日期的项的位置
+		self.items_of_one_date = dict()  # 储存同一日期的项的位置,每个日期对应一个列表，列表中的项为tuple(id,位置)
+		self.loading = False  # 是否正在加载
+		self.no_more_events = False  # 是否显示全部数据
+		self.event_num = 0  # 记录当前个数，传给后端提取数据
+		self.page_num = 10  # 每页显示的事件数
+		self.loading_item = None  # 加载标签
+		self.float_btn: FloatingButton = None  # 悬浮按钮
 
 		if self.kind == 0:
 			self.load_more_data()
@@ -632,7 +660,7 @@ class Upcoming(QListWidget):
 		✨ 点击下方 + 号添加首个日程"""
 
 		# 设置字体样式
-		set_font(self.notify_item,4)
+		set_font(self.notify_item, 4)
 
 		# 设置文字颜色（使用QColor）
 		self.notify_item.setForeground(QColor("#6c757d"))  # 中性灰文字
