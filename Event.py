@@ -2,22 +2,28 @@ from common import *
 import os
 import sqlite3
 from Emitter import Emitter
-
+from datetime import datetime, timedelta
 log = logging.getLogger(__name__)
 # ===默认连接数据库（应该不会启用）===
 DB_PATH = None
 conn = None
 cursor = None
 latest_ddlevent = None
-# ===数据名对应数据类型===
+# 字段类型映射表：用于根据字段名自动生成 SQL 建表语句
 TYPE_MAP = {
-	"title": "TEXT",
-	"datetime": "DATETIME",
-	"notes": "TEXT",
-	"importance": "TEXT",
-	"done": "INTEGER",
-	"advance_time": "DATETIME",
-	"tags": "TEXT",
+    "title": "TEXT",              # 事件标题
+    "datetime": "DATETIME",       # 截止时间或触发时间
+    "notes": "TEXT",              # 备注信息
+    "importance": "TEXT",         # 重要程度
+    "done": "INTEGER",            # 完成状态（0未完成/1完成/2过期）
+    "advance_time": "DATETIME",   # 提前提醒时间
+    "tags": "TEXT",               # 标签信息（预留）
+    "start_time": "TEXT",         # 开始时间（如09:00）
+    "end_time": "TEXT",           # 结束时间（如10:00）
+    "start_date": "TEXT",         # 起始日期（如2024-06-01）
+    "repeat_type": "TEXT",        # 重复类型（如"weekly"）
+    "repeat_until": "TEXT",       # 重复截止日期（如2024-12-31）
+    "repeat_days": "TEXT",        # 重复的周几（JSON字符串，例如["Mon", "Wed"]）
 }
 TABLE_MAP = {
 	"ddlevents": "DDL",
@@ -142,6 +148,7 @@ class DDLEvent(BaseEvent):
 			"importance": self.importance,
 			"done": self.done,
 		}
+	
 	def to_args(self) -> tuple:
 		return (self.title, self.datetime, self.notes, self.advance_time, self.importance, self.done)
 
@@ -156,29 +163,47 @@ class TaskEvent(BaseEvent):
 
 class ActivityEvent(BaseEvent):
 	"""
-	TODO:事件段1
-	输入：标题，开始事件，截止时间，笔记，提醒时间，重要程度
+	日程类event
+	输入：标题，每天开始时间，每天结束时间，开始日期，笔记，重要程度，重复类型如("weekly"、"biweekly），重复截止日期，重复具体星期
 	"""
 
-	def __init__(self, title:str, start_time:str, end_time:str, notes:str, advance_time:str, importance:str):
+	def __init__(self, title:str, start_time:str, end_time:str, start_date:str, notes:str, importance:str,repeat_type:str = None,repeat_until:str = None, repeat_days:tuple = None):
 		super().__init__(title)
 		self.start_time = start_time
 		self.end_time = end_time
+		self.start_date = start_date
 		self.notes = notes
-		self.advance_time = advance_time
 		self.importance = importance
+		self.repeat_type = repeat_type
+		self.repeat_until = repeat_until
+		# 将多个星期tuple转为json存入数据库
+		self.repeat_days = json.dumps(repeat_days) if repeat_type and len(repeat_type) > 0 else "[]"
 
 	def to_dict(self) -> dict:
 		return {
 			"title": self.title,
 			"start_time": self.start_time,
 			"end_time": self.end_time,
+			"start_date" : self.start_date,
 			"notes": self.notes,
-			"advance_time": self.advance_time,
 			"importance": self.importance,
+			"repeat_type": self.repeat_type,
+			"repeat_until": self.repeat_until,
+			"repeat_days": self.repeat_days,
 		}
+	
 	def to_args(self) -> tuple:
-		return (self.title, self.datetime, self.notes, self.advance_time, self.importance, self.done)
+		return (
+			self.title,
+			self.start_time,
+			self.end_time,
+			self.start_date,
+			self.notes,
+			self.importance,
+			self.repeat_type,
+			self.repeat_until,
+			self.repeat_days
+		)
 class EventFactory:
 	"""
 	事件工厂
@@ -186,7 +211,7 @@ class EventFactory:
 	registry: dict[str, BaseEvent] = {
 		"DDL": DDLEvent,
 		"Task": TaskEvent,
-		"Clock": ActivityEvent
+		"Activity": ActivityEvent
 	}
 
 	@classmethod

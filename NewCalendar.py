@@ -1,7 +1,6 @@
 from common import *
 from PySide6.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsRectItem, QGraphicsItem, QSizePolicy
 from PySide6.QtCore import QRectF
-from PySide6.QtGui import QShortcut, QKeySequence
 from Event import BaseEvent, get_events_in_month
 
 log = logging.getLogger(__name__)
@@ -51,7 +50,8 @@ class CalendarDayItem(QObject, QGraphicsRectItem):
 		super().mousePressEvent(event)
 
 	def mouseDoubleClickEvent(self, event):
-		if event.button() == Qt.LeftButton:
+		modifiers = QApplication.keyboardModifiers()
+		if event.button() == Qt.LeftButton and not (modifiers & Qt.ShiftModifier):
 			self.double_clicked.emit(self.date)
 		super().mouseDoubleClickEvent(event)
 
@@ -69,9 +69,9 @@ class CalendarDayItem(QObject, QGraphicsRectItem):
 		else:
 			# 按住Shift，切换当前选中状态
 			self._selected = not self._selected
-			self._selected = True
+
 		self.update()
-		super().mouseReleaseEvent(event)
+
 
 	def contextMenuEvent(self, event):
 		global_pos = event.screenPos()
@@ -181,8 +181,13 @@ class CalendarView(QWidget):
 		super().__init__()
 		# 日程信息
 		self.schedules = defaultdict(list)
+		# 绑定快捷键
+		self.setFocusPolicy(Qt.StrongFocus)
+		QShortcut(QKeySequence(Qt.Key_Left), self, self.go_to_prev_month)
+		QShortcut(QKeySequence(Qt.Key_Right), self, self.go_to_next_month)
+		QShortcut(QKeySequence(Qt.Key_Home), self, self.go_to_today)
 
-		layout = QVBoxLayout(self)  # 整体
+		layout = QVBoxLayout(self)  # 整体布局
 		layout.setContentsMargins(0, 0, 0, 0)
 		layout.setSpacing(0)
 		title_layout = QHBoxLayout()  # 标题布局
@@ -195,19 +200,19 @@ class CalendarView(QWidget):
 		self.title_label.setFont(font)
 		btn_layout = QHBoxLayout()  # 切换月份按钮布局
 		common_btn_style = """
-            QPushButton {
-                border: none;
-                background-color: palette(midlight);
-                padding: 4px 12px;
-                border-radius: 4px;
-            }
-            QPushButton:hover {
-                background-color: palette(mid);
-            }
-            QPushButton:pressed {
-                background-color: palette(mid);
-            }
-        """
+			QPushButton {
+				border: none;
+				background-color: palette(midlight);
+				padding: 4px 12px;
+				border-radius: 4px;
+			}
+			QPushButton:hover {
+				background-color: palette(mid);
+			}
+			QPushButton:pressed {
+				background-color: palette(mid);
+			}
+		"""
 		self.prev_btn = QPushButton("〈")
 		self.today_btn = QPushButton("Today")
 		self.next_btn = QPushButton("〉")
@@ -237,21 +242,21 @@ class CalendarView(QWidget):
 		self.view.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 		self.view.clear_selection = self.clear_selection
 		self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-		layout.addLayout(btn_layout)
+		self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+		self.view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+		self.view.setViewportUpdateMode(QGraphicsView.FullViewportUpdate)
 		layout.addWidget(self.view)
 
 		self.current_year = QDate.currentDate().year()
 		self.current_month = QDate.currentDate().month()
 		self.update_title()
 		self.handle_page_changed(self.current_year, self.current_month)
+
+	# 控制draw_month出发时间，避免第一次初始化时候在resize前draw
+	def showEvent(self, event):
+		super().showEvent(event)
 		self.draw_month(self.current_year, self.current_month)
-
-		# 快捷键绑定
-		QShortcut(QKeySequence(Qt.Key_Left), self.view, activated=self.go_to_prev_month)
-		QShortcut(QKeySequence(Qt.Key_Right), self.view, activated=self.go_to_next_month)
-		QShortcut(QKeySequence(Qt.Key_Home), self.view, activated=self.go_to_today)
-
+	
 	def update_title(self):
 		self.title_label.setText(f"{self.current_year}年{self.current_month}月")
 
@@ -278,11 +283,12 @@ class CalendarView(QWidget):
 		self.next_btn.setFont(btn_font)
 
 		# 更新日历栏大小
-		btn_height = 40  # 顶部按钮栏高度
-		w = self.width()
-		h = self.height() - btn_height
+		# 自适应高宽
+		w = self.view.viewport().width()
+		h = self.view.viewport().height()
 		day_width = w / 7
 		day_height = h / 6
+		self.view.resetTransform()
 		self.draw_month(self.current_year, self.current_month, day_width, day_height)
 
 	def clear_selection(self):
@@ -305,7 +311,7 @@ class CalendarView(QWidget):
 
 		current = QDate(start_date)
 		while current < end_date.addDays(1):
-			rect = QRectF(col * day_width, row * day_height, day_width - 2, day_height - 2)
+			rect = QRectF(col * day_width, row * day_height, day_width, day_height)
 			item = CalendarDayItem(
 				rect=rect,
 				date=current,
@@ -323,10 +329,9 @@ class CalendarView(QWidget):
 				row += 1
 			current = current.addDays(1)
 		total_cols = 7
-		total_rows = 6  # 万年历标准排布（固定42格）
-
+		total_rows = 6
 		self.scene.setSceneRect(0, 0, total_cols * day_width, total_rows * day_height)
-
+		
 	def go_to_month(self, year: int, month: int):
 		self.current_year = year
 		self.current_month = month
@@ -335,6 +340,7 @@ class CalendarView(QWidget):
 		self.update_title()
 
 	def go_to_prev_month(self):
+		log.info("上一月")
 		if self.current_month == 1:
 			self.current_month = 12
 			self.current_year -= 1
@@ -345,6 +351,7 @@ class CalendarView(QWidget):
 		self.update_title()
 
 	def go_to_next_month(self):
+		log.info("下一月")
 		if self.current_month == 12:
 			self.current_month = 1
 			self.current_year += 1
@@ -355,6 +362,7 @@ class CalendarView(QWidget):
 		self.update_title()
 
 	def go_to_today(self):
+		log.info("回到今天")
 		today = QDate.currentDate()
 		self.current_year = today.year()
 		self.current_month = today.month()

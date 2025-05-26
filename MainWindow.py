@@ -78,9 +78,9 @@ class MainWindow(QMainWindow):
 		self.main_stack_map = {}  # 名称→索引
 
 		# 设置 main_stack各页面的内容，注意初始化顺序
+		self.setup_setting_window()  # 设置界面
 		self.setup_main_window()  # 日历窗口（主界面）
 		self.setup_create_event_window()  # 日程填写窗口
-		self.setup_setting_window()  # 设置界面
 		self.setup_upcoming_window()  # 日程展示窗口
 		self.navigate_to("Calendar",self.main_stack)
 		# TODO:更改日历加载事件逻辑，通过向后端发送时间端请求事件，不要耦合upcoming完成
@@ -200,7 +200,6 @@ class MainWindow(QMainWindow):
 		middle_layout = QHBoxLayout()
 		# 创建日历界面
 		self.main_window_calendar = CalendarView()
-		# self.main_window_calendar.setGridVisible(False)
 		self.main_window_calendar.double_clicked.connect(lambda date: self.navigate_to("Upcoming", self.main_stack, date))
 		self.main_window_calendar.view_single_day.connect(lambda date: self.navigate_to("Upcoming", self.main_stack, date))
 		# 右侧搜索栏
