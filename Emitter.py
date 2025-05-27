@@ -48,7 +48,7 @@ class Emitter(QObject):
 		self.dynamic_signal.emit(args)
 
 	def send_view_and_edit_schedule_signal(self, data: tuple):
-		"""data[0]是一个DDLEvent，储存显示信息；data[1]是告诉navigate_to的信号，再传给后端确保编辑某日程
+		"""data[0]是一个BaseEvent，储存显示信息；data[1]是告诉navigate_to的信号，再传给后端确保编辑某日程
   		之后原来的这条日程被覆盖"""
 		self.view_and_edit_schedule_signal.emit(data)
 

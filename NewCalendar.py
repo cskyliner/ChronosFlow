@@ -383,6 +383,9 @@ class CalendarView(QWidget):
 		"""月份或年份变化时的回调"""
 		log.info(f"页面切换至: {year}年{month}月")
 		events = get_events_in_month(year, month)
+		if events is not None and len(events) > 0:
+			log.info(f"接收数据成功，共接收 {len(events)} 条数据：\n" +
+					 "\n".join(f"- {event.title} @ {event.datetime}" for event in events))
 		self.schedules.clear()
 		for event in events:
 			self.add_schedule(event)

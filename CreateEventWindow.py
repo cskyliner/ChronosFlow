@@ -93,12 +93,12 @@ class Schedule(QWidget):
 		super().__init__(parent)
 		self.standard_date = None
 		self.date = ['0000', '00', '00']  # 日期
-		self.datetime = ['00', '00']  # TODO:调整具体时间（小时，分钟）
+		self.datetime = ['00', '00']  # 调整具体时间（小时，分钟）
 		layout = QVBoxLayout(self)
 		layout.setSpacing(5)
 
 		# 创建框
-		self.group_box = QGroupBox("添加日程")
+		self.group_box = QGroupBox("添加DDL")
 		self.group_box.setStyleSheet("""
     		QGroupBox {
                 border: 1px solid palette(mid);
@@ -175,8 +175,8 @@ class Schedule(QWidget):
 		self.ddl_widgets = self.create_ddl_widgets()
 		self.schedule_widgets = self.create_schedule_widgets()
 		#将汉语转为英语
-		self.chinese_to_english = {'周一': 'Monday', '周二': 'Tuesday', '周三': 'Wednesday', '周四': 'Thursday',
-								   '周五': 'Friday', '周六': 'Saturday', '周日': 'Sunday'}
+		self.chinese_to_english = {'周一': 'Mon', '周二': 'Tue', '周三': 'Wed', '周四': 'Thu',
+								   '周五': 'Fri', '周六': 'Sat', '周日': 'Sun'}
 		# 连接信号槽
 		self.type_choose_combo.currentTextChanged.connect(self.update_dynamic_widgets)
 
@@ -231,7 +231,7 @@ class Schedule(QWidget):
 
 	def create_new_event(self):
 		"""
-		TODO:向Notice的schedule_notice发信号，重要程度的选择
+		向Notice的schedule_notice发信号，重要程度的选择
 		"""
 		_type = self.type_choose_combo.currentText()
 		theme = self.theme_text_edit.text()
@@ -254,14 +254,14 @@ class Schedule(QWidget):
 					if self.id is None:
 						# 新建事件
 						log.info(
-							f"创建新事件，标题：{theme}, 截止时间：{deadline}, 内容：{content}, 提前提醒时间：{reminder}, 重要程度：Great"),
+							f"创建新{_type}事件，标题：{theme}, 截止时间：{deadline}, 内容：{content}, 提前提醒时间：{reminder}, 重要程度：Great")
 						# DDL参数(标题，截止时间，具体内容，提前提醒时间，重要程度)
 						Emitter.instance().send_create_event_signal("DDL", theme, deadline, content, reminder, "Great")
 						QMessageBox.information(self, "保存成功",
 												f"主题: {theme}\n内容: {content}\n截止时间: {deadline}\n提醒时间: {reminder}")
 					else:
 						log.info(
-							f"修改事件，事件ID: {self.id} 标题：{theme}, 截止时间：{deadline}, 内容：{content}, 提前提醒时间：{reminder}, 重要程度：Great"),
+							f"修改{_type}事件，事件ID: {self.id},标题：{theme}, 截止时间：{deadline}, 内容：{content}, 提前提醒时间：{reminder}, 重要程度：Great")
 						# DDL参数(标题，截止时间，具体内容，提前提醒时间，重要程度)
 						Emitter.instance().send_modify_event_signal(self.id, "DDL", theme, deadline, content, reminder,
 																	"Great")
@@ -270,10 +270,10 @@ class Schedule(QWidget):
 						self.id = None
 
 			elif _type == "日程":
-				start_date = self.start_date_edit.dateTime().toString("yyyy-MM-dd")  # 开始日期
-				start_time = self.start_time_edit.dateTime().toString("HH:mm")  # 开始时间
-				end_date = self.end_date_edit.dateTime().toString("yyyy-MM-dd")  # 结束日期
-				end_time = self.end_time_edit.dateTime().toString("HH:mm")  # 结束时间
+				start_date = self.start_date_edit.dateTime().toString("yyyy-MM-dd")  	# 开始日期
+				start_time = self.start_time_edit.dateTime().toString("HH:mm")  		# 开始时间
+				end_date = self.end_date_edit.dateTime().toString("yyyy-MM-dd")  		# 结束日期
+				end_time = self.end_time_edit.dateTime().toString("HH:mm")  			# 结束时间
 
 				if start_date > end_date:
 					QMessageBox.warning(self, "警告", "开始日期晚于结束日期")
@@ -283,13 +283,25 @@ class Schedule(QWidget):
 						QMessageBox.warning(self, "警告", "开始时间晚于结束时间")
 						return
 
-				self.theme_text_edit.clear()
-				self.text_edit.clear()
-				repeat = self.repeat_combo.currentText()#是否重复
-				repeat_day = None#哪天重复
-				if repeat != '不重复':
+				repeat = self.repeat_combo.currentText()								#是否重复
+				repeat_day = None														#星期几重复
+				if repeat != "不重复":
 					repeat_day = self.chinese_to_english[self.repeat_day_combo.currentText()]
 				# TODO：传参
+				"""输入：标题，每天开始时间，每天结束时间，开始日期，终止日期，笔记，重要程度，重复类型如("weekly"、"biweekly），重复具体星期"""
+				if self.id is None:
+					# 新建事件
+					log.info(
+						f"创建新{_type}事件，标题：{theme}, 开始时间{start_time}, 结束时间{end_time}, 开始日期{start_date}, 结束日期{end_date}, 笔记{content}, 重要程度：'Great',重复类型：{repeat},重复星期：{repeat_day}")
+					Emitter.instance().send_create_event_signal("Activity", theme, start_time, end_time, start_date, end_date, content, "Great", repeat, repeat_day)
+					QMessageBox.information(self, "保存成功","")
+				else:
+					log.info(
+						f"修改{_type}事件，事件id：{self.id}，标题：{theme}, 开始时间{start_time}, 结束时间{end_time}, 开始日期{start_date}, 结束日期{end_date}, 笔记{content}, 重要程度：'Great',重复类型：{repeat},重复星期：{repeat_day}")
+					Emitter.instance().send_modify_event_signal(self.id, "Activity", theme, start_time, end_time, start_date, end_date, content, "Great", repeat, repeat_day)
+					QMessageBox.information(self, f"修改事件成功","")
+					# 刷新id
+					self.id = None
 		else:
 			QMessageBox.warning(self, "警告", "请填写标题")
 
@@ -455,10 +467,12 @@ class Schedule(QWidget):
 
 		if selected_text == "DDL":
 			# 显示选项1的部件
+			self.group_box.setTitle("添加DDL")
 			for widget in self.ddl_widgets:
 				widget.show()
 		elif selected_text == "日程":
 			# 显示选项2的部件
+			self.group_box.setTitle("添加日程")
 			for widget in self.schedule_widgets:
 				widget.show()
 			if self.repeat_combo.currentText() == '不重复':
@@ -468,6 +482,19 @@ class Schedule(QWidget):
 			log.error("警告：选择了除DDL和日程以外的种类")
 
 	def update_repeat_dynamic_widgets(self, selected_text):
+		"""
+		更新关于重复事件选择的选项
+		"""
 		self.repeat_day_combo.hide()
 		if not selected_text == "不重复":
 			self.repeat_day_combo.show()
+	
+	def refresh(self):
+		"""
+		刷新schedule
+		"""
+		self.id = None
+		self.theme_text_edit.clear()
+		self.text_edit.clear()
+		self.type_choose_combo.setCurrentText("DDL")
+		self.type_choose_combo.setEnabled(True)
