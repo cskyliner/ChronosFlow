@@ -75,11 +75,11 @@ class EyeButton(QPushButton):
 			}
 			QPushButton:hover {
 				color: #07C160;     /* 绿色悬停 */
-				background-color: rgba(7, 193, 96, 0.1); /* 浅绿色背景 */
+				background-color: rgba(7, 193, 96, 0.2); /* 浅绿色背景 */
 			}
 			QPushButton:pressed {
 				color: #05974C;
-				background-color: rgba(5, 151, 76, 0.2); /* 按压加深 */
+				background-color: rgba(5, 151, 76, 0.4); /* 按压加深 */
 			}
 		""")
 		self.setToolTip("查看")  # 增加提示文本
@@ -162,6 +162,15 @@ class CustomListItem(QWidget):
 		self.setAttribute(Qt.WA_StyledBackground, True)
 		self.setAutoFillBackground(False)
 		self.setMouseTracking(True)  # 启用鼠标跟踪
+		self.setStyleSheet("""
+		            CustomListItem {
+		                background-color: rgba(255, 255, 255, 0.6);
+		                border-radius: 15px;
+		            }
+		            CustomListItem:hover {
+		                background-color: rgba(255, 255, 255, 0.8); /*轻微高亮*/
+		            }
+		        """)
 		# 绑定item和对应的event
 		self.nevent = event
 
@@ -181,9 +190,7 @@ class CustomListItem(QWidget):
 
 		# 展示主题的标签
 		self.theme_display_label = QLabel(f"{event.title}")
-		self.theme_display_label.setStyleSheet("""
-				color: palette(text);
-		""")
+		self.theme_display_label.setStyleSheet("""color: black;""")
 		if event.done == 0:
 			set_font(self.theme_display_label)
 		else:
@@ -202,34 +209,6 @@ class CustomListItem(QWidget):
 		self.setLayout(layout)
 		layout.addWidget(self.view_schedule_button)
 		layout.addWidget(self.delete_button)
-
-	def paintEvent(self, event):
-		#TODO:hover
-		painter = QPainter(self)
-		painter.setRenderHint(QPainter.Antialiasing)  # 抗锯齿
-
-		# 获取当前调色板的 Midlight 颜色
-		palette = self.palette()
-		base_color = palette.color(QPalette.Midlight)
-
-		# 如果鼠标悬停，使用更亮的颜色
-		if self.underMouse():
-			base_color = base_color.lighter(120)  # 增加20%亮度
-
-		# 设置 Alpha 透明度（180 = ~70% 透明度）
-		transparent_color = QColor(base_color)
-		transparent_color.setAlpha(180)
-
-		# 设置圆角半径（可以根据需要调整）
-		radius = 10.0
-
-		# 使用半透明颜色绘制圆角矩形
-		painter.setBrush(transparent_color)
-		painter.setPen(Qt.NoPen)  # 无边框
-
-		# 绘制圆角矩形
-		rect = self.rect().adjusted(1, 1, -1, -1)  # 稍微缩小一点以避免边缘裁剪
-		painter.drawRoundedRect(rect, radius, radius)
 
 	def this_one_is_deleted(self):
 		self.delete_me_signal.emit(self.nevent)
@@ -256,29 +235,6 @@ class CustomListItem(QWidget):
 
 # def make_this_one_unfinished(self):
 # 	self.unfinished_signal.emit(self.nevent)
-
-
-class Record:
-	"""记录放到Upcoming里的日程"""
-
-	# TODO：现在没用
-	def __init__(self, id, pos, date, finished):
-		self.id = id
-		self.pos = pos  # 在Upcoming里的位置
-		self.date = date  # 格式："yyyy-MM-dd HH:mm"
-		self.finished = finished  # 是否完成
-
-	def __lt__(self, other):
-		if self.finished:
-			if other.finished:
-				return self.date < other.date
-			else:
-				return False
-		else:
-			if other.finished:
-				return True
-			else:
-				return self.date < other.date
 
 
 class Upcoming(QListWidget):
@@ -365,22 +321,23 @@ class Upcoming(QListWidget):
 		"""
 		在所有同一天的日程前加上日期
 		"""
-
 		today = QDate.currentDate()
 		tomorrow = today.addDays(1).toString("yyyy-MM-dd")
 		today = today.toString("yyyy-MM-dd")
 
 		date = date[:10]
 		if date == today:
-			date_item = QListWidgetItem('\n今天\n————————')
+			date_text = '\n今天\n————————'
 		elif date == tomorrow:
-			date_item = QListWidgetItem('\n明天\n————————')
+			date_text = '\n明天\n————————'
 		else:
 			tmp_date = date.split('-')
 			if date[:4] == today[:4]:
-				date_item = QListWidgetItem(f"\n{int(tmp_date[1])}月{int(tmp_date[2])}日\n————————")
+				date_text = f"\n{int(tmp_date[1])}月{int(tmp_date[2])}日\n————————"
 			else:
-				date_item = QListWidgetItem(f"\n{tmp_date[0]}年{int(tmp_date[1])}月{int(tmp_date[2])}日\n————————")
+				date_text = f"\n{tmp_date[0]}年{int(tmp_date[1])}月{int(tmp_date[2])}日\n————————"
+
+		date_item=QListWidgetItem(date_text)
 		set_font(date_item)
 
 		# 寻找插入位置（第一个比自身日期大的日期）
@@ -563,9 +520,6 @@ class Upcoming(QListWidget):
 				return
 			for event in self.events_used_to_update:
 				self.add_one_item(event)
-		elif self.kind == 2:
-			# TODO:只获取指定日期的待办
-			pass
 
 	def load_searched_data(self, text):
 		"""search_column"""

@@ -22,7 +22,7 @@ class SettingsPage(QWidget):
 		set_font(path_group)
 		path_group.setStyleSheet("""
 					QGroupBox {
-						border: 1px solid palette(mid);
+						border: 1px solid palette(text);
 						border-radius: 10px;
 						margin-top: 1.5ex;
 						padding: 5px;
@@ -78,7 +78,7 @@ class SettingsPage(QWidget):
 		set_font(theme_group)
 		theme_group.setStyleSheet("""
 					QGroupBox {
-						border: 1px solid palette(mid);
+						border: 1px solid palette(text);
 						border-radius: 10px;
 						margin-top: 1.5ex;
 						padding: 5px;
@@ -106,7 +106,7 @@ class SettingsPage(QWidget):
 		notification_group = QGroupBox("通知设置")
 		notification_group.setStyleSheet("""
 					QGroupBox {
-						border: 1px solid palette(mid);
+						border: 1px solid palette(text);
 						border-radius: 10px;
 						margin-top: 1.5ex;
 						padding: 5px;
@@ -144,7 +144,7 @@ class SettingsPage(QWidget):
 		volume_group = QGroupBox("音量设置")
 		volume_group.setStyleSheet("""
 					QGroupBox {
-						border: 1px solid palette(mid);
+						border: 1px solid palette(text);
 						border-radius: 10px;
 						margin-top: 1.5ex;
 						padding: 5px;
@@ -177,7 +177,7 @@ class SettingsPage(QWidget):
 		wallpaper_group = QGroupBox("壁纸")
 		wallpaper_group.setStyleSheet("""
 							QGroupBox {
-								border: 1px solid palette(mid);
+								border: 1px solid palette(text);
 								border-radius: 10px;
 								margin-top: 1.5ex;
 								padding: 5px;
