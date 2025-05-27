@@ -3,6 +3,7 @@ from common import *
 
 if sys.platform == 'darwin':
 	import pystray
+	import rumps
 	import threading
 from PIL import Image
 
@@ -47,24 +48,22 @@ class Tray(QObject):
 		self.tray.show()
 
 	def _init_macos_tray(self):
-		"""macOS托盘实现"""
-		log.info("初始化托盘")
-		self.load_frames()
-		self.tray = pystray.Icon(
-			"app_tray",
-			self._create_pillow_icon(),
-			"待办事项",
-			self._create_pystray_menu()
-		)
-		# def update_icon():
-		# 	while self.tray.visible:
-		# 		self.tray.icon = self.frames[self.frame_index]
-		# 		self.frame_index = (self.frame_index + 1) % len(self.frames)
-		# 		time.sleep(0.1)  # 控制帧率，10fps
+		"""macOS 托盘"""
+		self.tray = QSystemTrayIcon(self)
 
-		# threading.Thread(target=update_icon, daemon=True).start()
-		self.tray.run_detached()
+		# 加载 .icns 图标
+		icns_path = os.path.abspath("pic/icon.iconset/icon_512x512@2x.png")
+		icon = QIcon(icns_path)
+		self.tray.setIcon(icon)
 
+		menu = QMenu()
+		menu.addAction(QAction("打开主窗口", menu, triggered=lambda: self.show_main.emit()))
+		menu.addAction(QAction("打开悬浮窗", menu, triggered=lambda: self.show_floating.emit()))
+		menu.addAction(QAction("退出", menu, triggered=lambda: self.exit_app.emit()))
+		self.tray.setContextMenu(menu)
+		self.tray.activated.connect(self._on_tray_activated)
+		self.tray.show()
+		
 	def _create_fallback_tray(self):
 		"""创建备用托盘"""
 		self.tray = QSystemTrayIcon(self)
@@ -109,14 +108,12 @@ class Tray(QObject):
 			pystray.MenuItem('退出', self._pystray_exit)
 		)
 
-	# 暂时无用
+	# macOS
 	def _create_pillow_icon(self):
 		"""生成默认托盘图标"""
-		if self.frames:
-			return self.frames[0]
-		else:
-			img = Image.new('RGB', (64, 64), (70, 130, 180))
-			return img
+		icon_path = "pic/icon.iconset/icon_32x32@2x.png"
+		icon_image = Image.open(icon_path)
+		return icon_image
 
 	def load_frames(self, frame_folder='pic', frame_count=36):
 		"""TODO:macos托盘加载多帧PNG图像"""
@@ -135,6 +132,8 @@ class Tray(QObject):
 		event = data[0]
 		if platform.system() == 'Windows':
 			self.tray.showMessage(event.title, event.notes, QSystemTrayIcon.Information, 2000)
+		else:
+			rumps.notification(event.title, event.notes, "")
 
 	# macOS菜单回调函数
 	def _pystray_show_main(self, icon, item):
@@ -151,7 +150,8 @@ class Tray(QObject):
 		if platform.system() == 'Windows':
 			self.tray.hide()
 		else:
-			self.tray.stop()
+			# rumps 不需要显式停止，App 退出时自动清理
+			pass
 
 	def _connect_signals(self):
 		"""连接信号与槽"""

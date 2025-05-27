@@ -10,7 +10,7 @@ from FloatingWindow import FloatingWindow
 from Notice import Notice
 from Upcoming import Upcoming, FloatingButton
 from FontSetting import set_font
-from Event import DDLEvent, get_events_in_month, BaseEvent
+from Event import DDLEvent, get_events_in_month, BaseEvent, ActivityEvent
 import re
 
 log = logging.getLogger(__name__)
@@ -71,12 +71,11 @@ class MainWindow(QMainWindow):
 		self.main_stack_map = {}  # 名称→索引
 
 		# 设置 main_stack各页面的内容，注意初始化顺序
+		self.setup_setting_window()  # 设置界面
 		self.setup_main_window()  # 日历窗口（主界面）
 		self.setup_create_event_window()  # 日程填写窗口
-		self.setup_setting_window()  # 设置界面
 		self.setup_upcoming_window()  # 日程展示窗口
 		self.navigate_to("Calendar", self.main_stack)
-		# TODO:更改日历加载事件逻辑，通过向后端发送时间端请求事件，不要耦合upcoming完成
 		cur_month = QDate.currentDate().month()
 		cur_year = QDate.currentDate().year()
 		# self.get_events_in_month_from_backend(cur_year, cur_month)
@@ -436,9 +435,7 @@ class MainWindow(QMainWindow):
 		if name in self.main_stack_map:
 			# 向Schedule传输date
 			if name != "Schedule":
-				self.schedule.theme_text_edit.clear()
-				self.schedule.text_edit.clear()
-				self.schedule.id = None
+				self.schedule.refresh()
 			if name == 'Upcoming':
 				self.upcoming.float_btn.clicked.disconnect()
 				if date is not None:
@@ -449,7 +446,7 @@ class MainWindow(QMainWindow):
 					self.upcoming.refresh_upcoming()
 					self.upcoming.float_btn.clicked.connect(partial(self.navigate_to, "Schedule", self.main_stack))
 			elif name == "Schedule":
-				self.schedule.group_box.setTitle("添加日程")
+				self.schedule.group_box.setTitle("添加DDL")
 				if not date is None:
 					self.schedule.receive_date(date)
 				else:
@@ -464,13 +461,23 @@ class MainWindow(QMainWindow):
 
 	def check_one_schedule(self, data: tuple):
 		event: BaseEvent = data[0]
-		self.schedule.id = event.id
-		self.schedule.deadline_edit.setDateTime(QDateTime.fromString(event.datetime, "yyyy-MM-dd HH:mm"))
-		self.schedule.reminder_edit.setDateTime(QDateTime.fromString(event.advance_time, "yyyy-MM-dd HH:mm"))
-		self.schedule.theme_text_edit.setText(event.title)
-		self.schedule.text_edit.setPlainText(event.notes)
-		self.schedule.group_box.setTitle("编辑日程")
-		self.main_stack.setCurrentIndex(self.main_stack_map["Schedule"])
+		if isinstance(event,DDLEvent):
+			self.schedule.id = event.id
+			self.schedule.deadline_edit.setDateTime(QDateTime.fromString(event.datetime, "yyyy-MM-dd HH:mm"))
+			self.schedule.reminder_edit.setDateTime(QDateTime.fromString(event.advance_time, "yyyy-MM-dd HH:mm"))
+			self.schedule.theme_text_edit.setText(event.title)
+			self.schedule.text_edit.setPlainText(event.notes)
+			self.schedule.group_box.setTitle("编辑DDL")
+			self.schedule.type_choose_combo.setCurrentText("DDL")
+			self.schedule.type_choose_combo.setEnabled(False)
+			self.main_stack.setCurrentIndex(self.main_stack_map["Schedule"])
+		elif isinstance(event,ActivityEvent):
+			# TODO: 编辑日程时候对于事件的恢复
+			self.schedule.id = event.id
+			self.schedule.group_box.setTitle("编辑日程")
+			self.schedule.type_choose_combo.setCurrentText("日程")
+			self.schedule.type_choose_combo.setEnabled(False)
+
 
 	def setup_search_column_animation(self) -> None:
 		"""搜索结果栏展开动画设置"""
@@ -524,6 +531,7 @@ class MainWindow(QMainWindow):
 
 	def _init_tray(self):
 		"""初始化系统托盘"""
+
 		self.tray = Tray(
 			app=QApplication.instance(),
 			icon_path=self._get_icon_path()

@@ -1,6 +1,6 @@
 from common import *
 from PySide6.QtGui import QFont
-from Event import DDLEvent, get_events_in_month
+from Event import BaseEvent, get_events_in_month
 log = logging.getLogger(__name__)
 
 
@@ -22,7 +22,7 @@ class CalendarDelegate(QStyledItemDelegate):
 		self.weekend_format = QTextCharFormat()
 		self.weekend_format.setForeground(QColor("red"))
 
-		self.event: list[DDLEvent] = []
+		self.event: list[BaseEvent] = []
 		self.event_num = 0
 		#self.hovered_row = -1
 		#self.hovered_col = -1
@@ -307,7 +307,7 @@ class Calendar(QCalendarWidget):
 			self.holidays.add(date)
 		self.updateCells()
 
-	def add_schedule(self, event: DDLEvent):	
+	def add_schedule(self, event: BaseEvent):	
 		date = QDate.fromString(event.datetime.split(" ")[0], "yyyy-MM-dd")
 		self.schedules[date].append(event)
 		self.updateCells()

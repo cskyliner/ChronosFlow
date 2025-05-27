@@ -10,7 +10,7 @@ from PySide6.QtCore import (QPropertyAnimation, QEasingCurve, Qt, QDate, QTime, 
 							QFileInfo)
 from PySide6.QtGui import (QIcon, QAction, QPixmap, QColor, QLinearGradient, QPainter, QMouseEvent,
 						   QPainter, QFontMetrics, QTextCharFormat, QPen, QCursor, QFont, QPalette, QBrush,
-						   QImageReader)
+						   QImageReader,QShortcut,QKeySequence)
 import logging
 import sys
 import os

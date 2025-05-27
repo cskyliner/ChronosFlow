@@ -2,22 +2,29 @@ from common import *
 import os
 import sqlite3
 from Emitter import Emitter
-
+from datetime import datetime, timedelta
+from calendar import monthrange
 log = logging.getLogger(__name__)
 # ===默认连接数据库（应该不会启用）===
 DB_PATH = None
 conn = None
 cursor = None
 latest_ddlevent = None
-# ===数据名对应数据类型===
+# 字段类型映射表：用于根据字段名自动生成 SQL 建表语句
 TYPE_MAP = {
-	"title": "TEXT",
-	"datetime": "DATETIME",
-	"notes": "TEXT",
-	"importance": "TEXT",
-	"done": "INTEGER",
-	"advance_time": "DATETIME",
-	"tags": "TEXT",
+	"title": "TEXT",              # 事件标题
+	"datetime": "DATETIME",       # 截止时间或触发时间
+	"notes": "TEXT",              # 备注信息
+	"importance": "TEXT",         # 重要程度
+	"done": "INTEGER",            # 完成状态（0未完成/1完成/2过期）
+	"advance_time": "DATETIME",   # 提前提醒时间
+	"tags": "TEXT",               # 标签信息（预留）
+	"start_time": "TEXT",         # 开始时间（如09:00）
+	"end_time": "TEXT",           # 结束时间（如10:00）
+	"start_date": "TEXT",         # 起始日期（如2025-06-01）
+	"end_date": "TEXT",			  # 终止日期（如2025-06-02）
+	"repeat_type": "TEXT",        # 重复类型（如"weekly"）
+	"repeat_days": "TEXT",        # 重复的周几（JSON字符串，例如["Mon", "Wed"]）
 }
 TABLE_MAP = {
 	"ddlevents": "DDL",
@@ -52,7 +59,6 @@ def create_table_if_not_exist(table_name: str, data) -> None:
 	"""
 	cursor.execute(create_query)
 	conn.commit()
-
 
 class BaseEvent:
 	"""
@@ -142,6 +148,7 @@ class DDLEvent(BaseEvent):
 			"importance": self.importance,
 			"done": self.done,
 		}
+	
 	def to_args(self) -> tuple:
 		return (self.title, self.datetime, self.notes, self.advance_time, self.importance, self.done)
 
@@ -156,13 +163,117 @@ class TaskEvent(BaseEvent):
 
 class ActivityEvent(BaseEvent):
 	"""
-	TODO:事件段
+	日程类event
+	输入：标题，每天开始时间，每天结束时间，开始日期，终止日期，笔记，重要程度，重复类型如("weekly"、"biweekly），重复具体星期
 	"""
 
-	def __init__(self, title,):
+	def __init__(self, title:str, start_time:str, end_time:str, start_date:str, end_date:str, notes:str, importance:str = "Great",repeat_type:str = None, repeat_days:tuple = None):
 		super().__init__(title)
+		self.start_time = start_time
+		self.end_time = end_time
+		self.start_date = start_date
+		self.end_date = end_date
+		self.notes = notes
+		self.importance = importance
+		self.repeat_type = repeat_type
+		# 将多个星期tuple转为json存入数据库
+		self.repeat_days = json.dumps(repeat_days) if repeat_type and len(repeat_type) > 0 else "[]"
+		self.datetime = None
+
+	def to_dict(self) -> dict:
+		return {
+			"title": self.title,
+			"start_time": self.start_time,
+			"end_time": self.end_time,
+			"start_date" : self.start_date,
+			"end_date": self.end_date,
+			"notes": self.notes,
+			"importance": self.importance,
+			"repeat_type": self.repeat_type,
+			"repeat_days": json.loads(self.repeat_days),
+		}
+	
+	def to_args(self) -> tuple:
+		return (
+			self.title,
+			self.start_time,
+			self.end_time,
+			self.start_date,
+			self.end_date,
+			self.notes,
+			self.importance,
+			self.repeat_type,
+			json.loads(self.repeat_days),
+		)
+	
+	def expand(self, range_start:str, range_end:str) -> list[BaseEvent]:
+		"""
+		将重复日程扩展为多个单日日程
+		"""
+		# 转换为日期对象
+		result = []
+		start = datetime.strptime(range_start, "%Y-%m-%d").date()
+		end = datetime.strptime(range_end, "%Y-%m-%d").date()
+		base_start = datetime.strptime(self.start_date, "%Y-%m-%d").date()
+		base_end = datetime.strptime(self.end_date, "%Y-%m-%d").date()
+		repeat_days = json.loads(self.repeat_days)
+		if start > base_end or end < base_start:
+			log.error(f"{self.id} activity事件展开失败，起止日期错误")
+			return result
+		if self.repeat_type == "不重复":
+			event = self._create_occurrence(base_start)
+			result.append(event)
+		elif self.repeat_type == "每周":
+			current = max(start,base_start)
+			while current <= min(end, base_end):
+				if self._is_valid_recurrence_day(current, repeat_days):
+					result.append(self._create_occurrence(current))
+				current += timedelta(days=1)
+		elif self.repeat_type == "每两周":
+			current = max(start,base_start)
+			while current <= min(end, base_end):
+				delta_days = (current - base_start).days
+				week_index = delta_days // 7
+				if week_index % 2 == 0 and self._is_valid_recurrence_day(current, repeat_days):
+					result.append(self._create_occurrence(current))
+				current += timedelta(days=1)
+		else:
+			log.error(f"错误的重复类型，无法展开{self.id} activity事件")
+		return result
 
 
+	def _create_occurrence(self, date_obj:datetime) -> "ActivityEvent":
+		"""
+		创建子日程
+		"""
+		occ = ActivityEvent(
+				self.title,
+				self.start_time,
+				self.end_time,
+				self.start_date,
+				self.end_date,
+				self.notes,
+				self.importance,
+				self.repeat_type,
+				json.loads(self.repeat_days)	
+		)
+		# 记录原始id，便于后续从扩张出的事件中修改原重复事件
+		occ.id = self.id
+		# 记录某天发生的事件（开始时间），与ddl的datetime保持一致，方便复用
+		occ.datetime =f"{date_obj.strftime('%Y-%m-%d')} {self.start_time}"
+		return occ
+	
+	def _is_valid_recurrence_day(self, date_obj:datetime, repeat_days: list[str]) -> bool:
+		"""
+		判断某天是否为重复事件之一
+		"""
+		weekday_map = {
+		0: "Mon", 1: "Tue", 2: "Wed", 3: "Thu",
+		4: "Fri", 5: "Sat", 6: "Sun"
+		}
+		weekday_str = weekday_map[date_obj.weekday()]
+		return weekday_str in repeat_days
+	
 class EventFactory:
 	"""
 	事件工厂
@@ -170,11 +281,11 @@ class EventFactory:
 	registry: dict[str, BaseEvent] = {
 		"DDL": DDLEvent,
 		"Task": TaskEvent,
-		"Clock": ActivityEvent
+		"Activity": ActivityEvent
 	}
 
 	@classmethod
-	def create(cls, id:int , event_type: str, add: bool, *args) -> DDLEvent:
+	def create(cls, id:int , event_type: str, add: bool, *args) -> BaseEvent:
 		"""
 		根据种类创造不同Event
 		:params: id:事件ID event_type:事件类型 add:是否添加到数据库 *args:参数
@@ -185,7 +296,7 @@ class EventFactory:
 			raise Exception(f"EventFactory.create:event_type {event_type} not supported")
 		event_cls = cls.registry[event_type]
 		try:
-			n_event: DDLEvent = event_cls(*args)
+			n_event: BaseEvent = event_cls(*args)
 			if add is True and id is None:
 				# 此时纯粹为创建新事件
 				n_event.add_event()
@@ -216,7 +327,6 @@ class EventFactory:
 			log.error(f"EventFactory.create:创建event失败，创建使用参数为{args}，Error:{e}")
 			return None
 
-
 def receive_signal(recieve_data: tuple) -> None:
 	"""
 	接收信号函数
@@ -225,7 +335,7 @@ def receive_signal(recieve_data: tuple) -> None:
 	if not recieve_data or len(recieve_data) == 0:
 		log.error("receive_signal:接收信号失败，参数为空")
 	elif recieve_data[0] == "create_event":
-		log.info(f"receive_signal:接收{recieve_data[0]}信号成功，创建{recieve_data[2]}事件，参数为{recieve_data[3:]}")
+		log.info(f"receive_signal:接收{recieve_data[0]}信号成功，创建{recieve_data[1]}事件，参数为{recieve_data[3:]}")
 		event_type = recieve_data[1]  				# 事件类型
 		add = recieve_data[2]  						# 是否添加到数据库
 		args = recieve_data[3:]  					# 事件参数
@@ -279,7 +389,7 @@ def request_signal(recieve_data: tuple) -> None:
 	"""
 	处理请求信号并回传数据
 	"""
-	result = ()
+	result = ()		# tuple便于信号传递
 	signal_name = recieve_data[0]
 	if signal_name == "search_all":
 		keyword = recieve_data[1]
@@ -292,7 +402,9 @@ def request_signal(recieve_data: tuple) -> None:
 		log.info(f"request_signal:接收{signal_name}请求信号成功，获取事件")
 	elif signal_name == "update_specific_date_upcoming":
 		date = recieve_data[1][0]
-		result = get_specific_date_events("ddlevents", date)
+		tmp = get_specific_date_events("ddlevents", date)
+		tmp += get_specific_date_events("activityevents", date)
+		result = tuple(tmp)
 		log.info(f"request_signal:接收{signal_name}请求信号成功，获取事件")
 	elif signal_name == "search_time":
 		raise NotImplementedError("时间范围搜索功能尚未实现")
@@ -331,51 +443,83 @@ def get_latest_ddlevent(now_time:str) -> DDLEvent:
 	latest_ddlevent = event
 	return event
 
-def get_events_in_month(year: int, month: int) -> list[DDLEvent]:
-    """
-    获取指定年份和月份的所有 DDL 事件（基于 advance_time 字段匹配年月）。
-    返回 DDLEvent 列表。
-    """
-    # 验证输入
-    if month < 1 or month > 12:
-        log.warning(f"get_events_in_month:无效的月份输入: {month}")
-        return []
-    # 构造 SQL 查询：同时匹配年份和月份
-    query = """
-        SELECT * FROM ddlevents 
-        WHERE strftime('%Y', advance_time) = ? 
-          AND strftime('%m', advance_time) = ?
-        ORDER BY advance_time ASC
-    """
-    year_str = f"{year:04d}"  # 补零为4位（如 2024）
-    month_str = f"{month:02d}"  # 补零为2位（如 07）
+def get_month_range_str(year: int, month: int):
+	"""
+	获得该月的起止日期
+	"""
+	first_day = f"{year:04d}-{month:02d}-01"
+	last_day = f"{year:04d}-{month:02d}-{monthrange(year, month)[1]:02d}"
+	return first_day, last_day
 
-    try:
-        cursor.execute(query, (year_str, month_str))
-        rows = cursor.fetchall()
-    except Exception as e:
-        log.error(f"get_events_in_month:数据库查询失败: {e}")
-        return []
+def get_events_in_month(year: int, month: int) -> list[BaseEvent]:
+	"""
+	获取指定年份和月份的所有事件（ddl基于 datetime 字段匹配年月,activity 先判断起止日期是否落入月份，其次如果是重复事件则展开再进行筛选）。
+	返回 BaseEvent 列表。
+	"""
+	# 验证输入
+	if month < 1 or month > 12:
+		log.warning(f"get_events_in_month:无效的月份输入: {month}")
+		return []
+	# 构造 SQL 查询：同时匹配年份和月份
+	# 查询ddl
+	ddl_query = """
+		SELECT * FROM ddlevents 
+		WHERE strftime('%Y', datetime) = ? 
+		  AND strftime('%m', datetime) = ?
+		ORDER BY datetime ASC
+	"""
 
-    events = []
-    for row in rows:
-        try:
-            # 假设数据库字段顺序：id, title, advance_time, notes, ...
-            paras = row[1:]  # 跳过 id 列
-            event = EventFactory.create(None, "DDL", False, *paras)
-            if event is not None:
-                event.id = row[0]  # 设置事件ID
-                events.append(event)
-                log.debug(f"get_events_in_month:加载事件成功: {event.title} @ {event.advance_time}")
-        except Exception as e:
-            log.error(f"get_events_in_month:解析事件失败（ID={row[0]}）: {e}")
+	year_str = f"{year:04d}"  # 补零为4位（如 2024）
+	month_str = f"{month:02d}"  # 补零为2位（如 07）
+	# 查询activity
+	first_day, last_day = get_month_range_str(year,month)
+	activity_query = f"""
+		SELECT * FROM activityevents
+		WHERE 
+			(date(start_date) <= '{last_day}')
+		AND (date(end_date) >= '{first_day}')
+	"""
+	ddl_rows = []
+	activity_rows = []
+	try:
+		cursor.execute(ddl_query, (year_str, month_str))
+		ddl_rows = cursor.fetchall()
+	except Exception as e:
+		log.error(f"get_events_in_month:ddl_events数据库查询失败: {e}")
+	try:
+		cursor.execute(activity_query)
+		activity_rows = cursor.fetchall()
+	except Exception as e:
+		log.error(f"get_events_in_month:activity_events数据库查询失败: {e}")
+	events = []
+	for row in ddl_rows:
+		try:
+			# 假设数据库字段顺序：id, title, advance_time, notes, ...
+			paras = row[1:]  # 跳过 id 列
+			event = EventFactory.create(None, "DDL", False, *paras)
+			if event is not None:
+				event.id = row[0]  # 设置事件ID
+				events.append(event)
+				log.debug(f"get_events_in_month:加载ddl事件成功: {event.title} @ {event.datetime}-{event.advance_time}")
+		except Exception as e:
+			log.error(f"get_events_in_month:解析ddl事件失败（ID={row[0]}）: {e}")
 
-    log.info(f"get_events_in_month:找到 {len(events)} 个事件（{year}年{month}月）")
-    return events
+	for row in activity_rows:
+		try:
+			paras = row[1:]
+			event:ActivityEvent = EventFactory.create(None, "Activity", False, *paras)
+			if event is not None:
+				event.id = row[0]
+				events += event.expand(first_day,last_day)
+		except Exception as e:
+			log.error(f"get_events_in_month:解析activity事件失败（ID={row[0]}）: {e}")
+
+	log.info(f"get_events_in_month:找到 {len(events)} 个事件（{year}年{month}月）")
+	return events
 
 def search_all(keyword: tuple[str]) -> list[BaseEvent]:
 	"""
-	多关键词模糊性全局搜索（AND关系）
+	多关键词模糊性全局搜索（AND关系）,改为只搜索title和notes
 	"""
 	result: list[BaseEvent] = []
 	cursor.execute("SELECT name FROM sqlite_master WHERE type ='table' AND name != 'global_id'")  					# 获取所有table
@@ -383,7 +527,7 @@ def search_all(keyword: tuple[str]) -> list[BaseEvent]:
 	for table in tables:
 		cursor.execute(f"PRAGMA table_info({table})")  										# 通过PRAGMA获取table列信息
 		columns_info = cursor.fetchall()
-		possible_columns = [column[1] for column in columns_info if "TEXT" == column[2]] 	# 排除格式非TEXT的列
+		possible_columns = [column[1] for column in columns_info if "TEXT" == column[2] and ("title" == column[1] or "notes" == column[1]) ] 	# 排除格式非TEXT的列
 		if not possible_columns:
 			continue
 		# 拼接语句，注意使用AND连接
@@ -400,9 +544,11 @@ def search_all(keyword: tuple[str]) -> list[BaseEvent]:
 			paras = row[1:]
 			event = EventFactory.create(None, TABLE_MAP.get(table, "DDL"), False, *paras)
 			event.id = row[0]
-			result.append(event)
+			if isinstance(event, DDLEvent):
+				result.append(event)
+			elif isinstance(event, ActivityEvent):
+				result += event.expand(event.start_date,event.end_date)
 	return result
-
 
 def search_time(start_time: str, end_time: str) -> list[BaseEvent]:
 	"""
@@ -427,52 +573,75 @@ def search_time(start_time: str, end_time: str) -> list[BaseEvent]:
 			result.append(event)
 	return result
 
-
-
-def get_specific_date_events(table_name:str, date: QDate) -> tuple[BaseEvent]:
-    '''
-    从数据库中找到指定 QDate 当天的全部日程事件
-    '''
-    # 将 QDate 转换为 ISO 格式字符串（如 "2023-10-05"）
-    target_date = date.toString("yyyy-MM-dd")
+def get_specific_date_events(table_name:str, date: QDate) -> list[BaseEvent]:
+	'''
+	从数据库中找到指定 QDate 当天的全部日程事件
+	'''
+	# 将 QDate 转换为 ISO 格式字符串（如 "2023-10-05"）
+	target_date = date.toString("yyyy-MM-dd")
 	# 查找对应表
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
-    tables = [row[0] for row in cursor.fetchall()]
+	cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+	tables = [row[0] for row in cursor.fetchall()]
 
-    if table_name not in tables:
-        log.error(f"事件表 {table_name} 不存在")
-        return []
+	if table_name not in tables:
+		log.error(f"事件表 {table_name} 不存在")
+		return []
 	# 查找指定时间的事件
-    query = f"""
-        SELECT * FROM {table_name}
-        WHERE date(datetime) = ?
-        ORDER BY datetime ASC  -- 按时间升序排列
-    """
-    cursor.execute(query, (target_date,))
-    rows = cursor.fetchall()
-    log.info(f"get_specific_date_events:找到 {len(rows)} 条 {target_date} 的事件记录")
+	rows = []
+	if table_name == "ddlevents":
+		ddl_query = f"""
+			SELECT * FROM {table_name}
+			WHERE date(datetime) = ?
+			ORDER BY datetime ASC
+		"""
+		cursor.execute(ddl_query, (target_date,))
+		rows = cursor.fetchall()
+	elif table_name == "activityevents":
+		activity_query = f"""
+			SELECT * FROM {table_name}
+			WHERE (date(start_date) <= ?)
+			AND (date(end_date) >= ?)
+			ORDER BY start_time ASC 
+		"""
+		cursor.execute(activity_query,(target_date,target_date))
+		rows = cursor.fetchall()
+	else:
+		log.error(f"{table_name}类事件未设置")
 
-    # 转换为 BaseEvent 对象
-    events = []
-    for row in rows:
-        event_id = row[0]
-        paras = row[1:]
-        event_type = TABLE_MAP.get(table_name, "DDL")
-        event = EventFactory.create(event_id,event_type,False,*paras)
-        events.append(event)
+	log.info(f"get_specific_date_events:找到 {len(rows)} 条 {target_date} 的事件记录")
 
-    return tuple(events) 						
+	# 转换为 BaseEvent 对象
+	events = []
+	if table_name == "ddlevents":
+		for row in rows:
+			event_id = row[0]
+			paras = row[1:]
+			event_type = "DDL"
+			event:DDLEvent = EventFactory.create(event_id,event_type,False,*paras)
+			events.append(event)
+	elif table_name == "activityevents":
+		for row in rows:
+			event_id = row[0]
+			paras = row[1:]
+			event_type = "Activity"
+			event:ActivityEvent = EventFactory.create(event_id,event_type,False,*paras)
+			result = event.expand(target_date,target_date)
+			events += result
+	return events
 
 def get_data_time_order(table_name: str, start_pos: int, event_num: int) -> tuple[BaseEvent]:
 	'''
-	从指定数据库中按时间顺序获取数据，从start_pos开始，取num个返回
+	从指定数据库中按时间顺序获取ddl数据，从start_pos开始，取num个返回
 	'''
 	cursor.execute(f"SELECT name FROM sqlite_master WHERE type ='table'")  # 获取所有table名称
 	tables = [row[0] for row in cursor.fetchall()]
 	if table_name not in tables:
 		log.error(f"{table_name}不存在")
 		return ()
-	query = f"SELECT * FROM {table_name} ORDER BY datetime ASC LIMIT {event_num} OFFSET {start_pos}"
+	if table_name == "ddlevents":
+		query = f"SELECT * FROM {table_name} ORDER BY datetime ASC LIMIT {event_num} OFFSET {start_pos}"
+	else:
+		query = f"SELECT * FROM {table_name} ORDER BY datetime ASC LIMIT {event_num} OFFSET {start_pos}"	
 	cursor.execute(query)
 	rows = cursor.fetchall()
 	log.info(f"获取数据成功，数据为{rows}")
