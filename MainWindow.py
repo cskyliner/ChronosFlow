@@ -10,6 +10,7 @@ from Tray import Tray
 from FloatingWindow import FloatingWindow
 from Notice import Notice
 from Upcoming import Upcoming, FloatingButton
+from Weekview import WeekView
 from FontSetting import set_font
 from Event import DDLEvent, get_events_in_month, BaseEvent
 log = logging.getLogger(__name__)
@@ -83,6 +84,7 @@ class MainWindow(QMainWindow):
 		self.setup_create_event_window()  # 日程填写窗口
 		self.setup_setting_window()  # 设置界面
 		self.setup_upcoming_window()  # 日程展示窗口
+		self.setup_week_view_window()
 		self.navigate_to("Calendar",self.main_stack)
 		# TODO:更改日历加载事件逻辑，通过向后端发送时间端请求事件，不要耦合upcoming完成
 		cur_month = QDate.currentDate().month()
@@ -284,7 +286,69 @@ class MainWindow(QMainWindow):
 		self.schedule = Schedule()
 		schedule_layout.addWidget(self.schedule)
 		self.add_page(self.main_stack, self.create_event_window, "Schedule")
+	def setup_week_view_window(self):
+		"""创建周视图窗口"""
+		self.week_view_window = QWidget()
+		week_view_layout = QVBoxLayout()  # 内容区域布局
+		week_view_layout.setSpacing(0)
+		week_view_layout.setContentsMargins(20, 5, 20, 20)
+		self.week_view_window.setLayout(week_view_layout)
 
+		# 顶部按钮布局
+		btn_layout = QHBoxLayout()
+		btn_layout.setContentsMargins(0, 0, 0, 0)  # 移除边距
+		week_view_layout.addLayout(btn_layout)
+
+		# 侧边栏切换按钮
+		sidebar_btn = QPushButton("<")
+		sidebar_btn.setStyleSheet("""
+			QPushButton {
+				background-color: transparent;
+				border: none;
+				padding: 0;
+				margin: 0;
+				text-align: center;
+				color: #a0a0a0;
+			}
+			QPushButton:hover {
+				color: #07C160;
+			}
+			QPushButton:pressed {
+				color: #05974C;
+			}
+		""")
+		set_font(sidebar_btn)
+		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
+
+		# 返回按钮，回到calendar
+		return_btn = QPushButton("✕")
+		return_btn.setStyleSheet("""
+			QPushButton {
+				background-color: transparent;
+				border: none;
+				padding: 0;
+				margin: 0;
+				text-align: center;
+				color: #a0a0a0;
+			}
+			QPushButton:hover {
+				color: rgb(235,51,36);
+			}
+			QPushButton:pressed {
+				color: rgb(189,41,29);
+			}
+		""")
+		set_font(return_btn, 1)
+		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
+
+		btn_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
+		btn_layout.addWidget(return_btn, alignment=Qt.AlignmentFlag.AlignRight)
+
+		# 添加周视图内容
+		self.week_view = WeekView()
+		week_view_layout.addWidget(self.week_view)
+		
+		self.add_page(self.main_stack, self.week_view_window, "Weekview")
 	def setup_setting_window(self):
 		"""创建设置栏"""
 		self.setting_window = QWidget()

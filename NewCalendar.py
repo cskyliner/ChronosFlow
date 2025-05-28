@@ -75,6 +75,7 @@ class CalendarDayItem(QObject, QGraphicsRectItem):
 
     def paint(self, painter, option, widget=None):
 
+
         if self._selected:                              # 选中
             painter.setBrush(QColor("#cce8ff"))
         elif self._hovering:                            # 悬浮
@@ -84,7 +85,7 @@ class CalendarDayItem(QObject, QGraphicsRectItem):
 
         painter.setPen(QPen(QColor("#cccccc")))
         painter.drawRect(self.rect())
-        painter.setPen(QColor("#409EFF") if self.is_today else Qt.black)
+        painter.setPen(QColor("#1880E7") if self.is_today else Qt.black)
         if self.date.day() == 1:
             rect = self.rect()
             # 月份字体较大
@@ -131,7 +132,7 @@ class CalendarDayItem(QObject, QGraphicsRectItem):
         font = painter.font()
         font.setPointSize(dynamic_font_size)
         painter.setFont(font)
-        painter.setPen(QColor("#555555"))
+        painter.setPen(QColor("#E41818"))
 
         font_metrics = QFontMetrics(font)
         line_height = font_metrics.lineSpacing()
@@ -167,7 +168,7 @@ class CalendarView(QWidget):
         super().__init__()
         # 日程信息
         self.schedules = defaultdict(list)
-
+        self.weekday_font = QFont("Microsoft YaHei", 10, QFont.Bold)
         layout = QVBoxLayout(self)                                      # 整体
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
@@ -268,7 +269,8 @@ class CalendarView(QWidget):
         w = self.width()
         h = self.height() - btn_height
         day_width = w / 7
-        day_height = h / 6
+        weekday_height = 30  # 固定周几栏高度
+        day_height = (h - weekday_height) / 6  # 剩余高度分给日期
         self.draw_month(self.current_year, self.current_month, day_width, day_height)
 
     def clear_selection(self):
@@ -284,14 +286,31 @@ class CalendarView(QWidget):
         if day_width is None:
             day_width = self.view.width() / 7
         if day_height is None:
-            day_height = self.view.height() / 6
+            day_height = (self.view.height() - 30) / 6  # 总高度减去周几栏高度
+        # 添加周几栏（固定在顶部）
+        weekday_names = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+        weekday_height = 30  # 周几栏高度
+        for col in range(7):
+            rect = QRectF(col * day_width, 0, day_width, weekday_height)
+            weekday_item = QGraphicsRectItem(rect)
+            weekday_item.setBrush(QColor("#f5f5f5"))  # 浅灰色背景
+            weekday_item.setPen(QPen(Qt.NoPen))
+            self.scene.addItem(weekday_item)
+            
+            # 添加周几文本
+            text_item = QGraphicsSimpleTextItem(weekday_names[col], weekday_item)
+            text_item.setFont(QFont("Microsoft YaHei", 10, QFont.Bold))
+            text_item.setBrush(QColor("#333333"))  # 深灰色文字
+             # 文本居中
+            text_width = text_item.boundingRect().width()
+            text_item.setPos(rect.x() + (rect.width() - text_width) / 2, rect.y() + 5)   
         col = 0
         row = 0
         today = QDate.currentDate()
 
         current = QDate(start_date)
         while current < end_date.addDays(1):
-            rect = QRectF(col * day_width, row * day_height, day_width - 2, day_height - 2)
+            rect = QRectF(col * day_width, row * day_height + weekday_height, day_width - 2, day_height - 2)
             item = CalendarDayItem(
                 rect=rect,
                 date=current,
@@ -309,9 +328,9 @@ class CalendarView(QWidget):
                 row += 1
             current = current.addDays(1)
         total_cols = 7
-        total_rows = 6  # 万年历标准排布（固定42格）
+        total_rows = 7  # 6行日期 + 1行周几栏 # 万年历标准排布（固定42格）
 
-        self.scene.setSceneRect(0, 0, total_cols * day_width, total_rows * day_height)
+        self.scene.setSceneRect(0, 0, total_cols * day_width, weekday_height + (total_rows - 1) * day_height)
 
     def go_to_month(self, year: int, month: int):
         self.current_year = year

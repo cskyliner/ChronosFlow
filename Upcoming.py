@@ -39,32 +39,7 @@ class DeleteButton(QPushButton):
 				padding-top: 2px;
 			}
 		""")
-			QPushButton {
-				background-color: rgba(255, 80, 80, 0.1);  /* 半透明红色背景 */
-				border: 1px solid rgba(255, 80, 80, 0.3);
-				border-radius: 8px;
-				min-width: 48px;
-				min-height: 48px;
-				padding: 0;
-				padding-top: -6px;  /* 关键对齐参数 */
-				color: #FF5050;
-				font-size: 24px;
-				font-weight: 500;
-				text-align: center;
-			}
-			QPushButton:hover {
-				background-color: rgba(255, 80, 80, 0.15);
-				border: 1px solid rgba(255, 80, 80, 0.5);
-				color: #E03C3C;
-				font-size: 26px;
-			}
-			QPushButton:pressed {
-				background-color: rgba(224, 60, 60, 0.2);
-				border: 1px solid rgba(224, 60, 60, 0.7);
-				color: #C03030;
-				padding-top: 2px;
-			}
-		""")
+		
 		self.setToolTip("删除")
 		self.setCursor(Qt.PointingHandCursor)
 		self.setFixedSize(40, 40)
@@ -627,38 +602,6 @@ class Upcoming(QListWidget):
 			return
 		for event in self.events_used_to_update:
 			self.add_one_item(event)
-
-	def show_specific_date(self, date: QDate):
-		"""显示指定日期的日程"""
-		self.clear()
-		self.index_of_date_label.clear()
-		self.items_of_one_date.clear()
-		self.events_used_to_update = tuple()
-		self.loading = False
-		self.no_more_events = False
-		self.event_num = 0
-		self.loading_item = None
-		# 连接接收信号
-		Emitter.instance().backend_data_to_frontend_signal.connect(self.get_specific_date_data)
-		# 显示加载标签
-		self.show_loading_label()
-		# 发送请求信号
-		#Emitter.instance().request_update_upcoming_event_signal(self.event_num, self.page_num)
-		Emitter.instance().request_update_specific_date_upcoming_event_signal(date)
-		# 断开接收信号连接
-		Emitter.instance().backend_data_to_frontend_signal.disconnect(self.get_specific_date_data)
-
-		# 停止加载
-		self.loading = False
-		# 每次获取全部当日信息，故不再获取更多
-		self.no_more_events = True
-		if self.events_used_to_update == ():
-			log.info("show_specific_date:没有更多数据了，停止加载……")
-			self.notify_no_events()
-			return
-		for event in self.events_used_to_update:
-			self.add_one_item(event)
-
 	def refresh_upcoming(self):
 		"""用于每次切换到Upcoming时刷新"""
 		if self.kind != 0:  # 仅限Upcoming页面使用
@@ -675,35 +618,6 @@ class Upcoming(QListWidget):
 		self.loading_item = None
 		self.load_more_data()
 		log.info(f"共{self.event_num}条日程")
-	def notify_no_events(self):
-		# 创建自定义样式的提示项
-		# 创建提示项
-		self.notify_item = QListWidgetItem()
-		self.notify_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)  # 文字居中
-
-		# 使用Unicode符号+多行文本
-		notice_text = """📅 当前没有日程安排
-		────────────────
-		✨ 点击下方 + 号添加首个日程"""
-
-		# 设置字体样式
-		font = QFont()
-		font.setItalic(False)  # 斜体
-		font.setPixelSize(20)  # 统一字号
-		self.notify_item.setFont(font)
-
-		# 设置文字颜色（使用QColor）
-		self.notify_item.setForeground(QColor("#6c757d"))  # 中性灰文字
-
-
-
-		# 交互限制
-		self.notify_item.setFlags(Qt.ItemFlag.NoItemFlags)  # 禁止交互
-		self.notify_item.setSizeHint(QSize(200, 100))       # 合适的高度
-		self.notify_item.setText(notice_text)
-
-		self.addItem(self.notify_item)
-
 	def notify_no_events(self):
 		# 创建自定义样式的提示项
 		# 创建提示项
