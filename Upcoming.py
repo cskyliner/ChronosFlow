@@ -1,5 +1,4 @@
 from operator import truediv
-
 from common import *
 from Emitter import Emitter
 from functools import partial
@@ -153,9 +152,10 @@ class FloatingButton(QPushButton):
 class CustomListItem(QWidget):
 	"""一条日程"""
 	delete_me_signal: Signal = Signal(BaseEvent)
-	finished_signal: Signal = Signal(BaseEvent)
-	unfinished_signal: Signal = Signal(BaseEvent)
 	view_and_edit_signal: Signal = Signal(BaseEvent)
+
+	# finished_signal: Signal = Signal(BaseEvent)
+	# unfinished_signal: Signal = Signal(BaseEvent)
 
 	def __init__(self, event: BaseEvent, parent=None):
 		super().__init__(parent)
@@ -179,7 +179,7 @@ class CustomListItem(QWidget):
 		layout.setContentsMargins(5, 2, 5, 2)  # 边距：左、上、右、下
 
 		# 是否完成的复选框
-		if hasattr(event,"done"):
+		if hasattr(event, "done"):
 			self.finish_checkbox = QCheckBox()
 			self.finish_checkbox.setChecked(bool(self.nevent.done))
 			self.finish_checkbox.toggled.connect(partial(self.this_one_is_finished))
@@ -190,7 +190,7 @@ class CustomListItem(QWidget):
 		self.theme_display_label.setStyleSheet("""
 				color: palette(text);
 		""")
-		if hasattr(event,"done"):
+		if hasattr(event, "done"):
 			if event.done == 0:
 				set_font(self.theme_display_label)
 			else:
@@ -231,25 +231,39 @@ class CustomListItem(QWidget):
 		else:
 			set_font(self.theme_display_label)
 
+
 # def make_this_one_finished(self):
-# 	"""标记日程已完成"""
-# 	self.finished_signal.emit(self.nevent)
+#	"""标记日程已完成"""
+#	self.finished_signal.emit(self.nevent)
 
 # def make_this_one_unfinished(self):
-# 	self.unfinished_signal.emit(self.nevent)
+#	self.unfinished_signal.emit(self.nevent)
 
-class Record:
-	"""记录放到Upcoming里的日程"""
+class ItemRecorder:
+	"""用于记录插入位置的类"""
 
-	# TODO：现在没用
-	def __init__(self, id, pos, date, finished):
+	def __init__(self, pos, id, date, finished):
+		self.pos = pos
 		self.id = id
-		self.pos = pos  # 在Upcoming里的位置
-		self.date = date  # 格式："yyyy-MM-dd HH:mm"
-		self.finished = finished  # 是否完成
+		self.date = date
+		self.finished = finished  # 0为未完成
 
 	def cmp(self):
-		pass
+		"""用于排序"""
+		return self.finished, self.date
+
+	def __lt__(self, other):
+		"""用于找插入位置"""
+		if self.finished < other.finished:
+			return True
+		elif self.finished == other.finished:
+			return self.date < other.date
+		else:
+			return False
+
+	def __eq__(self, other):
+		# other为event
+		return self.id == other.id
 
 
 class Upcoming(QListWidget):
@@ -309,9 +323,6 @@ class Upcoming(QListWidget):
 			self.verticalScrollBar().valueChanged.connect(self.check_scroll)  # 检测是否滚动到底部
 		elif self.kind == 2:
 			self.load_more_data()
-		else:
-			# Calendar的search_column不用预先加载
-			pass
 
 	def check_scroll(self):
 		"""检查是否滚动到底部"""
@@ -352,7 +363,7 @@ class Upcoming(QListWidget):
 			else:
 				date_text = f"\n{tmp_date[0]}年{int(tmp_date[1])}月{int(tmp_date[2])}日\n————————"
 
-		date_item=QListWidgetItem(date_text)
+		date_item = QListWidgetItem(date_text)
 		set_font(date_item)
 
 		# 寻找插入位置（第一个比自身日期大的日期）
@@ -392,13 +403,10 @@ class Upcoming(QListWidget):
 					 "\n".join(f"- {event.title} @ {event.datetime}" for event in data))
 			self.events_used_to_update = data
 			self.event_num += len(data)
-		# if len(data) < self.page_num:#TODO：应对奇怪的问题
-		#	self.no_more_events = True
 		else:
 			log.info("接受数据为空，无更多数据")
 			# 数据加载完毕
 			self.no_more_events = True
-
 		# 删除加载标签
 		if hasattr(self, "loading_item"):
 			self.takeItem(self.row(self.loading_item))
@@ -416,7 +424,7 @@ class Upcoming(QListWidget):
 		if not event.datetime[:10] in self.index_of_date_label:
 			self.add_date_label(event.datetime)
 			# 如果未完成，插到自己的日期标签的下方
-			if hasattr(event,"done") and event.done == 0:
+			if hasattr(event, "done") and event.done == 0:
 				self.insertItem(self.index_of_date_label[event.datetime[:10]].row() + 1, item)
 				self.setItemWidget(item, custom_widget)
 				self.items_of_one_date[event.datetime[:10]] = [
@@ -440,7 +448,7 @@ class Upcoming(QListWidget):
 					self.items_of_one_date[event.datetime[:10]] = [
 						(event.id, QPersistentModelIndex(self.indexFromItem(item)))]
 		else:
-			if hasattr(event,"done") and event.done == 0:
+			if hasattr(event, "done") and event.done == 0:
 				self.insertItem(self.index_of_date_label[event.datetime[:10]].row() + 1, item)
 				self.setItemWidget(item, custom_widget)
 				self.items_of_one_date[event.datetime[:10]].append(
@@ -475,22 +483,19 @@ class Upcoming(QListWidget):
 		Emitter.instance().send_view_and_edit_schedule_signal((event,))
 
 	# def finish_one_item(self, event: BaseEvent):
-	# 	"""标记一个事件已完成"""
-	# 	# 先删除
-	# 	self.delete_one_item(event, True)
-	# 	# 通知后端;再次刷新时保持这一状态
-	# 	# 再插入
-	# 	self.add_one_item(event)
-	# 	log.info(f"标记该事件完成：{event.title} @ {event.datetime}")
+	#	"""标记一个事件已完成"""
+	#	# 先删除
+	#	self.delete_one_item(event, True)
+	#	# 再插入
+	#	self.add_one_item(event)
+	#	log.info(f"标记该事件完成：{event.title} @ {event.datetime}")
 
 	# def make_one_item_unfinished(self, event: BaseEvent):
-	# 	"""取消复选框的对勾"""
-	# 	# 通知后端;再次刷新时保持这一状态
-	# 	self.delete_one_item(event, True)
-	# 	# 再获取“是否完成”改变后的event
-	# 	# 再插入
-	# 	self.add_one_item(event)
-	# 	log.info(f"标记该事件未完成：{event.title} @ {event.datetime}")
+	#	"""取消复选框的对勾"""
+	#	self.delete_one_item(event, True)
+	#	# 再插入
+	#	self.add_one_item(event)
+	#	log.info(f"标记该事件未完成：{event.title} @ {event.datetime}")
 
 	def delete_one_item(self, event: BaseEvent, keep_corresponding_event=False):
 		"""
