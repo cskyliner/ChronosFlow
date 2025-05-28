@@ -1,6 +1,5 @@
 from common import *
 from SideBar import SideBar
-from Calendar import Calendar
 from NewCalendar import CalendarView
 from functools import partial
 from CreateEventWindow import Schedule
@@ -12,7 +11,9 @@ from Notice import Notice
 from Upcoming import Upcoming, FloatingButton
 from Weekview import WeekView
 from FontSetting import set_font
-from Event import DDLEvent, get_events_in_month, BaseEvent
+from Event import DDLEvent, get_events_in_month, BaseEvent, ActivityEvent
+import re
+
 log = logging.getLogger(__name__)
 
 
@@ -63,15 +64,6 @@ class MainWindow(QMainWindow):
 
 		# 主窗口（设计为堆叠窗口，有多个界面）
 		self.main_stack = QStackedWidget()
-		# TODO:背景添加
-		# self.main_stack.setStyleSheet("""
-		# QStackedWidget {
-		#	background-image: url("地址");  /* 图片路径 */
-		#	background-position: center;    /* 居中 */
-		#	background-repeat: no-repeat;   /* 不重复 */
-		#	background-size: contain;       /* 保持比例 */
-		# }
-		# """)
 		self.main_layout.addWidget(self.main_stack)
 
 		# 连接sidebar的信号
@@ -80,13 +72,12 @@ class MainWindow(QMainWindow):
 		self.main_stack_map = {}  # 名称→索引
 
 		# 设置 main_stack各页面的内容，注意初始化顺序
+		self.setup_setting_window()  # 设置界面
 		self.setup_main_window()  # 日历窗口（主界面）
 		self.setup_create_event_window()  # 日程填写窗口
-		self.setup_setting_window()  # 设置界面
 		self.setup_upcoming_window()  # 日程展示窗口
 		self.setup_week_view_window()
-		self.navigate_to("Calendar",self.main_stack)
-		# TODO:更改日历加载事件逻辑，通过向后端发送时间端请求事件，不要耦合upcoming完成
+		self.navigate_to("Calendar", self.main_stack)
 		cur_month = QDate.currentDate().month()
 		cur_year = QDate.currentDate().year()
 		# self.get_events_in_month_from_backend(cur_year, cur_month)
@@ -102,6 +93,9 @@ class MainWindow(QMainWindow):
 
 		# 悬浮窗口初始化
 		self._init_floating_window()
+
+		# 设置壁纸
+		self.set_wallpaper(self.setting.wallpaper_path)
 
 		# 安装事件过滤器，处理Calendar页面的侧边栏的收放
 		self.main_stack.installEventFilter(self)
@@ -128,23 +122,25 @@ class MainWindow(QMainWindow):
 		upper_layout.setSpacing(0)
 		# 添加'<'按钮
 		sidebar_btn = QPushButton("<")
+		sidebar_btn.setFixedSize(35, 30)
 		sidebar_btn.setStyleSheet("""
 				                QPushButton {
 				                    background-color: transparent;
 				                    border: none;
-				                    padding: 0;
+				                    border-radius: 5px;
+				                    padding: 5;
 		    						margin: 0;
 				                    text-align: center;
-				                    color: #a0a0a0;
+				                    color: palette(text);
 				                }
 				                QPushButton:hover {
-				                    color: #07C160;
+				                    background-color: palette(midlight);
 				                }
 				                QPushButton:pressed {
-									color: #05974C;
+									background-color: palette(mid);
 								}
 				            """)
-		set_font(sidebar_btn, 1)
+		set_font(sidebar_btn, 4)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 添加search文本框
@@ -156,11 +152,12 @@ class MainWindow(QMainWindow):
 								    QLineEdit {
 								    background: transparent;
 						            padding: 8px;
-					                border: 1px solid palette(mid);
+					                border: 1px solid palette(text);
 					                border-top-left-radius: 19px;     /* 左上角 */
     								border-top-right-radius: 0px;    /* 右上角 */
     								border-bottom-left-radius: 19px;  /* 左下角 */
     								border-bottom-right-radius: 0px; /* 右下角 */
+    								border-right: none;
 					                font-size: 14px;
 						            }
 							    """)
@@ -175,7 +172,7 @@ class MainWindow(QMainWindow):
 		btn.setStyleSheet("""
 					QPushButton {
 		                background-color: transparent;
-		                border: 1px solid palette(mid);
+		                border: 1px solid palette(text);
 		                border-top-left-radius: 0px;     /* 左上角 */
     					border-top-right-radius: 19px;    /* 右上角 */
     					border-bottom-left-radius: 0px;  /* 左下角 */
@@ -204,8 +201,10 @@ class MainWindow(QMainWindow):
 		# 创建日历界面
 		self.main_window_calendar = CalendarView()
 		# self.main_window_calendar.setGridVisible(False)
-		self.main_window_calendar.double_clicked.connect(lambda date: self.navigate_to("Upcoming", self.main_stack, date))
-		self.main_window_calendar.view_single_day.connect(lambda date: self.navigate_to("Upcoming", self.main_stack, date))
+		self.main_window_calendar.double_clicked.connect(
+			lambda date: self.navigate_to("Upcoming", self.main_stack, date))
+		self.main_window_calendar.view_single_day.connect(
+			lambda date: self.navigate_to("Upcoming", self.main_stack, date))
 		# 右侧搜索栏
 		self.search_column = Upcoming(1)
 		self.search_column.setMaximumWidth(0)
@@ -230,6 +229,7 @@ class MainWindow(QMainWindow):
 		创建 create_event_window
 		"""
 		self.create_event_window = QWidget()
+
 		schedule_layout = QVBoxLayout()  # 内容区域布局
 		schedule_layout.setSpacing(0)
 		schedule_layout.setContentsMargins(20, 5, 20, 20)
@@ -240,43 +240,46 @@ class MainWindow(QMainWindow):
 		schedule_layout.addLayout(btn_layout)
 
 		sidebar_btn = QPushButton("<")
+		sidebar_btn.setFixedSize(35, 30)
 		sidebar_btn.setStyleSheet("""
-								QPushButton {
-								background-color: transparent;
-								border: none;
-								padding: 0;
-								margin: 0;
-								text-align: center;
-								color: #a0a0a0;
+				                QPushButton {
+				                    background-color: transparent;
+				                    border: none;
+				                    border-radius: 5px;
+				                    padding: 5;
+		    						margin: 0;
+				                    text-align: center;
+				                    color: palette(text);
+				                }
+				                QPushButton:hover {
+				                    background-color: palette(midlight);
+				                }
+				                QPushButton:pressed {
+									background-color: palette(mid);
 								}
-								QPushButton:hover {
-								color: #07C160;
-								}
-								QPushButton:pressed {
-								color: #05974C;
-								}
-								""")
-		set_font(sidebar_btn)
+				            """)
+		set_font(sidebar_btn, 4)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 返回按钮，回到calendar
 		return_btn = QPushButton("✕")
+		return_btn.setFixedSize(35, 30)
 		return_btn.setStyleSheet("""
-						        QPushButton {
-						        background-color: transparent;
-						        border: none;
-						        padding: 0;
-				    			margin: 0;
-						        text-align: center;
-						        color: #a0a0a0;
-						        }
-						        QPushButton:hover {
-								color: rgb(235,51,36);
+				                QPushButton {
+				                    background-color: transparent;
+				                    border-radius: 5px;
+				                    padding: 5;
+		    						margin: 0;
+				                    text-align: center;
+				                    color: palette(text);
+				                }
+				                QPushButton:hover {
+				                	color: #E61B23;
+				                }
+				                QPushButton:pressed {
+									color: #B8281C;
 								}
-								QPushButton:pressed {
-								color: rgb(189,41,29);
-								}
-						        """)
+				            """)
 		set_font(return_btn, 1)
 		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
 
@@ -301,43 +304,46 @@ class MainWindow(QMainWindow):
 
 		# 侧边栏切换按钮
 		sidebar_btn = QPushButton("<")
+		sidebar_btn.setFixedSize(35, 30)
 		sidebar_btn.setStyleSheet("""
-			QPushButton {
-				background-color: transparent;
-				border: none;
-				padding: 0;
-				margin: 0;
-				text-align: center;
-				color: #a0a0a0;
-			}
-			QPushButton:hover {
-				color: #07C160;
-			}
-			QPushButton:pressed {
-				color: #05974C;
-			}
-		""")
-		set_font(sidebar_btn)
+				                QPushButton {
+				                    background-color: transparent;
+				                    border: none;
+				                    border-radius: 5px;
+				                    padding: 5;
+		    						margin: 0;
+				                    text-align: center;
+				                    color: palette(text);
+				                }
+				                QPushButton:hover {
+				                    background-color: palette(midlight);
+				                }
+				                QPushButton:pressed {
+									background-color: palette(mid);
+								}
+				            """)
+		set_font(sidebar_btn, 4)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 返回按钮，回到calendar
 		return_btn = QPushButton("✕")
+		return_btn.setFixedSize(35, 30)
 		return_btn.setStyleSheet("""
-			QPushButton {
-				background-color: transparent;
-				border: none;
-				padding: 0;
-				margin: 0;
-				text-align: center;
-				color: #a0a0a0;
-			}
-			QPushButton:hover {
-				color: rgb(235,51,36);
-			}
-			QPushButton:pressed {
-				color: rgb(189,41,29);
-			}
-		""")
+				                QPushButton {
+				                    background-color: transparent;
+				                    border-radius: 5px;
+				                    padding: 5;
+		    						margin: 0;
+				                    text-align: center;
+				                    color: palette(text);
+				                }
+				                QPushButton:hover {
+				                	color: #E61B23;
+				                }
+				                QPushButton:pressed {
+									color: #B8281C;
+								}
+				            """)
 		set_font(return_btn, 1)
 		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
 
@@ -362,41 +368,44 @@ class MainWindow(QMainWindow):
 		setting_layout.addLayout(btn_layout)
 
 		sidebar_btn = QPushButton("<")
+		sidebar_btn.setFixedSize(35, 30)
 		sidebar_btn.setStyleSheet("""
-								QPushButton {
-								background-color: transparent;
-								border: none;
-								padding: 0;
-								margin: 0;
-								text-align: center;
-								color: #a0a0a0;
+				                QPushButton {
+				                    background-color: transparent;
+				                    border: none;
+				                    border-radius: 5px;
+				                    padding: 5;
+		    						margin: 0;
+				                    text-align: center;
+				                    color: palette(text);
+				                }
+				                QPushButton:hover {
+				                    background-color: palette(midlight);
+				                }
+				                QPushButton:pressed {
+									background-color: palette(mid);
 								}
-								QPushButton:hover {
-								color: #07C160;
-								}
-								QPushButton:pressed {
-								color: #05974C;
-								}
-						            """)
-		set_font(sidebar_btn)
+				            """)
+		set_font(sidebar_btn, 4)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 返回按钮，回到calendar
 		return_btn = QPushButton("✕")
+		return_btn.setFixedSize(35, 30)
 		return_btn.setStyleSheet("""
 				                QPushButton {
 				                    background-color: transparent;
-				                    border: none;
-				                    padding: 0;
+				                    border-radius: 5px;
+				                    padding: 5;
 		    						margin: 0;
 				                    text-align: center;
-				                    color: #a0a0a0;
+				                    color: palette(text);
 				                }
 				                QPushButton:hover {
-								color: rgb(235,51,36);
-								}
-								QPushButton:pressed {
-								color: rgb(189,41,29);
+				                	color: #E61B23;
+				                }
+				                QPushButton:pressed {
+									color: #B8281C;
 								}
 				            """)
 		set_font(return_btn, 1)
@@ -412,6 +421,7 @@ class MainWindow(QMainWindow):
 	def setup_upcoming_window(self):
 		"""日程展示窗口"""
 		self.upcoming_window = QWidget()
+
 		layout = QVBoxLayout()  # 内容区域布局
 		layout.setSpacing(0)
 		layout.setContentsMargins(20, 5, 20, 20)
@@ -422,43 +432,46 @@ class MainWindow(QMainWindow):
 		layout.addLayout(btn_layout)
 
 		sidebar_btn = QPushButton("<")
+		sidebar_btn.setFixedSize(35, 30)
 		sidebar_btn.setStyleSheet("""
-								QPushButton {
-								background-color: transparent;
-								border: none;
-								padding: 0;
-								margin: 0;
-								text-align: center;
-								color: #a0a0a0;
+				                QPushButton {
+				                    background-color: transparent;
+				                    border: none;
+				                    border-radius: 5px;
+				                    padding: 5;
+		    						margin: 0;
+				                    text-align: center;
+				                    color: palette(text);
+				                }
+				                QPushButton:hover {
+				                    background-color: palette(midlight);
+				                }
+				                QPushButton:pressed {
+									background-color: palette(mid);
 								}
-								QPushButton:hover {
-								color: #07C160;
-								}
-								QPushButton:pressed {
-								color: #05974C;
-								}
-								""")
-		set_font(sidebar_btn, 1)
+				            """)
+		set_font(sidebar_btn, 4)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
 		# 返回按钮，回到calendar
 		return_btn = QPushButton("✕")
+		return_btn.setFixedSize(35, 30)
 		return_btn.setStyleSheet("""
-								 QPushButton {
-								background-color: transparent;
-								border: none;
-								padding: 0;
-								margin: 0;
-								text-align: center;
-								color: #a0a0a0;
+				                QPushButton {
+				                    background-color: transparent;
+				                    border-radius: 5px;
+				                    padding: 5;
+		    						margin: 0;
+				                    text-align: center;
+				                    color: palette(text);
+				                }
+				                QPushButton:hover {
+				                	color: #E61B23;
+				                }
+				                QPushButton:pressed {
+									color: #B8281C;
 								}
-								QPushButton:hover {
-								color: rgb(235,51,36);
-								}
-								QPushButton:pressed {
-								color: rgb(189,41,29);
-								}
-								""")
+				            """)
 		set_font(return_btn, 1)
 		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
 
@@ -475,7 +488,6 @@ class MainWindow(QMainWindow):
 		self.upcoming.float_btn.move(50, 50)  # 初始位置
 		self.upcoming.float_btn.raise_()  # 确保在最上层
 		self.upcoming.float_btn.clicked.connect(partial(self.navigate_to, "Schedule", self.main_stack))
-		
 
 	def add_page(self, stack: QStackedWidget, widget: QWidget, name: str):
 		'''
@@ -490,19 +502,18 @@ class MainWindow(QMainWindow):
 		if name in self.main_stack_map:
 			# 向Schedule传输date
 			if name != "Schedule":
-				self.schedule.theme_text_edit.clear()
-				self.schedule.text_edit.clear()
-				self.schedule.id = None
+				self.schedule.refresh()
 			if name == 'Upcoming':
 				self.upcoming.float_btn.clicked.disconnect()
 				if date is not None:
 					self.upcoming.show_specific_date(date)
-					self.upcoming.float_btn.clicked.connect(partial(self.navigate_to,"Schedule",self.main_stack,date))
+					self.upcoming.float_btn.clicked.connect(
+						partial(self.navigate_to, "Schedule", self.main_stack, date))
 				else:
 					self.upcoming.refresh_upcoming()
-					self.upcoming.float_btn.clicked.connect(partial(self.navigate_to,"Schedule",self.main_stack))
+					self.upcoming.float_btn.clicked.connect(partial(self.navigate_to, "Schedule", self.main_stack))
 			elif name == "Schedule":
-				self.schedule.group_box.setTitle("添加日程")
+				self.schedule.group_box.setTitle("添加DDL")
 				if not date is None:
 					self.schedule.receive_date(date)
 				else:
@@ -517,13 +528,23 @@ class MainWindow(QMainWindow):
 
 	def check_one_schedule(self, data: tuple):
 		event: BaseEvent = data[0]
-		self.schedule.id = event.id
-		self.schedule.deadline_edit.setDateTime(QDateTime.fromString(event.datetime, "yyyy-MM-dd HH:mm"))
-		self.schedule.reminder_edit.setDateTime(QDateTime.fromString(event.advance_time, "yyyy-MM-dd HH:mm"))
-		self.schedule.theme_text_edit.setText(event.title)
-		self.schedule.text_edit.setPlainText(event.notes)
-		self.schedule.group_box.setTitle("编辑日程")
-		self.main_stack.setCurrentIndex(self.main_stack_map["Schedule"])
+		if isinstance(event,DDLEvent):
+			self.schedule.id = event.id
+			self.schedule.deadline_edit.setDateTime(QDateTime.fromString(event.datetime, "yyyy-MM-dd HH:mm"))
+			self.schedule.reminder_edit.setDateTime(QDateTime.fromString(event.advance_time, "yyyy-MM-dd HH:mm"))
+			self.schedule.theme_text_edit.setText(event.title)
+			self.schedule.text_edit.setPlainText(event.notes)
+			self.schedule.group_box.setTitle("编辑DDL")
+			self.schedule.type_choose_combo.setCurrentText("DDL")
+			self.schedule.type_choose_combo.setEnabled(False)
+			self.main_stack.setCurrentIndex(self.main_stack_map["Schedule"])
+		elif isinstance(event,ActivityEvent):
+			# TODO: 编辑日程时候对于事件的恢复
+			self.schedule.id = event.id
+			self.schedule.group_box.setTitle("编辑日程")
+			self.schedule.type_choose_combo.setCurrentText("日程")
+			self.schedule.type_choose_combo.setEnabled(False)
+
 
 	def setup_search_column_animation(self) -> None:
 		"""搜索结果栏展开动画设置"""
@@ -577,6 +598,7 @@ class MainWindow(QMainWindow):
 
 	def _init_tray(self):
 		"""初始化系统托盘"""
+
 		self.tray = Tray(
 			app=QApplication.instance(),
 			icon_path=self._get_icon_path()
@@ -670,3 +692,49 @@ class MainWindow(QMainWindow):
 		events: list[DDLEvent] = get_events_in_month(cur_year, cur_month)
 		self.main_window_calendar.schedules.clear()
 		self.load_event_in_calendar(events)
+
+	def is_valid_wallpaper(self, path: str) -> bool:
+		"""检查壁纸路径是否有效"""
+		# 1. 检查路径是否为空
+		if not path or path.strip() == "" or path == "无壁纸":
+			return False
+
+		# 2. 检查文件是否存在且可读
+		if not QFile(path).exists() or not QFile(path).permissions() & QFile.ReadUser:
+			return False
+
+		# 3. 检查文件格式是否被支持
+		supported_formats = QImageReader.supportedImageFormats()
+		file_suffix = QFileInfo(path).suffix().lower()
+		if file_suffix.encode() not in supported_formats:
+			return False
+
+		# 检查 Windows 下的合法路径格式
+		if sys.platform == "win32" and not re.match(r"^[a-zA-Z]:", path):
+			return False
+
+		# 检查 macOS 是否具有访问权限（沙盒环境下需要额外授权）
+		if sys.platform == "darwin" and not path.startswith("/Users/"):
+			log.error("警告：非用户目录可能无权限访问该壁纸路径")
+			return False
+
+		return True
+
+	def set_wallpaper(self, path: str):
+		"""安全设置壁纸背景"""
+		if self.is_valid_wallpaper(path):
+			# 处理路径格式
+			if " " in path:
+				path = f'"{path}"'  # 空格路径添加引号
+
+			# 更新样式表
+			self.main_stack.setStyleSheet(f"""
+				            QStackedWidget {{
+				                background-image: url({path});
+				                background-position: center;
+				                background-repeat: no-repeat;
+				                background-size: contain;
+				            }}
+				        """)
+		else:
+			log.error("警告：壁纸路径无效")

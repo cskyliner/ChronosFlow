@@ -16,9 +16,15 @@ title_font.setFamilies(["Inter", "Helvetica Neue", "Segoe UI", "Arial"])
 title_font.setPointSize(20)
 
 delete_font = QFont()  # 用于Upcoming中完成的日程,3
-delete_font.setFamilies(["Inter", "Helvetica Neue", "Segoe UI", "Arial"])
+delete_font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
 delete_font.setPointSize(13)
 delete_font.setStrikeOut(True)
+
+one_day_font = QFont()  # 用于查看一天的日程时，没有日程的提示，4
+
+one_day_font.setFamilies(["Segoe UI", "Helvetica", "Arial"])
+one_day_font.setPixelSize(20)
+one_day_font.setItalic(False)
 
 
 def set_font(my_widget, kind=0):
@@ -33,6 +39,8 @@ def set_font(my_widget, kind=0):
 		my_widget.setFont(title_font)
 	elif kind == 3:
 		my_widget.setFont(delete_font)
+	elif kind == 4:
+		my_widget.setFont(one_day_font)
 	else:
 		log.error("警告：使用未知字体！")
 

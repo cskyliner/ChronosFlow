@@ -8,6 +8,7 @@ class SideBar(QFrame):
 	def __init__(self, parent):
 		super().__init__(parent)
 		self.setFrameShape(QFrame.StyledPanel)
+		# self.setStyleSheet("""background: palette(light);""")
 
 		# ===侧边栏内容===
 		layout = QVBoxLayout()
