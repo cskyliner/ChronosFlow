@@ -65,48 +65,53 @@ class WeekView(QWidget):
         self.update_week(QDate.currentDate())
         
     def init_ui(self):
+        
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.main_layout.setSpacing(0)
-        
+       
         # 创建一个包含时间轴和内容视图的主场景
         self.main_scene = QGraphicsScene()
         
         # 创建主视图
         self.main_view = QGraphicsView(self.main_scene)
-        self.main_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.main_view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        
+        #self.main_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        #self.main_view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.main_view = QGraphicsView(self.main_scene)
+        self.main_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.main_view.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.main_view.setDragMode(QGraphicsView.ScrollHandDrag)  # 支持拖拽滚动    
+        self.main_layout.addWidget(self.main_view)    
         # 添加水平滚动条
-        self.horizontal_scrollbar = QScrollBar(Qt.Horizontal)
-        self.horizontal_scrollbar.valueChanged.connect(self.horizontal_scroll)
+        #self.horizontal_scrollbar = QScrollBar(Qt.Horizontal)
+        #self.horizontal_scrollbar.valueChanged.connect(self.horizontal_scroll)
         
         # 添加垂直滚动条
-        self.vertical_scrollbar = QScrollBar(Qt.Vertical)
-        self.vertical_scrollbar.valueChanged.connect(self.vertical_scroll)
+        #self.vertical_scrollbar = QScrollBar(Qt.Vertical)
+        #self.vertical_scrollbar.valueChanged.connect(self.vertical_scroll)
         
         # 布局
-        scroll_layout = QHBoxLayout()
-        scroll_layout.addWidget(self.main_view)
-        scroll_layout.addWidget(self.vertical_scrollbar)
+        #scroll_layout = QHBoxLayout()
+        #scroll_layout.addWidget(self.main_view)
+        #scroll_layout.addWidget(self.vertical_scrollbar)
         
-        self.main_layout.addLayout(scroll_layout)
-        self.main_layout.addWidget(self.horizontal_scrollbar)
+        #self.main_layout.addLayout(scroll_layout)
+        #self.main_layout.addWidget(self.horizontal_scrollbar)
         
         # 时间轴视图（作为主场景的一部分）
-        self.time_axis_view = QGraphicsView(self.main_scene)
-        self.time_axis_view.setFixedWidth(60)
-        self.time_axis_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.time_axis_view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        #self.time_axis_view = QGraphicsView(self.main_scene)
+        #self.time_axis_view.setFixedWidth(60)
+        #self.time_axis_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        #self.time_axis_view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         
         # 主内容视图（作为主场景的一部分）
-        self.content_view = QGraphicsView(self.main_scene)
-        self.content_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.content_view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        #self.content_view = QGraphicsView(self.main_scene)
+        #self.content_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        #self.content_view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         
         # 鼠标滚轮事件
-        self.time_axis_view.wheelEvent = self.main_wheel_event
-        self.content_view.wheelEvent = self.main_wheel_event
+        #self.time_axis_view.wheelEvent = self.main_wheel_event
+        #self.content_view.wheelEvent = self.main_wheel_event
         
     def main_wheel_event(self, event):
         """处理主视图的鼠标滚轮事件"""
@@ -177,7 +182,7 @@ class WeekView(QWidget):
             line = self.main_scene.addLine(0, y, 60, y, QPen(QColor("#f3ef0bec")))
             
         # 设置时间轴视图的位置和大小
-        self.time_axis_view.setSceneRect(0, 0, 60, self.time_slot_count * self.hour_height)
+        #self.time_axis_view.setSceneRect(0, 0, 60, self.time_slot_count * self.hour_height)
 
     def update_week(self, week_date: QDate):
         """更新显示指定周"""
@@ -201,19 +206,19 @@ class WeekView(QWidget):
         total_width = 60 + self.day_width * 7  # 时间轴宽度 + 7天宽度
         total_height = 30 + self.time_slot_count * self.hour_height  # 30是表头高度
         self.main_scene.setSceneRect(0, 0, total_width, total_height)
-        
+
         # 设置内容视图的位置和大小
-        self.content_view.setSceneRect(0, 0, total_width, total_height)
+        #self.content_view.setSceneRect(0, 0, total_width, total_height)
         
         # 更新滚动条范围
-        self.horizontal_scrollbar.setRange(0, max(0, total_width - self.main_view.width() + 60))
-        self.horizontal_scrollbar.setPageStep(self.main_view.width() - 60)
+        #self.horizontal_scrollbar.setRange(0, max(0, total_width - self.main_view.width() + 60))
+        #self.horizontal_scrollbar.setPageStep(self.main_view.width() - 60)
         
-        self.vertical_scrollbar.setRange(0, max(0, total_height - self.main_view.height()))
-        self.vertical_scrollbar.setPageStep(self.main_view.height())
+        #self.vertical_scrollbar.setRange(0, max(0, total_height - self.main_view.height()))
+        #self.vertical_scrollbar.setPageStep(self.main_view.height())
         
         # 更新视图位置
-        self.update_views_position()
+        #self.update_views_position()
         
     def setup_day_headers(self):
         """创建日期表头"""
@@ -229,7 +234,7 @@ class WeekView(QWidget):
             text = f"{date.month()}月{date.day()}日  {['周一','周二','周三','周四','周五','周六','周日'][i]}"
             text_item = QGraphicsSimpleTextItem(text, header)
             text_item.setFont(QFont("Microsoft YaHei", 9))
-            text_item.setPos(rect.x() + 55, rect.y() + 5)
+            text_item.setPos(rect.x() + 12, rect.y() + 5)
             # 假设有一个矩形区域 (x, y, width, height)
 
 
@@ -321,10 +326,10 @@ class WeekView(QWidget):
         self.update_week(QDate.currentDate())
 
 # 使用示例
-if __name__ == "__main__":
-    app = QApplication()
-    window = WeekView()
-    window.resize(800, 600)
-    window.update_week(QDate.currentDate())
-    window.show()
-    app.exec()
+#if __name__ == "__main__":
+ #   app = QApplication()
+  #  window = WeekView()
+   # window.resize(800, 600)
+    #window.update_week(QDate.currentDate())
+    #window.show()
+    #app.exec()
