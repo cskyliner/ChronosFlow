@@ -247,6 +247,12 @@ class Schedule(QWidget):
 			if _type == "DDL":
 				self.theme_text_edit.clear()
 				self.text_edit.clear()
+				deadline_dt = self.deadline_edit.dateTime()
+				reminder_dt = self.reminder_edit.dateTime()
+
+				if deadline_dt < reminder_dt:
+					QMessageBox.warning(self, "时间错误", "截止时间不能早于提醒时间！")
+					return
 				deadline = self.deadline_edit.dateTime().toString("yyyy-MM-dd HH:mm")
 				reminder = self.reminder_edit.dateTime().toString("yyyy-MM-dd HH:mm")
 				log.info(f"notify_time是{self.reminder_edit.dateTime()}")

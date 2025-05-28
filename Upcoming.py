@@ -38,6 +38,7 @@ class DeleteButton(QPushButton):
 				padding-top: 2px;
 			}
 		""")
+		
 		self.setToolTip("删除")
 		self.setCursor(Qt.PointingHandCursor)
 		self.setFixedSize(40, 40)
@@ -304,6 +305,16 @@ class Upcoming(QListWidget):
 			QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
 				background: none;
 			}
+			QListWidget::item:selected {
+				background: transparent;
+				border: none;
+				color: palette(text)
+			}
+			QListWidget { background: transparent; }
+			QListWidget::item {
+					/* 控制行间距（相邻项的间隔） */
+					margin: 5px;  
+			}
 			""")
 
 		self.kind = kind  # 0:Upcoming页面的Upcoming；1:Calendar页面的search_column；2:某个日期的Upcoming
@@ -377,6 +388,23 @@ class Upcoming(QListWidget):
 		else:
 			self.addItem(date_item)
 		self.index_of_date_label[date] = QPersistentModelIndex(self.indexFromItem(date_item))
+		self.index_of_date_label = dict(sorted(self.index_of_date_label.items()))  # 保证日期标签按升序排列，仅支持python3.7及以上
+	def get_specific_date_data(self, data: tuple[BaseEvent]):
+		"""从后端加载特定日期的数据"""
+		if data is not None and len(data) > 0:
+			log.info(f"get_specific_date_data:接收数据成功，共接收 {len(data)} 条数据：\n" +
+					 "\n".join(f"- {event.title} @ {event.datetime}" for event in data))
+			self.events_used_to_update = data
+			self.event_num += len(data)
+		else:
+			log.info("接受数据为空，无更多数据")
+			# 数据加载完毕
+			self.no_more_events = True
+
+		# 删除加载标签
+		if hasattr(self, "loading_item"):
+			self.takeItem(self.row(self.loading_item))
+			del self.loading_item
 		self.index_of_date_label = dict(sorted(self.index_of_date_label.items()))  # 保证日期标签按升序排列
 
 	def get_specific_date_data(self, data: tuple[BaseEvent]):
@@ -573,7 +601,6 @@ class Upcoming(QListWidget):
 			set_font(item)
 			item.setTextAlignment(Qt.AlignCenter)
 			self.addItem(item)
-
 	def show_specific_date(self, date: QDate):
 		"""显示指定日期的日程"""
 		self.clear()
@@ -592,18 +619,14 @@ class Upcoming(QListWidget):
 		Emitter.instance().request_update_specific_date_upcoming_event_signal(date)
 		# 断开接收信号连接
 		Emitter.instance().backend_data_to_frontend_signal.disconnect(self.get_specific_date_data)
-
 		# 停止加载
 		self.loading = False
-		# 每次获取全部当日信息，故不再获取更多
-		self.no_more_events = True
-		if self.events_used_to_update == ():
+		if self.no_more_events:
 			log.info("show_specific_date:没有更多数据了，停止加载……")
 			self.notify_no_events()
 			return
 		for event in self.events_used_to_update:
 			self.add_one_item(event)
-
 	def refresh_upcoming(self):
 		"""用于每次切换到Upcoming时刷新"""
 		if self.kind != 0:  # 仅限Upcoming页面使用
@@ -620,7 +643,6 @@ class Upcoming(QListWidget):
 		self.loading_item = None
 		self.load_more_data()
 		log.info(f"共{self.event_num}条日程")
-
 	def notify_no_events(self):
 		# 创建自定义样式的提示项
 		# 创建提示项
