@@ -155,5 +155,3 @@ class Emitter(QObject):
 		log.info(f"向后端发送需要更新最新的事件，当前时间为{formatted_time}")
 		out = ("latest_event", (formatted_time,))
 		self.latest_event_signal.emit(out)
-		out = ("latest_event", (formatted_time,))
-		self.latest_event_signal.emit(out)
