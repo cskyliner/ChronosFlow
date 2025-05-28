@@ -1,6 +1,7 @@
 from common import *
 from PySide6.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsRectItem, QGraphicsItem, QSizePolicy
 from PySide6.QtCore import QRectF
+from PySide6.QtGui import QShortcut, QKeySequence
 from Event import BaseEvent, get_events_in_month
 
 log = logging.getLogger(__name__)
@@ -287,10 +288,19 @@ class CalendarView(QWidget):
 		w = self.view.viewport().width()
 		h = self.view.viewport().height()
 		day_width = w / 7
-		day_height = h / 6
+		weekday_height = 30  # 固定周几栏高度
+		day_height = (h - weekday_height) / 6  # 剩余高度分给日期		
 		self.view.resetTransform()
 		self.draw_month(self.current_year, self.current_month, day_width, day_height)
 
+		# 更新日历栏大小
+		#btn_height = 40                                         # 顶部按钮栏高度
+		#w = self.width()
+	   # h = self.height() - btn_height
+	   # day_width = w / 7
+	   # weekday_height = 30  # 固定周几栏高度
+	   # day_height = (h - weekday_height) / 6  # 剩余高度分给日期
+		#self.draw_month(self.current_year, self.current_month, day_width, day_height)
 	def clear_selection(self):
 		for item in self.scene.items():
 			if isinstance(item, CalendarDayItem):
@@ -305,13 +315,30 @@ class CalendarView(QWidget):
 			day_width = self.view.width() / 7
 		if day_height is None:
 			day_height = self.view.height() / 6
+		# 添加周几栏（固定在顶部）
+		weekday_names = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+		weekday_height = 30  # 周几栏高度
+		for col in range(7):
+			rect = QRectF(col * day_width, 0, day_width, weekday_height)
+			weekday_item = QGraphicsRectItem(rect)
+			weekday_item.setBrush(QColor("#f5f5f5"))  # 浅灰色背景
+			weekday_item.setPen(QPen(Qt.NoPen))
+			self.scene.addItem(weekday_item)
+
+			# 添加周几文本
+			text_item = QGraphicsSimpleTextItem(weekday_names[col], weekday_item)
+			text_item.setFont(QFont("Microsoft YaHei", 10, QFont.Bold))
+			text_item.setBrush(QColor("#333333"))  # 深灰色文字
+			 # 文本居中
+			text_width = text_item.boundingRect().width()
+			text_item.setPos(rect.x() + (rect.width() - text_width) / 2, rect.y() + 5)
 		col = 0
 		row = 0
 		today = QDate.currentDate()
 
 		current = QDate(start_date)
 		while current < end_date.addDays(1):
-			rect = QRectF(col * day_width, row * day_height, day_width, day_height)
+			rect = QRectF(col * day_width, weekday_height + row * day_height, day_width, day_height)
 			item = CalendarDayItem(
 				rect=rect,
 				date=current,
@@ -329,8 +356,9 @@ class CalendarView(QWidget):
 				row += 1
 			current = current.addDays(1)
 		total_cols = 7
-		total_rows = 6
-		self.scene.setSceneRect(0, 0, total_cols * day_width, total_rows * day_height)
+		total_rows = 7
+		#self.scene.setSceneRect(0, 0, total_cols * day_width, total_rows * day_height)
+		self.scene.setSceneRect(0, 0, total_cols * day_width, weekday_height + (total_rows - 1) * day_height)
 		
 	def go_to_month(self, year: int, month: int):
 		self.current_year = year

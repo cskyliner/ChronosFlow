@@ -44,7 +44,7 @@ class Notice(QObject):
 								sound='Ping')
 				else:
 					self.notify_show_floating_window.emit()
-					self.notify_to_floating_window.emit((self.latest_event,))
+					#self.notify_to_floating_window.emit((self.latest_event,))
 					self.notify_to_tray.emit((self.latest_event,))
 
 				self.latest_event = None
@@ -53,8 +53,8 @@ class Notice(QObject):
 
 		else:
 			# log.info(f"当前Notice没有储存事件，正调用request_latest_event获取事件")
-			# self.request_latest_event(current)
-			pass
+			self.request_latest_event(current)
+			
 
 	def update_latest_event(self, latest_event_info: tuple):
 		tag = latest_event_info[1]
@@ -82,6 +82,8 @@ class Notice(QObject):
 				self.latest_event = latest_event_info[0]
 				log.info(
 					f"tag：{tag}最新DDLEvent：{self.latest_event.title}; 提醒时间{self.latest_event.advance_time}; 截止时间{self.latest_event.datetime}")
+		"""把消息传递给悬浮窗以便于展示"""
+		self.notify_to_floating_window.emit((self.latest_event,))
 
 	def request_latest_event(self, cur_time: QDateTime):
 		Emitter.instance().request_latest_event_signal(cur_time)
