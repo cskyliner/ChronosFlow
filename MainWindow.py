@@ -11,7 +11,8 @@ from Notice import Notice
 from Upcoming import Upcoming, FloatingButton
 from Weekview import WeekView
 from FontSetting import set_font
-from Event import DDLEvent, get_events_in_month, BaseEvent, ActivityEvent
+from events.Event import *
+from events.EventManager import EventSQLManager
 import re
 
 log = logging.getLogger(__name__)
@@ -689,7 +690,7 @@ class MainWindow(QMainWindow):
 
 	def get_events_in_month_from_backend(self, cur_year: int, cur_month: int):
 		"""获取当前月份的事件"""
-		events: list[DDLEvent] = get_events_in_month(cur_year, cur_month)
+		events: list[DDLEvent] = EventSQLManager.get_events_in_month(cur_year, cur_month)
 		self.main_window_calendar.schedules.clear()
 		self.load_event_in_calendar(events)
 

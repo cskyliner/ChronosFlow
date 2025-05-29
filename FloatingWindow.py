@@ -1,7 +1,8 @@
 from common import *
 # ---------------------- 悬浮窗口类 ----------------------
 from Notice import NotificationWidget
-from Event import DDLEvent
+from events.Event import *
+
 log = logging.getLogger(__name__)
 class FloatingWindow(QWidget):
 	exit_requested = Signal()  # 完全退出信号

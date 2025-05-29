@@ -1,5 +1,6 @@
 from common import *
 from Emitter import Emitter
+import json
 from FontSetting import set_font
 
 log = logging.getLogger(__name__)

@@ -4,7 +4,7 @@ from PySide6.QtWidgets import (QWidget, QGraphicsView, QGraphicsScene, QGraphics
                               QLabel, QPushButton, QMenu, QSplitter)
 from PySide6.QtGui import QFont, QColor, QPen, QPainter, QFontMetrics
 from common import *
-from Event import BaseEvent,DDLEvent
+from events.Event import *
 
 class TimeAxisItem(QGraphicsRectItem):
     """左侧时间轴项"""

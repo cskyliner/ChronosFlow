@@ -3,7 +3,7 @@ from operator import truediv
 from common import *
 from Emitter import Emitter
 from functools import partial
-from Event import BaseEvent, DDLEvent, ActivityEvent
+from events.Event import *
 from FontSetting import set_font
 
 log = logging.getLogger("Upcoming")
@@ -405,23 +405,6 @@ class Upcoming(QListWidget):
 			self.addItem(date_item)
 		self.index_of_date_label[date] = QPersistentModelIndex(self.indexFromItem(date_item))
 		self.index_of_date_label = dict(sorted(self.index_of_date_label.items()))  # 保证日期标签按升序排列，仅支持python3.7及以上
-	def get_specific_date_data(self, data: tuple[BaseEvent]):
-		"""从后端加载特定日期的数据"""
-		if data is not None and len(data) > 0:
-			log.info(f"get_specific_date_data:接收数据成功，共接收 {len(data)} 条数据：\n" +
-					 "\n".join(f"- {event.title} @ {event.datetime}" for event in data))
-			self.events_used_to_update = data
-			self.event_num += len(data)
-		else:
-			log.info("接受数据为空，无更多数据")
-			# 数据加载完毕
-			self.no_more_events = True
-
-		# 删除加载标签
-		if hasattr(self, "loading_item"):
-			self.takeItem(self.row(self.loading_item))
-			del self.loading_item
-		self.index_of_date_label = dict(sorted(self.index_of_date_label.items()))  # 保证日期标签按升序排列
 
 	def get_specific_date_data(self, data: tuple[BaseEvent]):
 		"""从后端加载特定日期的数据"""
@@ -439,6 +422,7 @@ class Upcoming(QListWidget):
 		if hasattr(self, "loading_item"):
 			self.takeItem(self.row(self.loading_item))
 			del self.loading_item
+		# self.no_more_events = True
 
 	def get_data(self, data: tuple[BaseEvent] = None):
 		"""从后端加载数据"""
@@ -652,6 +636,8 @@ class Upcoming(QListWidget):
 			return
 		for event in self.events_used_to_update:
 			self.add_one_item(event)
+		self.no_more_events = True
+
 	def refresh_upcoming(self):
 		"""用于每次切换到Upcoming时刷新"""
 		if self.kind != 0:  # 仅限Upcoming页面使用
@@ -668,6 +654,7 @@ class Upcoming(QListWidget):
 		self.loading_item = None
 		self.load_more_data()
 		log.info(f"共{self.event_num}条日程")
+
 	def notify_no_events(self):
 		# 创建自定义样式的提示项
 		# 创建提示项

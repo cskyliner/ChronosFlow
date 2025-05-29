@@ -1,6 +1,7 @@
 from common import *
 from PySide6.QtGui import QFont
-from Event import BaseEvent, get_events_in_month
+from events.EventManager import EventSQLManager
+from events.Event import *
 log = logging.getLogger(__name__)
 
 
@@ -316,7 +317,7 @@ class Calendar(QCalendarWidget):
 		"""月份或年份变化时的回调"""
 		#month += 1  # 注意：month 的范围是0~11
 		log.info(f"页面切换至: {year}年{month}月")
-		events = get_events_in_month(year, month)
+		events = EventSQLManager.get_events_in_month(year, month)
 		self.schedules.clear()
 		for event in events:
 			self.add_schedule(event)
