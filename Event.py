@@ -517,6 +517,73 @@ def get_events_in_month(year: int, month: int) -> list[BaseEvent]:
 	log.info(f"get_events_in_month:找到 {len(events)} 个事件（{year}年{month}月）")
 	return events
 
+
+def get_activity_events_in_week() -> list[BaseEvent]:
+	"""
+	获取当前周的所有重复事件（只包括 weekly 和 biweekly）。
+	不考虑起止时间，只根据 repeat_days 生成本周事件。
+	"""
+	today = datetime.today()
+	current_weekday = today.weekday()  # 0=Monday, ..., 6=Sunday
+	start_of_week = today - timedelta(days=current_weekday)
+	
+	events = []
+
+	# 查询所有 ActivityEvent 类型中设置了 repeat 的事件
+	query = """
+		SELECT * FROM activityevents
+		WHERE repeat_type IN ('每周', '每两周')
+	"""
+	try:
+		cursor.execute(query)
+		rows = cursor.fetchall()
+		log.info(f"get_events_in_week: 查询到 {len(rows)} 个事件")
+	except Exception as e:
+		log.error(f"get_events_in_week: 查询失败: {e}")
+		return []
+
+  
+	for row in rows:
+		try:
+			paras = row[1:]
+			event: ActivityEvent = EventFactory.create(None, "Activity", False, *paras)
+			if not event:
+				continue
+
+			event.id = row[0]
+
+			try:
+				repeat_days = json.loads(event.repeat_days)
+				log.info(f"get_events_in_week: repeat_days 解析成功 {repeat_days}")
+			except Exception as e:
+				log.warning(f"get_events_in_week: repeat_days 解析失败: {event.repeat_days}, 错误: {e}")
+				repeat_days = []
+				
+			weekday_map = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+			for i in range(7):  # 遍历周一到周日  # 0=Monday, ..., 6=Sunday
+				weekday_str = weekday_map[i]  # 把 0~6 映射为 "Mon"~"Sun"
+				if weekday_str in repeat_days:
+					repeat_date = (start_of_week + timedelta(days=i)).strftime("%Y-%m-%d")
+					clone = ActivityEvent(
+						title=event.title,
+						start_time=event.start_time,
+						end_time=event.end_time,
+						start_date=repeat_date,
+						end_date=repeat_date,
+						notes=event.notes,
+						importance=event.importance,
+						repeat_type=event.repeat_type,
+						repeat_days=repeat_days
+					)
+					clone.id = event.id
+					events.append(clone)
+
+		except Exception as e:
+			log.error(f"get_events_in_week: 解析事件失败（ID={row[0]}）: {e}")
+
+	log.info(f"get_events_in_week: 找到 {len(events)} 个每周重复事件")
+	return events
+	
 def search_all(keyword: tuple[str]) -> list[BaseEvent]:
 	"""
 	多关键词模糊性全局搜索（AND关系）,改为只搜索title和notes

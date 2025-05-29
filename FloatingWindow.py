@@ -120,9 +120,14 @@ class FloatingWindow(QWidget):
 	@Slot(object)
 	def show_notification(self, data:tuple):
 		"""显示通知"""
-		log.info(f"收到通知：{data[0].title}")
+
+		if(data[0] is None):
+			log.info("暂无通知")
+		else:	
+			log.info(f"收到通知：{data[0].title}")
 		self.lattest_event = data[0]
-		if(self.notification_area.count()):
+		if self.notification_area.count():#更新时清楚旧通知
+
 			self.notification_area.takeAt(0).widget().setParent(None)
 		notification = CountdownLabel(self.lattest_event)
 		self.notification_area.addWidget(notification)
@@ -132,13 +137,7 @@ class FloatingWindow(QWidget):
 		# 自动排列通知
 		# self._arrange_notifications()
 
-	def _arrange_notifications(self):  # 暂时无用
-		"""排列通知位置"""
-		y_pos = self.height() - 50
-		for widget in self.notification_widgets:
-			if widget.isVisible():
-				widget.move(self.width() - widget.width() - 20, y_pos)
-				y_pos -= widget.height() + 10
+
 
 	def paintEvent(self, event):
 		"""绘制背景渐变"""
@@ -166,7 +165,7 @@ class FloatingWindow(QWidget):
 	def mouseReleaseEvent(self, event):
 		if event.button() == Qt.LeftButton:
 			self.draggable = False
-			print(self.pos())
+			#print(self.pos())
 
 	def closeEvent(self, event):
 		# 确保资源释放和状态更新
@@ -181,6 +180,11 @@ class FloatingWindow(QWidget):
 class CountdownLabel(QLabel):
 	def __init__(self, event: DDLEvent, parent=None):
 		super().__init__(parent)
+
+		if event is None: 
+			self.setText("        DDL event:无")
+			return
+
 		self._event = event
 		self.end_time = QDateTime.fromString(event.datetime, "yyyy-MM-dd HH:mm")
 		self.notify_time = QDateTime.fromString(event.advance_time, "yyyy-MM-dd HH:mm")
