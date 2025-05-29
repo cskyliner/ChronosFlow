@@ -236,13 +236,13 @@ class Schedule(QWidget):
 		_type = self.type_choose_combo.currentText()
 		theme = self.theme_text_edit.text()
 		content = self.text_edit.toPlainText()
-		"""
-		time = QTime(int(self.datetime[0]), int(self.datetime[1]))
-		datetime = QDateTime(self.standard_date, time)
-		datetime_str = datetime.toString("yyyy-MM-dd HH:mm")
-		test_advance_time = datetime.addDays(-1)
-		test_advance_time_str = test_advance_time.toString("yyyy-MM-dd HH:mm")
-  		"""
+
+		#time = QTime(int(self.datetime[0]), int(self.datetime[1]))
+		#datetime = QDateTime(self.standard_date, time)
+		#datetime_str = datetime.toString("yyyy-MM-dd HH:mm")
+		#test_advance_time = datetime.addDays(-1)
+		#test_advance_time_str = test_advance_time.toString("yyyy-MM-dd HH:mm")
+
 		if theme:  # 可以支持只有主题，没有内容，多行文本框会返回空字符串，没有问题
 			if _type == "DDL":
 				self.theme_text_edit.clear()
