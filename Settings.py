@@ -23,7 +23,7 @@ class SettingsPage(QWidget):
 		set_font(path_group)
 		path_group.setStyleSheet("""
 					QGroupBox {
-						border: 1px solid palette(mid);
+						border: 1px solid palette(text);
 						border-radius: 10px;
 						margin-top: 1.5ex;
 						padding: 5px;
@@ -79,7 +79,7 @@ class SettingsPage(QWidget):
 		set_font(theme_group)
 		theme_group.setStyleSheet("""
 					QGroupBox {
-						border: 1px solid palette(mid);
+						border: 1px solid palette(text);
 						border-radius: 10px;
 						margin-top: 1.5ex;
 						padding: 5px;
@@ -107,7 +107,7 @@ class SettingsPage(QWidget):
 		notification_group = QGroupBox("通知设置")
 		notification_group.setStyleSheet("""
 					QGroupBox {
-						border: 1px solid palette(mid);
+						border: 1px solid palette(text);
 						border-radius: 10px;
 						margin-top: 1.5ex;
 						padding: 5px;
@@ -145,7 +145,7 @@ class SettingsPage(QWidget):
 		volume_group = QGroupBox("音量设置")
 		volume_group.setStyleSheet("""
 					QGroupBox {
-						border: 1px solid palette(mid);
+						border: 1px solid palette(text);
 						border-radius: 10px;
 						margin-top: 1.5ex;
 						padding: 5px;
@@ -178,7 +178,7 @@ class SettingsPage(QWidget):
 		wallpaper_group = QGroupBox("壁纸")
 		wallpaper_group.setStyleSheet("""
 							QGroupBox {
-								border: 1px solid palette(mid);
+								border: 1px solid palette(text);
 								border-radius: 10px;
 								margin-top: 1.5ex;
 								padding: 5px;
@@ -230,6 +230,83 @@ class SettingsPage(QWidget):
 
 		wallpaper_group.setLayout(wallpaper_layout)
 
+		# 课表路径
+		excel_group = QGroupBox("课表")
+		excel_group.setStyleSheet("""
+									QGroupBox {
+										border: 1px solid palette(text);
+										border-radius: 10px;
+										margin-top: 1.5ex;
+										padding: 5px;
+									}
+									QGroupBox::title {
+										subcontrol-origin: margin;
+										left: 10px;
+										padding: 0 3px;
+									}
+									""")
+		set_font(excel_group)
+
+		ttl_excel_layout = QVBoxLayout()
+
+		excel_date_layout = QHBoxLayout()
+		ttl_excel_layout.addLayout(excel_date_layout)
+		start_time_label = QLabel("这个学期开始第一天（周一）的日期")
+		set_font(start_time_label)
+		excel_date_layout.addWidget(start_time_label)
+		self.start_date_edit = QDateTimeEdit()
+		self.start_date_edit.setCalendarPopup(True)
+		calendar = self.start_date_edit.calendarWidget()  # 获取日历控件（QCalendarWidget）
+		calendar.setStyleSheet("""
+								            QCalendarWidget QAbstractItemView:item:hover {  /*鼠标悬停*/
+								                background-color: palette(midlight);
+								            }
+										    """)  # 设置日历样式
+		self.start_date_edit.setDisplayFormat("yyyy-MM-dd")
+		excel_date_layout.addWidget(self.start_date_edit)
+		self.start_date_edit.setDate(QDate.currentDate())
+
+		excel_layout = QHBoxLayout()
+		ttl_excel_layout.addLayout(excel_layout)
+		excel_label = QLabel("课表路径:")
+		set_font(excel_label)
+		excel_layout.addWidget(excel_label)
+
+		self.excel_path_edit = QLineEdit()
+		self.excel_path_edit.setFixedHeight(35)
+		self.excel_path_edit.setStyleSheet("""QLineEdit {
+							border-radius: 5px;
+							border:1px solid palette(mid);
+							background:transparent
+						}""")
+		self.excel_path_edit.setPlaceholderText("请选择课表路径")
+		set_font(self.excel_path_edit)
+		excel_layout.addWidget(self.excel_path_edit)
+
+		excel_btn = QPushButton("浏览...")
+		excel_btn.setFixedSize(80, 35)
+		excel_btn.setStyleSheet("""
+				                QPushButton {
+				                    background-color: transparent;
+				                    border: 1px solid palette(mid);
+				                    border-radius: 4px;
+				                    padding: 0px;
+				                    text-align: center;
+				                }
+				                QPushButton:hover {
+				                    background-color: palette(midlight); /*轻微高亮*/
+				                    border-radius: 4px;
+				                }
+				                QPushButton:pressed {
+									background-color: palette(mid);
+								}
+				            """)
+		set_font(excel_btn)
+		excel_btn.clicked.connect(self.select_excel_path)
+		excel_layout.addWidget(excel_btn)
+
+		excel_group.setLayout(ttl_excel_layout)
+
 		# 保存按钮
 		save_btn = QPushButton("保存设置")
 		save_btn.setStyleSheet("""
@@ -255,9 +332,13 @@ class SettingsPage(QWidget):
 		# 主布局
 		layout.addWidget(path_group)
 		layout.addWidget(theme_group)
+		theme_group.hide()
 		layout.addWidget(notification_group)
+		notification_group.hide()
 		layout.addWidget(volume_group)
+		volume_group.hide()
 		layout.addWidget(wallpaper_group)
+		layout.addWidget(excel_group)
 		layout.addStretch()
 		layout.addWidget(save_btn, alignment=Qt.AlignRight)
 		self.setLayout(layout)
@@ -309,7 +390,32 @@ class SettingsPage(QWidget):
 			)
 		if file_path:
 			log.info(f"用户选择的壁纸文件: {file_path}")
-			self.wallpaper_path_edit.setText(file_path)  # 假设有另一个输入框
+			self.wallpaper_path_edit.setText(file_path)
+
+	def select_excel_path(self):
+		"""选择 Excel 文件"""
+		if sys.platform == 'darwin':  # macOS
+			file_filter = "Excel Files (*.xlsx *.xls *.csv)"
+			file_path, _ = QFileDialog.getOpenFileName(
+				self,
+				"选择 Excel 文件",  # 对话框标题
+				"",  # 默认打开路径（空表示当前目录）
+				file_filter
+			)
+		else:  # Windows/Linux
+			root = tk.Tk()
+			root.withdraw()
+			file_path = filedialog.askopenfilename(
+				title="选择 Excel 文件",
+				filetypes=[
+					("Excel 文件", "*.xlsx *.xls"),  # .xlsx 和 .xls
+					("CSV 文件", "*.csv"),  # .csv
+					("所有文件", "*.*")  # 允许选择所有文件（可选）
+				]
+			)
+		if file_path:
+			log.info(f"用户选择的 Excel 文件: {file_path}")
+			self.excel_path_edit.setText(file_path)
 
 	def get_config_path(self) -> str:
 		"""获取配置文件路径"""
@@ -344,8 +450,13 @@ class SettingsPage(QWidget):
 					self.update_volume_label(volume)
 
 					# 加载壁纸路径
-					self.wallpaper_path = settings.get('wallpaper_path','')
+					self.wallpaper_path = settings.get('wallpaper_path', '')
 					self.wallpaper_path_edit.setText(self.wallpaper_path)
+
+					#课表
+					self.start_date_edit.setDate(QDate.fromString(settings.get('course_start_date'), "yyyy-MM-dd"))
+					self.excel_path=settings.get('excel_path','')
+					self.excel_path_edit.setText(self.excel_path)
 
 					log.info(f"加载设置: {settings}")
 					# 发送信号通知储存路径
@@ -362,7 +473,9 @@ class SettingsPage(QWidget):
 				"notifications_enabled": True,
 				"notification_type": "系统通知",
 				"volume": 50,
-				"wallpaper_path": "无壁纸"
+				"wallpaper_path": "无壁纸",
+				"excel_path": "无课表",
+				'course_start_date': "无"
 			}
 			try:
 				with open(config_path, 'w', encoding='utf-8') as f:
@@ -376,6 +489,8 @@ class SettingsPage(QWidget):
 				self.volume_slider.setValue(volume)
 				self.update_volume_label(volume)
 				self.wallpaper_path_edit.setText(default_settings["wallpaper_path"])
+				self.excel_path_edit.setText(default_settings["excel_path"])
+				self.start_date_edit.setDate(QDate.currentDate())
 
 				self.save_settings(reminder=False)
 				log.info(f"创建默认设置: {default_settings}")
@@ -394,6 +509,8 @@ class SettingsPage(QWidget):
 			'notification_type': self.notify_type_combo.currentText(),
 			'volume': self.volume_slider.value(),
 			'wallpaper_path': self.wallpaper_path_edit.text(),
+			'excel_path': self.excel_path_edit.text(),
+			'course_start_date': self.start_date_edit.date().toString("yyyy-MM-dd"),
 			'last_modified': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 		}
 
