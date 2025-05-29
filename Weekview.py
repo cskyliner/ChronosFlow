@@ -1,4 +1,3 @@
-
 from common import *
 from Event import BaseEvent, DDLEvent, ActivityEvent, get_activity_events_in_week
 from Emitter import Emitter

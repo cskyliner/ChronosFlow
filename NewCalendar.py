@@ -70,9 +70,7 @@ class CalendarDayItem(QObject, QGraphicsRectItem):
 		else:
 			# 按住Shift，切换当前选中状态
 			self._selected = not self._selected
-
 		self.update()
-
 
 	def contextMenuEvent(self, event):
 		global_pos = event.screenPos()
@@ -94,7 +92,7 @@ class CalendarDayItem(QObject, QGraphicsRectItem):
 
 		text_color = palette.color(QPalette.Text)
 		mid_color = palette.color(QPalette.Mid)
-		painter.setPen(QPen(mid_color)) #边框颜色
+		painter.setPen(QPen(mid_color))  # 边框颜色
 		painter.drawRect(self.rect())
 		painter.setPen(QColor("#08B9FF") if self.is_today else QPen(text_color))  # 日期的颜色
 		if self.date.day() == 1:
@@ -257,7 +255,7 @@ class CalendarView(QWidget):
 	def showEvent(self, event):
 		super().showEvent(event)
 		self.draw_month(self.current_year, self.current_month)
-	
+
 	def update_title(self):
 		self.title_label.setText(f"{self.current_year}年{self.current_month}月")
 
@@ -301,11 +299,6 @@ class CalendarView(QWidget):
 	   # weekday_height = 30  # 固定周几栏高度
 	   # day_height = (h - weekday_height) / 6  # 剩余高度分给日期
 		#self.draw_month(self.current_year, self.current_month, day_width, day_height)
-	def clear_selection(self):
-		for item in self.scene.items():
-			if isinstance(item, CalendarDayItem):
-				item._selected = False
-				item.update()
 
 	def draw_month(self, year, month, day_width=None, day_height=None):
 		self.scene.clear()
@@ -329,7 +322,7 @@ class CalendarView(QWidget):
 			text_item = QGraphicsSimpleTextItem(weekday_names[col], weekday_item)
 			text_item.setFont(QFont("Microsoft YaHei", 10, QFont.Bold))
 			text_item.setBrush(QColor("#333333"))  # 深灰色文字
-			 # 文本居中
+			# 文本居中
 			text_width = text_item.boundingRect().width()
 			text_item.setPos(rect.x() + (rect.width() - text_width) / 2, rect.y() + 5)
 		col = 0
@@ -359,7 +352,7 @@ class CalendarView(QWidget):
 		total_rows = 7
 		#self.scene.setSceneRect(0, 0, total_cols * day_width, total_rows * day_height)
 		self.scene.setSceneRect(0, 0, total_cols * day_width, weekday_height + (total_rows - 1) * day_height)
-		
+
 	def go_to_month(self, year: int, month: int):
 		self.current_year = year
 		self.current_month = month

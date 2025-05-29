@@ -290,6 +290,7 @@ class MainWindow(QMainWindow):
 		self.schedule = Schedule()
 		schedule_layout.addWidget(self.schedule)
 		self.add_page(self.main_stack, self.create_event_window, "Schedule")
+
 	def setup_week_view_window(self):
 		"""创建周视图窗口"""
 		self.week_view_window = QWidget()
@@ -354,8 +355,9 @@ class MainWindow(QMainWindow):
 		# 添加周视图内容
 		self.week_view = WeekView()
 		week_view_layout.addWidget(self.week_view)
-		
+
 		self.add_page(self.main_stack, self.week_view_window, "Weekview")
+
 	def setup_setting_window(self):
 		"""创建设置栏"""
 		self.setting_window = QWidget()
@@ -531,7 +533,7 @@ class MainWindow(QMainWindow):
 
 	def check_one_schedule(self, data: tuple):
 		event: BaseEvent = data[0]
-		if isinstance(event,DDLEvent):
+		if isinstance(event, DDLEvent):
 			self.schedule.id = event.id
 			self.schedule.deadline_edit.setDateTime(QDateTime.fromString(event.datetime, "yyyy-MM-dd HH:mm"))
 			self.schedule.reminder_edit.setDateTime(QDateTime.fromString(event.advance_time, "yyyy-MM-dd HH:mm"))
@@ -541,13 +543,21 @@ class MainWindow(QMainWindow):
 			self.schedule.type_choose_combo.setCurrentText("DDL")
 			self.schedule.type_choose_combo.setEnabled(False)
 			self.main_stack.setCurrentIndex(self.main_stack_map["Schedule"])
-		elif isinstance(event,ActivityEvent):
-			# TODO: 编辑日程时候对于事件的恢复
+		elif isinstance(event, ActivityEvent):
 			self.schedule.id = event.id
+			self.schedule.start_date_edit.setDate(QDate.fromString(event.start_date, "yyyy-MM-dd"))
+			self.schedule.start_time_edit.setTime(QTime.fromString(event.start_time, "HH:mm"))
+			self.schedule.end_date_edit.setDate(QDate.fromString(event.end_date, "yyyy-MM-dd"))
+			self.schedule.end_time_edit.setTime(QTime.fromString(event.end_time, "HH:mm"))
+			self.schedule.repeat_combo.setCurrentText(event.repeat_type)
+			if event.repeat_type != '不重复':
+				english_to_chinese = {'Mon': '周一', 'Tue': '周二', 'Wed': '周三', 'Thu': '周四', 'Fri': '周五',
+									  'Sat': '周六', 'Sun': '周日'}
+				self.schedule.repeat_day_combo.setCurrentText(english_to_chinese[event.repeat_days])
 			self.schedule.group_box.setTitle("编辑日程")
 			self.schedule.type_choose_combo.setCurrentText("日程")
 			self.schedule.type_choose_combo.setEnabled(False)
-
+			self.main_stack.setCurrentIndex(self.main_stack_map["Schedule"])
 
 	def setup_search_column_animation(self) -> None:
 		"""搜索结果栏展开动画设置"""
