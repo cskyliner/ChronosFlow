@@ -14,6 +14,7 @@ from FontSetting import set_font
 from Event import DDLEvent, get_events_in_month, BaseEvent, ActivityEvent
 import re
 
+
 log = logging.getLogger(__name__)
 
 
@@ -523,6 +524,8 @@ class MainWindow(QMainWindow):
 					self.schedule.reminder_edit.setDateTime(QDateTime.currentDateTime())
 			elif name == "Calendar":
 				self.main_window_calendar.refresh()
+			elif name == "Weekview":
+				self.week_view.load_schedules()
 			stack.setCurrentIndex(self.main_stack_map[name])
 			log.info(f"跳转到{name}页面，日期为{date.toString() if date else date}")
 		else:
