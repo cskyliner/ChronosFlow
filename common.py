@@ -4,9 +4,10 @@ from PySide6.QtWidgets import (QApplication, QStyleFactory, QMainWindow, QWidget
 							   QSystemTrayIcon, QMenu, QListWidget, QListWidgetItem, QSpacerItem,
 							   QSizePolicy, QFrame, QDateTimeEdit, QGraphicsDropShadowEffect, QCalendarWidget,
 							   QScrollBar, QStyledItemDelegate, QTableView, QInputDialog, QHeaderView, QScrollArea,
-							   QDialog, QTextEdit, QStyleOptionViewItem, QStyle, QAbstractItemView, QGraphicsSimpleTextItem)
+							   QDialog, QTextEdit, QStyleOptionViewItem, QStyle, QAbstractItemView, QGraphicsSimpleTextItem,
+          						QGraphicsView, QGraphicsScene, QGraphicsRectItem, QSplitter)
 from PySide6.QtCore import (QPropertyAnimation, QEasingCurve, Qt, QDate, QTime, QDateTime, Signal, Slot, QSize, QObject,
-							QPoint, QTimer, QEvent, QPointF, QPersistentModelIndex, QRect, QModelIndex, QFile,
+							QPoint, QTimer, QEvent, QPointF, QPersistentModelIndex, QRect, QModelIndex, QFile, QRectF,
 							QFileInfo)
 from PySide6.QtGui import (QIcon, QAction, QPixmap, QColor, QLinearGradient, QPainter, QMouseEvent,
 						   QPainter, QFontMetrics, QTextCharFormat, QPen, QCursor, QFont, QPalette, QBrush,
@@ -17,7 +18,7 @@ import os
 import json
 import tkinter as tk
 from tkinter import filedialog
-from datetime import datetime
+from datetime import datetime, timedelta
 import platform
 import time
 from collections import defaultdict
