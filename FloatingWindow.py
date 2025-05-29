@@ -120,12 +120,14 @@ class FloatingWindow(QWidget):
 	@Slot(object)
 	def show_notification(self, data:tuple):
 		"""显示通知"""
+
 		if(data[0] is None):
 			log.info("暂无通知")
 		else:	
 			log.info(f"收到通知：{data[0].title}")
 		self.lattest_event = data[0]
 		if self.notification_area.count():#更新时清楚旧通知
+
 			self.notification_area.takeAt(0).widget().setParent(None)
 		notification = CountdownLabel(self.lattest_event)
 		self.notification_area.addWidget(notification)
@@ -178,9 +180,11 @@ class FloatingWindow(QWidget):
 class CountdownLabel(QLabel):
 	def __init__(self, event: DDLEvent, parent=None):
 		super().__init__(parent)
+
 		if event is None: 
 			self.setText("        DDL event:无")
 			return
+
 		self._event = event
 		self.end_time = QDateTime.fromString(event.datetime, "yyyy-MM-dd HH:mm")
 		self.notify_time = QDateTime.fromString(event.advance_time, "yyyy-MM-dd HH:mm")

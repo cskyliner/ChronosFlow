@@ -1,13 +1,18 @@
+
 from common import *
 from Event import BaseEvent, DDLEvent, ActivityEvent, get_activity_events_in_week
 from Emitter import Emitter
 log = logging.getLogger(__name__)
+
 class TimeAxisItem(QGraphicsRectItem):
     """左侧时间轴项"""
     def __init__(self, rect, time_str):
         super().__init__(rect)
         self.time_str = time_str
+
         self.setPen(QPen("#DEEE4FE6"))
+
+
         
     def paint(self, painter, option, widget=None):
         painter.setFont(QFont("Arial", 8))
@@ -22,6 +27,7 @@ class ScheduleBlockItem(QGraphicsRectItem, QObject):
     def __init__(self, rect, event):
         QObject.__init__(self)  # 初始化 QObject
         QGraphicsRectItem.__init__(self, rect)  # 初始化 QGraphicsRectItem
+
         self._event:ActivityEvent = event
         self.setAcceptHoverEvents(True)
         self.setBrush(QColor("#f0f0f0"))  
@@ -49,24 +55,29 @@ class ScheduleBlockItem(QGraphicsRectItem, QObject):
         text = f"{title}({self._event.repeat_type})\n{time_range}"
         painter.drawText(text_rect, Qt.AlignLeft | Qt.AlignTop, text)
 
+
         
     def mousePressEvent(self, event):
         self.clicked.emit(self.event)
         
     def mouseDoubleClickEvent(self, event):
         self.double_clicked.emit(self.event)
+
     def hoverEnterEvent(self, event):
         self.setBrush(QColor("#eee60b"))  # 鼠标悬停时变为黄色
 
     def hoverLeaveEvent(self, event):
         self.setBrush(QColor("#f0f0f0"))  # 鼠标离开时恢复
 
+
 class WeekDayColumn(QGraphicsRectItem):
     """单日列容器"""
     def __init__(self, rect, date):
         super().__init__(rect)
         self.date = date
+
         self.setPen(QPen(QColor("#f15ccc")))
+
         self.setBrush(Qt.white)
 
 class WeekView(QWidget):
@@ -81,6 +92,7 @@ class WeekView(QWidget):
         self.end_hour = 24   # 结束时间
         self.hour_height = 60  # 每个小时的高度
         self.time_slot_count = self.end_hour - self.start_hour
+
         self.day_width = 100  
         self.cell_map = {}  # {(weekday: int, hour: int): ScheduleAreaItem} 用于定位时间格子 # Monday=1, Sunday=7
         self.mp = {"Mon": 1, "Tue": 2, "Wed": 3, "Thu": 4, "Fri": 5, "Sat": 6, "Sun": 7}
@@ -90,6 +102,7 @@ class WeekView(QWidget):
         self.setup_time_axis()
         self.current_week = QDate.currentDate().weekNumber()[0]
         #log.info(f"self.current_week = {self.current_week}")
+
         self.update_week(QDate.currentDate())
         
     def init_ui(self):
@@ -102,7 +115,9 @@ class WeekView(QWidget):
         self.main_scene = QGraphicsScene()
         
         # 创建主视图
+
         #self.main_view = QGraphicsView(self.main_scene)
+
         #self.main_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         #self.main_view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.main_view = QGraphicsView(self.main_scene)
@@ -207,7 +222,9 @@ class WeekView(QWidget):
                 self.main_scene.addItem(item)
             
             # 绘制小时分隔线（贯穿时间轴）
+
             #line = self.main_scene.addLine(0, y, 60, y, QPen(QColor("#f91289eb")))
+
             
         # 设置时间轴视图的位置和大小
         #self.time_axis_view.setSceneRect(0, 0, 60, self.time_slot_count * self.hour_height)
@@ -277,6 +294,7 @@ class WeekView(QWidget):
             
             # 添加时间格子
             for h in range(self.time_slot_count):
+
                 #cell_rect = QRectF(0, h*self.hour_height, self.day_width, self.hour_height)
                 #cell = QGraphicsRectItem(cell_rect, col)
                 #cell = ScheduleAreaItem(cell_rect, col)
@@ -290,6 +308,7 @@ class WeekView(QWidget):
                 cell.setPos(cell_x, cell_y)
                 self.main_scene.addItem(cell)      
                 self.cell_map[(i + 1, self.start_hour + h)] = cell         
+
                 # 绑定点击事件
                 cell.mousePressEvent = lambda event, d=self.dates[i], h=h+self.start_hour: \
                     self.handle_time_click(d, h, event)
@@ -297,7 +316,9 @@ class WeekView(QWidget):
         # 添加贯穿所有列的小时分隔线（与时间轴对齐）
         for h in range(self.time_slot_count + 1):
             y = start_y + h * self.hour_height
+
             line = self.main_scene.addLine(0, y, 60 + self.day_width * 7, y, QPen(QColor("#3cf907")))
+
 
     def handle_time_click(self, date, hour, event):
         """处理时间格子点击"""
@@ -314,6 +335,7 @@ class WeekView(QWidget):
             menu.exec(event.screenPos())
 
     def load_schedules(self):
+
         """加载周的日程"""
         #self.clear_schedule_blocks()
         self.events = get_activity_events_in_week()
@@ -434,3 +456,4 @@ class ScheduleAreaItem(QGraphicsRectItem):
 
     def hoverLeaveEvent(self, event):
         self.setBrush(QColor("#f0f0f0"))  # 鼠标离开时恢复
+
