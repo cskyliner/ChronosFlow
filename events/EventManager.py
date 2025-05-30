@@ -27,7 +27,6 @@ class EventFactory:
 		:params: id:事件ID event_type:事件类型 add:是否添加到数据库 *args:参数
 		:return: BaseEvent 事件类
 		"""
-		global latest_ddlevent
 		if event_type not in cls.registry:
 			raise Exception(f"EventFactory.create:event_type {event_type} not supported")
 		event_cls = cls.registry[event_type]
@@ -43,14 +42,14 @@ class EventFactory:
 					log.info(f"EventFactory.create:现在时间是 {now_time}")
 					if now_time > n_event.datetime:
 						log.info(f"EventFactory.create:现在时间是 {now_time} 添加新事件比最新事件更晚，不更新最新事件")
-					elif latest_ddlevent is None:
+					elif EventSQLManager.latest_ddlevent is None:
 						log.info(f"EventFactory.create:没有最新的DDL事件，添加新事件:title：{n_event.title}; notes:{n_event.notes}")
-						latest_ddlevent = n_event
+						EventSQLManager.latest_ddlevent = n_event
 						Emitter.instance().send_notice_signal((n_event,"create"))
 						Emitter.instance().send_notice_signal((n_event,"create"))
-					elif n_event.datetime < latest_ddlevent.datetime:
+					elif n_event.datetime < EventSQLManager.latest_ddlevent.datetime:
 						log.info(f"EventFactory.create:添加新事件比最新事件更早，更新最新事件为新事件:title：{n_event.title}; notes:{n_event.notes}")
-						latest_ddlevent = n_event
+						EventSQLManager.latest_ddlevent = n_event
 						Emitter.instance().send_notice_signal((n_event,"update"))
 					else:
 						log.info("EventFactory.create:添加新事件比最新事件更晚，不更新最新事件")
@@ -196,6 +195,7 @@ class EventSQLManager:
 			WHERE 
 				(date(start_date) <= '{last_day}')
 			AND (date(end_date) >= '{first_day}')
+			ORDER BY date(start_date) ASC, time(start_time) ASC
 		"""
 		ddl_rows = []
 		activity_rows = []
@@ -224,7 +224,9 @@ class EventSQLManager:
 
 		for row in activity_rows:
 			try:
-				paras = row[1:]
+				paras = list(row[1:])
+				# 此处微调bug，先将SQL中repeat_day的json形式还原为tuple再输入作为paras
+				paras[-1] = json.loads(paras[-1])
 				event:ActivityEvent = EventFactory.create(None, "Activity", False, *paras)
 				if event is not None and isinstance(event, ActivityEvent):
 					event.id = row[0]
@@ -237,68 +239,46 @@ class EventSQLManager:
 	
 	@classmethod
 	def get_events_between_twodays(cls, start_date:str, end_date:str) -> list[BaseEvent]:
-		raise NotImplementedError
-		return events
+		"""
+		获取两个时间点之间的所有日程（暂时不加ddlevent)
+		"""
+		# 验证输入
+		if start_date > end_date:
+			log.warning(f"get_events_between_twodays:无效的起始日期输入: {start_date}-{end_date}")
+			return []
+		# 构造 SQL 查询：同时匹配年份和月份
 
-	@classmethod
-	def search_all(cls, keyword: tuple[str]) -> list[BaseEvent]:
+		# 查询activity
+		first_day, last_day = start_date,end_date
+		activity_query = f"""
+			SELECT * FROM activityevents
+			WHERE 
+				(date(start_date) <= '{last_day}')
+			AND (date(end_date) >= '{first_day}')
+			ORDER BY date(start_date) ASC, time(start_time) ASC
 		"""
-		多关键词模糊性全局搜索（AND关系）,改为只搜索title和notes
-		"""
-		result: list[BaseEvent] = []
-		cls.cursor.execute("SELECT name FROM sqlite_master WHERE type ='table' AND name != 'global_id'")  					# 获取所有table
-		tables = [row[0] for row in cls.cursor.fetchall()]
-		for table in tables:
-			cls.cursor.execute(f"PRAGMA table_info({table})")  									# 通过PRAGMA获取table列信息
-			columns_info = cls.cursor.fetchall()
-			possible_columns = [column[1] for column in columns_info if "TEXT" == column[2] and ("title" == column[1] or "notes" == column[1]) ] 	# 排除格式非TEXT的列
-			if not possible_columns:
-				continue
-			# 拼接语句，注意使用AND连接
-			where_clauses = [
-				" AND ".join(f"{col} LIKE ?" for key in keyword)
-				for col in possible_columns
-			]
-			where_column = " OR ".join(where_clauses)  											# 选择所有匹配所有关键字的列
-			values = [f"%{key}%" for key in keyword] * len(possible_columns)
-			query = f"SELECT * FROM {table} WHERE {where_column}" 								# 选择匹配关键字的行
-			cls.cursor.execute(query, values)
-			rows = cls.cursor.fetchall()
-			for row in rows:
-				paras = row[1:]
-				event = EventFactory.create(None, cls.TABLE_MAP.get(table, "DDL"), False, *paras)
-				event.id = row[0]
-				if isinstance(event, DDLEvent):
-					result.append(event)
-				elif isinstance(event, ActivityEvent):
-					result += event.expand(event.start_date,event.end_date)
-				else:
-					log.error("search_all发生事件类型错误")
-		return result
-	
-	@classmethod
-	def search_time(cls, start_time: str, end_time: str) -> list[BaseEvent]:
-		"""
-		时间范围搜索
-		"""
-		result: list[BaseEvent] = []
-		cls.cursor.execute("SELECT name FROM sqlite_master WHERE type ='table'")  	# 获取所有table名称
-		tables = [row[0] for row in cls.cursor.fetchall()]
-		for table in tables:
-			cls.cursor.execute(f"PRAGMA table_info({table})")  						# 通过PRAGMA获取table列信息
-			columns_info = cls.cursor.fetchall()
-			columns_name = [column[1] for column in columns_info][1:]
-			if "datetime" not in columns_name:  								# 排除没有datetime列的table
-				continue
-			query = f"SELECT * FROM {table} WHERE datetime BETWEEN ? AND ?"
-			cls.cursor.execute(query, (start_time, end_time))
-			rows = cls.cursor.fetchall()
-			for row in rows:
-				paras = row[1:]
-				event = EventFactory.create(None, cls.TABLE_MAP.get(table, "DDL"), False, *paras)
-				event.id = row[0]
-				result.append(event)
-		return result
+		activity_rows = []
+		try:
+			cls.cursor.execute(activity_query)
+			activity_rows = cls.cursor.fetchall()
+		except Exception as e:
+			log.error(f"get_events_in_month:activity_events数据库查询失败: {e}")
+		events = []
+
+		for row in activity_rows:
+			try:
+				paras = list(row[1:])
+				# 此处微调bug，先将SQL中repeat_day的json形式还原为tuple再输入作为paras
+				paras[-1] = json.loads(paras[-1])
+				event:ActivityEvent = EventFactory.create(None, "Activity", False, *paras)
+				if event is not None and isinstance(event, ActivityEvent):
+					event.id = row[0]
+					events += event.expand(first_day,last_day)
+			except Exception as e:
+				log.error(f"get_events_in_month:解析activity事件失败（ID={row[0]}）: {e}")
+
+		log.info(f"get_events_in_month:找到 {len(events)} 个事件（{start_date}-{end_date}）")
+		return events
 	
 	@classmethod
 	def get_specific_date_events(cls, table_name:str, date: QDate) -> list[BaseEvent]:
@@ -350,7 +330,9 @@ class EventSQLManager:
 		elif table_name == "activityevents":
 			for row in rows:
 				event_id = row[0]
-				paras = row[1:]
+				paras = list(row[1:])
+				# 此处微调bug，先将SQL中repeat_day的json形式还原为tuple再输入作为paras
+				paras[-1] = json.loads(paras[-1])
 				event_type = "Activity"
 				event:ActivityEvent = EventFactory.create(event_id,event_type,False,*paras)
 				result = event.expand(target_date,target_date)
@@ -358,6 +340,69 @@ class EventSQLManager:
 		else:
 			log.error("get_specific_date_events:Event类型出错，类型未实现该函数")
 		return events
+	
+	@classmethod
+	def search_all(cls, keyword: tuple[str]) -> list[BaseEvent]:
+		"""
+		多关键词模糊性全局搜索（AND关系）,改为只搜索title和notes
+		"""
+		result: list[BaseEvent] = []
+		cls.cursor.execute("SELECT name FROM sqlite_master WHERE type ='table' AND name != 'global_id'")  					# 获取所有table
+		tables = [row[0] for row in cls.cursor.fetchall()]
+		for table in tables:
+			cls.cursor.execute(f"PRAGMA table_info({table})")  									# 通过PRAGMA获取table列信息
+			columns_info = cls.cursor.fetchall()
+			possible_columns = [column[1] for column in columns_info if "TEXT" == column[2] and ("title" == column[1] or "notes" == column[1]) ] 	# 排除格式非TEXT的列
+			if not possible_columns:
+				continue
+			# 拼接语句，注意使用AND连接
+			where_clauses = [
+				" AND ".join(f"{col} LIKE ?" for key in keyword)
+				for col in possible_columns
+			]
+			where_column = " OR ".join(where_clauses)  											# 选择所有匹配所有关键字的列
+			values = [f"%{key}%" for key in keyword] * len(possible_columns)
+			query = f"SELECT * FROM {table} WHERE {where_column}" 								# 选择匹配关键字的行
+			cls.cursor.execute(query, values)
+			rows = cls.cursor.fetchall()
+			for row in rows:
+				paras = list(row[1:])
+				if cls.TABLE_MAP.get(table, "DDL") == "Activity":
+					# 此处微调bug，先将SQL中repeat_day的json形式还原为tuple再输入作为paras
+					paras[-1] = json.loads(paras[-1])		
+				event = EventFactory.create(None, cls.TABLE_MAP.get(table, "DDL"), False, *paras)
+				event.id = row[0]
+				if isinstance(event, DDLEvent):
+					result.append(event)
+				elif isinstance(event, ActivityEvent):
+					result += event.expand(event.start_date,event.end_date)
+				else:
+					log.error("search_all发生事件类型错误")
+		return result
+	
+	@classmethod
+	def search_time(cls, start_time: str, end_time: str) -> list[BaseEvent]:
+		"""
+		时间范围搜索
+		"""
+		result: list[BaseEvent] = []
+		cls.cursor.execute("SELECT name FROM sqlite_master WHERE type ='table'")  	# 获取所有table名称
+		tables = [row[0] for row in cls.cursor.fetchall()]
+		for table in tables:
+			cls.cursor.execute(f"PRAGMA table_info({table})")  						# 通过PRAGMA获取table列信息
+			columns_info = cls.cursor.fetchall()
+			columns_name = [column[1] for column in columns_info][1:]
+			if "datetime" not in columns_name:  								# 排除没有datetime列的table
+				continue
+			query = f"SELECT * FROM {table} WHERE datetime BETWEEN ? AND ?"
+			cls.cursor.execute(query, (start_time, end_time))
+			rows = cls.cursor.fetchall()
+			for row in rows:
+				paras = row[1:]
+				event = EventFactory.create(None, cls.TABLE_MAP.get(table, "DDL"), False, *paras)
+				event.id = row[0]
+				result.append(event)
+		return result
 	
 	@classmethod
 	def get_data_time_order(cls, table_name: str, start_pos: int, event_num: int) -> tuple[BaseEvent]:

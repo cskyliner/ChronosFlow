@@ -121,11 +121,11 @@ class Schedule(QWidget):
 		group_layout.addWidget(self.theme_text_edit)
 
 		# 创建多行文本框
-		self.text_edit = QPlainTextEdit()
+		self.text_edit = QTextEdit()
 		self.text_edit.setPlaceholderText("内容")
 		# 设置半透明和自适应主题的样式表
 		self.text_edit.setStyleSheet("""
-		    QPlainTextEdit {
+		    QTextEdit {
 		        background-color: rgba(255, 255, 255, 0.6); 
 		        color: black;  
 		        border: 1px solid palette(shadow);

@@ -339,19 +339,22 @@ class WeekView(QWidget):
         """加载周的日程"""
         #self.clear_schedule_blocks()
         self.events = []
-        # self.events = EventSQLManager.get_activity_events_in_week()
+        first_date = self.dates[0].toString("yyyy-MM-dd")
+        end_date = self.dates[-1].toString("yyyy-MM-dd")
+        self.events = EventSQLManager.get_events_between_twodays(first_date,end_date)
         if(len(self.events) == 0):
             log.info(f"Weekview load_schedules: 没有找到任何活动日程")
         else:
-            log.info(f"Weekview load_schedules: 找到 {len(self.events)} 条活动日程")
+            log.info(f"Weekview load_schedules: 找到 {len(self.events)} 条活动日程\n"
+                     +"\n".join(f"- {event.title} @ {event.start_date}-{event.end_date}" for event in self.events))
             
         for event in self.events:
             self.add_schedule_item(event)
 
     def add_schedule_item(self, event:ActivityEvent):
         """添加日程块到视图"""
-        start_t = QDateTime.fromString(event.start_time, "HH:mm")
-        end_t = QDateTime.fromString(event.end_time, "HH:mm")
+        start_t = QTime.fromString(event.start_time, "HH:mm")
+        end_t = QTime.fromString(event.end_time, "HH:mm")
         
         try:
             repeat_days = json.loads(event.repeat_days)
@@ -360,18 +363,18 @@ class WeekView(QWidget):
         except Exception as e:
             log.error(f"解析 repeat_days 失败: {event.repeat_days} - {e}")
             return        
-        if not repeat_days:
-            log.warning(f"{event.title} 没有 repeat_days")
-            return
-        #log.info(f"{event.title} repeat_days: {repeat_days} type: {type(repeat_days)}")
 
-        for day_str in repeat_days:
-            weekday = self.mp.get(day_str)
-            if weekday is None:
-                log.error(f"未知的星期缩写: {day_str}")
-                continue
+        dt = QDateTime.fromString(event.datetime, "yyyy-MM-dd HH:mm")
+        date = dt.date()
+        weekday = date.dayOfWeek()
+        # else:
+        #     for day_str in repeat_days:
+        #         weekday = self.mp.get(day_str)
+        #         if weekday is None:
+        #             log.error(f"未知的星期缩写: {day_str}")
+        #             continue
 
-        start_hour = start_t.time().hour()
+        start_hour = start_t.hour()
         key = (weekday, start_hour)        
         # 只显示当前周的日程
         #if start_dt.date() not in self.dates:
@@ -384,7 +387,7 @@ class WeekView(QWidget):
         else:
             log.info(f"添加的日程:{event.title} (weekday, start_hour) = {key} 对应的时间格子位置x:{cell.x()}, y:{cell.y()}\
                 width:{cell.rect().width()} height:{cell.rect().height()}")
-        start_min = start_t.time().minute()
+        start_min = start_t.minute()
         y = (start_min / 60) * self.hour_height
         duration_min = max(start_t.secsTo(end_t) // 60, 40)
         height = (duration_min / 60) * self.hour_height

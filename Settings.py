@@ -1,5 +1,6 @@
 from common import *
 from Emitter import Emitter
+from ioporter.course_importer import CourseScheduleImporter
 import json
 from FontSetting import set_font
 
@@ -457,11 +458,12 @@ class SettingsPage(QWidget):
 					self.start_date_edit.setDate(QDate.fromString(settings.get('course_start_date'), "yyyy-MM-dd"))
 					self.excel_path=settings.get('excel_path','')
 					self.excel_path_edit.setText(self.excel_path)
-
 					log.info(f"加载设置: {settings}")
 					# 发送信号通知储存路径
 					Emitter.instance().send_storage_path(
 						os.path.join(settings.get('storage_path', ''), "AppData", "Database"))
+					CourseScheduleImporter.init_importer("/Users/kylin/Desktop/timetable大一下.xls","2025-02-17",16)
+					# CourseScheduleImporter.extract_info()
 
 			except Exception as e:
 				QMessageBox.warning(self, "错误", f"加载设置失败: {str(e)}")

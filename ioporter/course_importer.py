@@ -19,8 +19,8 @@ class CourseScheduleImporter:
         "星期日": "Sun",
     }
     time_start_map = {
-        "第一节": "8:00",
-        "第二节": "9:00",
+        "第一节": "08:00",
+        "第二节": "09:00",
         "第三节": "10:10",
         "第四节": "11:10",
         "第五节": "13:00",
@@ -33,8 +33,8 @@ class CourseScheduleImporter:
         "第十二节": "20:40",
     }
     time_end_map = {
-        "第一节": "8:50",
-        "第二节": "9:50",
+        "第一节": "08:50",
+        "第二节": "09:50",
         "第三节": "11:00",
         "第四节": "12:00",
         "第五节": "13:50",
@@ -47,13 +47,20 @@ class CourseScheduleImporter:
         "第十二节": "21:30",
     }
     @classmethod
-    def init_importer(cls, in_path, start_str, semester_weeks):
+    def init_importer(cls, in_path, start_str, semester_weeks = 16):
+        """
+        初始化导入课表
+        """
         cls.in_path = in_path
         cls.start_str = start_str
         cls.semester_weeks = semester_weeks
     
     @classmethod
     def extract_info(cls):
+        """
+        提取课表信息
+        """
+        # 此处为了配合多种不同的excel形式，似乎学校的只能是老旧的xls，所以用条件判断一下
         if cls.in_path.endswith(".xls"):
             schedule = pd.read_excel(cls.in_path, engine="xlrd", index_col=0)
         elif cls.in_path.endswith(".xlsx"):
@@ -61,22 +68,24 @@ class CourseScheduleImporter:
         else:
             raise ValueError("不支持的文件格式")
 
-        # 提取每一个单元格
+        # 提取每一个单元格信息
         for idx, row in schedule.iterrows():
-            for weekday in schedule.columns[1:]:
+            for weekday in schedule.columns:
                 cell = row[weekday]
                 if pd.isna(cell):
                     continue
                 else:
                     log.info(f"{weekday}，{idx}，内容：{cell}")
                     try:
-                        # EventSQLManager.add_event(cls.process_data(cell,weekday,idx))
-                        log.info(f"添加课程{cls.process_data(cell,weekday,idx).to_dict()}成功")
+                        n_event = cls.process_data(cell,weekday,idx)
+                        log.info(f"添加课程{n_event.to_dict()}成功")
                     except Exception as e:
                         log.error(f"添加课程{cell}失败,{e}")
     @classmethod
     def process_data(cls, cell, weekday, idx) -> ActivityEvent:
-
+        """
+        处理每个单元格的信息
+        """
         result:dict = {
             "title" : "",
             "location" : "",
@@ -112,7 +121,7 @@ class CourseScheduleImporter:
         exam_match = re.search(r"(考试(?:时间|方式)：[^；]+)",cell)
         if exam_match:
             result["exam_info"] = exam_match.group(1).strip()
-        # 提取重复信息
+        # 整理重复事件信息
         repeat_day = cls.week_map[weekday]
         start_time = cls.time_start_map[idx]
         end_time = cls.time_end_map[idx]
@@ -123,20 +132,20 @@ class CourseScheduleImporter:
         end_date = start_date.addDays(cls.semester_weeks*7 - 1)
         end_date_str = end_date.toString("yyyy-MM-dd")
         if result["repeat_type"] == "每周":
-            repeat_type = "weekly"
+            repeat_type = "每周"
             start_date_str = cls.start_str 
         elif result["repeat_type"] == "单周":
-            repeat_type = "biweekly"
+            repeat_type = "每两周"
             start_date_str = cls.start_str
         elif result["repeat_type"] == "双周":
-            repeat_type = "biweekly"
+            repeat_type = "每两周"
             start_date_str = start_date.addDays(7).toString("yyyy-MM-dd")
         else:
             log.error(f"{result['repeat_type']}，该重复类型未实现")
         # 合并notes
         notes = f"上课地点：{result['location']}\n备注：{result['remark']}\n{result['exam_info']}"
         """输入：标题，每天开始时间，每天结束时间，开始日期，终止日期，笔记，重要程度，重复类型如("weekly"、"biweekly），重复具体星期"""
-        return EventFactory.create(None, "Activity", False, result["title"], start_time, end_time, start_date_str, end_date_str, notes, "Great", repeat_type, (repeat_day,))
+        return EventFactory.create(None, "Activity", True, result["title"], start_time, end_time, start_date_str, end_date_str, notes, "Great", repeat_type, (repeat_day,))
 
 # CourseScheduleImporter.init_importer("/Users/kylin/Desktop/timetable大一下.xls","2025-02-17",16)
 # CourseScheduleImporter.extract_info() 

@@ -64,7 +64,7 @@ class ActivityEvent(BaseEvent):
 	输入：标题，每天开始时间，每天结束时间，开始日期，终止日期，笔记，重要程度，重复类型如("weekly"、"biweekly），重复具体星期
 	"""
 
-	def __init__(self, title:str, start_time:str, end_time:str, start_date:str, end_date:str, notes:str, importance:str = "Great",repeat_type:str = None, repeat_days:tuple = None):
+	def __init__(self, title:str, start_time:str, end_time:str, start_date:str, end_date:str, notes:str, importance:str = "Great",repeat_type:str = "不重复", repeat_days:tuple = []):
 		super().__init__(title)
 		self.start_time = start_time
 		self.end_time = end_time
@@ -87,7 +87,7 @@ class ActivityEvent(BaseEvent):
 			"notes": self.notes,
 			"importance": self.importance,
 			"repeat_type": self.repeat_type,
-			"repeat_days": json.loads(self.repeat_days),
+			"repeat_days": self.repeat_days,
 		}
 	
 	def to_args(self) -> tuple:

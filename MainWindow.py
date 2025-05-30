@@ -554,7 +554,9 @@ class MainWindow(QMainWindow):
 			if event.repeat_type != '不重复':
 				english_to_chinese = {'Mon': '周一', 'Tue': '周二', 'Wed': '周三', 'Thu': '周四', 'Fri': '周五',
 									  'Sat': '周六', 'Sun': '周日'}
-				self.schedule.repeat_day_combo.setCurrentText(english_to_chinese[json.loads(event.repeat_days)])
+				weekdays = json.loads(event.repeat_days)
+				# 这里暂时只能选一周内的一天
+				self.schedule.repeat_day_combo.setCurrentText(english_to_chinese[weekdays[0]])
 			self.schedule.group_box.setTitle("编辑日程")
 			self.schedule.type_choose_combo.setCurrentText("日程")
 			self.schedule.type_choose_combo.setEnabled(False)
