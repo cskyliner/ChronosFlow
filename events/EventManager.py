@@ -385,7 +385,7 @@ class EventSQLManager:
 			result.append(event)
 		return tuple(result)
 	
-	# 修改特定事件
+	# 对特定事件进行操作，增删减改
 	@classmethod
 	def add_event(cls, event:BaseEvent) -> None:
 		"""
