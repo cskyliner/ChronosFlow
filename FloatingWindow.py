@@ -1,8 +1,6 @@
 from common import *
-# ---------------------- 悬浮窗口类 ----------------------
 from Notice import NotificationWidget
 from events.Event import *
-
 log = logging.getLogger(__name__)
 class FloatingWindow(QWidget):
 	exit_requested = Signal()  # 完全退出信号
@@ -128,7 +126,6 @@ class FloatingWindow(QWidget):
 			log.info(f"收到通知：{data[0].title}")
 		self.lattest_event = data[0]
 		if self.notification_area.count():#更新时清楚旧通知
-
 			self.notification_area.takeAt(0).widget().setParent(None)
 		notification = CountdownLabel(self.lattest_event)
 		self.notification_area.addWidget(notification)

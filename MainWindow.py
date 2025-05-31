@@ -10,12 +10,11 @@ from FloatingWindow import FloatingWindow
 from Notice import Notice
 from Upcoming import Upcoming, FloatingButton
 from Weekview import WeekView
+from Weekview import WeekView
 from FontSetting import set_font
 from events.Event import *
 from events.EventManager import EventSQLManager
 import re
-
-
 log = logging.getLogger(__name__)
 
 
@@ -79,6 +78,7 @@ class MainWindow(QMainWindow):
 		self.setup_create_event_window()  # 日程填写窗口
 		self.setup_upcoming_window()  # 日程展示窗口
 		self.setup_week_view_window()
+		Emitter.instance().delete_activity_event_signal.connect(self.week_view.update_view_geometry)
 		self.navigate_to("Calendar", self.main_stack)
 		cur_month = QDate.currentDate().month()
 		cur_year = QDate.currentDate().year()
@@ -291,7 +291,6 @@ class MainWindow(QMainWindow):
 		self.schedule = Schedule()
 		schedule_layout.addWidget(self.schedule)
 		self.add_page(self.main_stack, self.create_event_window, "Schedule")
-
 	def setup_week_view_window(self):
 		"""创建周视图窗口"""
 		self.week_view_window = QWidget()
@@ -356,8 +355,14 @@ class MainWindow(QMainWindow):
 		# 添加周视图内容
 		self.week_view = WeekView()
 		week_view_layout.addWidget(self.week_view)
-
+		self.week_view.floating_button = FloatingButton(self.week_view_window)
+		self.week_view.floating_button.move(50, 50)  # 初始位置
+		self.week_view.floating_button.raise_()  # 确保在最上层
+		self.week_view.floating_button.clicked.connect(partial(self.navigate_to, "Schedule", self.main_stack))		
 		self.add_page(self.main_stack, self.week_view_window, "Weekview")
+		self.week_view.schedule_area_clicked.connect(lambda info: self.navigate_to("Schedule", self.main_stack, None, ("from_weekview_add",info)))
+		self.week_view.schedule_del_btn_clicked.connect(lambda event: Emitter.instance().send_delete_event_signal(event.id, event.table_name()))
+		self.week_view.schedule_double_clicked.connect(lambda event: self.check_one_schedule((event,)))
 
 	def setup_setting_window(self):
 		"""创建设置栏"""
@@ -492,6 +497,8 @@ class MainWindow(QMainWindow):
 		self.upcoming.float_btn.move(50, 50)  # 初始位置
 		self.upcoming.float_btn.raise_()  # 确保在最上层
 		self.upcoming.float_btn.clicked.connect(partial(self.navigate_to, "Schedule", self.main_stack))
+		#self.upcoming.del_activity_event_signal.connect(self.week_view.update_view_geometry)
+
 
 	def add_page(self, stack: QStackedWidget, widget: QWidget, name: str):
 		'''
@@ -520,9 +527,24 @@ class MainWindow(QMainWindow):
 				self.schedule.group_box.setTitle("添加DDL")
 				if not date is None:
 					self.schedule.receive_date(date)
+				elif tag is not None:
+					info = tag[0]
+					if info == "from_weekview_add":
+						bg_t:QTime = tag[1][0]
+						en_t:QTime = tag[1][1]
+						date:QDate = tag[1][2]
+						self.schedule.type_choose_combo.setCurrentText("日程")
+						self.schedule.type_choose_combo.setEnabled(True)      
+						self.schedule.start_date_edit.setDate(date)
+						self.schedule.end_date_edit.setDate(date)
+						self.schedule.start_time_edit.setTime(bg_t)
+						self.schedule.end_time_edit.setTime(en_t)	
+							
 				else:
-					self.schedule.deadline_edit.setDateTime(QDateTime.currentDateTime())
-					self.schedule.reminder_edit.setDateTime(QDateTime.currentDateTime())
+					self.schedule.deadline_date_edit.setDate(QDate.currentDate())
+					self.schedule.deadline_time_edit.setTime(QTime.currentTime())
+					self.schedule.reminder_date_edit.setDate(QDate.currentDate())
+					self.schedule.reminder_time_edit.setTime(QTime.currentTime())
 			elif name == "Calendar":
 				self.main_window_calendar.refresh()
 			elif name == "Weekview":
@@ -536,15 +558,19 @@ class MainWindow(QMainWindow):
 		event: BaseEvent = data[0]
 		if isinstance(event, DDLEvent):
 			self.schedule.id = event.id
-			self.schedule.deadline_edit.setDateTime(QDateTime.fromString(event.datetime, "yyyy-MM-dd HH:mm"))
-			self.schedule.reminder_edit.setDateTime(QDateTime.fromString(event.advance_time, "yyyy-MM-dd HH:mm"))
+			datetime = QDateTime.fromString(event.datetime, "yyyy-MM-dd HH:mm")
+			remainder_datetime = QDateTime.fromString(event.advance_time, "yyyy-MM-dd HH:mm")
+			self.schedule.deadline_date_edit.setDate(datetime.date())
+			self.schedule.deadline_time_edit.setTime(datetime.time())
+			self.schedule.reminder_date_edit.setDate(remainder_datetime.date())
+			self.schedule.reminder_time_edit.setTime(remainder_datetime.time())
 			self.schedule.theme_text_edit.setText(event.title)
 			self.schedule.text_edit.setPlainText(event.notes)
 			self.schedule.group_box.setTitle("编辑DDL")
 			self.schedule.type_choose_combo.setCurrentText("DDL")
 			self.schedule.type_choose_combo.setEnabled(False)
-			self.main_stack.setCurrentIndex(self.main_stack_map["Schedule"])
-		elif isinstance(event, ActivityEvent):
+		elif isinstance(event,ActivityEvent):
+			# TODO: 编辑日程时候对于事件的恢复
 			self.schedule.id = event.id
 			self.schedule.start_date_edit.setDate(QDate.fromString(event.start_date, "yyyy-MM-dd"))
 			self.schedule.start_time_edit.setTime(QTime.fromString(event.start_time, "HH:mm"))
@@ -560,7 +586,20 @@ class MainWindow(QMainWindow):
 			self.schedule.group_box.setTitle("编辑日程")
 			self.schedule.type_choose_combo.setCurrentText("日程")
 			self.schedule.type_choose_combo.setEnabled(False)
-			self.main_stack.setCurrentIndex(self.main_stack_map["Schedule"])
+			bg_t:QTime = QTime.fromString(event.start_time,"HH:mm")
+			en_t:QTime = QTime.fromString(event.end_time,"HH:mm")
+			st_date:QDate = QDate.fromString(event.start_date, "yyyy-MM-dd")
+			en_date:QDate = QDate.fromString(event.end_date, "yyyy-MM-dd")
+			self.schedule.type_choose_combo.setCurrentText("日程")
+			self.schedule.theme_text_edit.setText(event.title)
+			self.schedule.text_edit.setPlainText(event.notes)
+			self.schedule.type_choose_combo.setEnabled(True)      
+			self.schedule.start_date_edit.setDate(st_date)
+			self.schedule.end_date_edit.setDate(en_date)
+			self.schedule.start_time_edit.setTime(bg_t)
+			self.schedule.end_time_edit.setTime(en_t)
+
+		self.main_stack.setCurrentIndex(self.main_stack_map["Schedule"])
 
 	def setup_search_column_animation(self) -> None:
 		"""搜索结果栏展开动画设置"""

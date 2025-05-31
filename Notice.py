@@ -52,11 +52,8 @@ class Notice(QObject):
 				self.request_latest_event(current)
 
 		else:
-			pass
-			# log.info(f"当前Notice没有储存事件，正调用request_latest_event获取事件")
-			# self.request_latest_event(current)
+			self.request_latest_event(current)
 			
-
 	def update_latest_event(self, latest_event_info: tuple):
 		tag = latest_event_info[1]
 		if tag == "create":

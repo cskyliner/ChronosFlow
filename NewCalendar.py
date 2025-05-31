@@ -4,6 +4,7 @@ from PySide6.QtCore import QRectF
 from events.EventManager import *
 from events.EventManager import EventSQLManager
 
+
 log = logging.getLogger(__name__)
 
 
@@ -299,6 +300,11 @@ class CalendarView(QWidget):
 	   # weekday_height = 30  # 固定周几栏高度
 	   # day_height = (h - weekday_height) / 6  # 剩余高度分给日期
 		#self.draw_month(self.current_year, self.current_month, day_width, day_height)
+	def clear_selection(self):
+		for item in self.scene.items():
+			if isinstance(item, CalendarDayItem):
+				item._selected = False
+				item.update()
 
 	def draw_month(self, year, month, day_width=None, day_height=None):
 		self.scene.clear()
