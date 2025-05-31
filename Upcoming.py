@@ -1,6 +1,6 @@
 from common import *
 from Emitter import Emitter
-from Event import BaseEvent, DDLEvent
+from events.Event import *
 from FontSetting import set_font
 
 log = logging.getLogger("Upcoming")
@@ -176,14 +176,15 @@ class CustomListItem(QWidget):
 		layout = QHBoxLayout(self)
 		layout.setContentsMargins(5, 2, 5, 2)  # 边距：左、上、右、下
 
-		self.finish_checkbox = QCheckBox()
-		self.finish_checkbox.setChecked(bool(self.nevent.done))
-		#self.finish_checkbox.clicked.connect(lambda x: self.this_one_is_finished(x))
-		# 当打勾时触发
-		self.finish_checkbox.clicked.connect(lambda checked: self.make_this_one_finished() if checked else None)
-		# 当取消打勾时触发
-		self.finish_checkbox.clicked.connect(lambda checked: self.make_this_one_unfinished() if not checked else None)
-		layout.addWidget(self.finish_checkbox)
+		if hasattr(self.nevent,"done"):
+			self.finish_checkbox = QCheckBox()
+			self.finish_checkbox.setChecked(bool(self.nevent.done))
+			#self.finish_checkbox.clicked.connect(lambda x:self.this_one_is_finished(x))
+			# 当打勾时触发
+			self.finish_checkbox.clicked.connect(lambda checked: self.make_this_one_finished() if checked else None)
+			# 当取消打勾时触发
+			self.finish_checkbox.clicked.connect(lambda checked: self.make_this_one_unfinished() if not checked else None)
+			layout.addWidget(self.finish_checkbox)
 
 		# 展示主题的标签
 		self.theme_display_label = QLabel(f"{event.title}")
@@ -590,6 +591,7 @@ class Upcoming(QListWidget):
 			return
 		for event in self.events_used_to_update:
 			self.add_one_item(event)
+		self.no_more_events = True
 
 	def refresh_upcoming(self):
 		"""用于每次切换到Upcoming时刷新"""

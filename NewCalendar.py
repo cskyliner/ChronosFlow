@@ -1,8 +1,8 @@
 from common import *
 from PySide6.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsRectItem, QGraphicsItem, QSizePolicy
 from PySide6.QtCore import QRectF
-from PySide6.QtGui import QShortcut, QKeySequence
-from Event import BaseEvent, get_events_in_month
+from events.EventManager import *
+from events.EventManager import EventSQLManager
 
 log = logging.getLogger(__name__)
 
@@ -403,7 +403,7 @@ class CalendarView(QWidget):
 	def handle_page_changed(self, year: int, month: int):
 		"""月份或年份变化时的回调"""
 		log.info(f"页面切换至: {year}年{month}月")
-		events = get_events_in_month(year, month)
+		events = EventSQLManager.get_events_in_month(year, month)
 		if events is not None and len(events) > 0:
 			log.info(f"接收数据成功，共接收 {len(events)} 条数据：\n" +
 					 "\n".join(f"- {event.title} @ {event.datetime}" for event in events))
