@@ -1,31 +1,74 @@
 from common import *
 from Event import BaseEvent, DDLEvent, ActivityEvent, get_activity_events_in_week
 from Emitter import Emitter
+from Upcoming import FloatingButton, DeleteButton
+from functools import partial
 log = logging.getLogger(__name__)
 class TimeAxisItem(QGraphicsRectItem):
     """左侧时间轴项"""
     def __init__(self, rect, time_str):
         super().__init__(rect)
         self.time_str = time_str
-        self.setPen(QPen("#DEEE4FE6"))
+        #self.setPen(QPen("#DEEE4FE6"))
         
     def paint(self, painter, option, widget=None):
         painter.setFont(QFont("Arial", 8))
         painter.setPen(QColor("#20B96A"))
         painter.drawText(self.rect().adjusted(2, 0, 0, 0), Qt.AlignLeft | Qt.AlignVCenter, self.time_str)
 
-class ScheduleBlockItem(QGraphicsRectItem, QObject):
+class ScheduleBlockItem(QGraphicsRectItem,QObject):
     """日程块图形项"""
     clicked = Signal(BaseEvent)
+    del_btn_clicked = Signal(BaseEvent)
     double_clicked = Signal(BaseEvent)
-    
-    def __init__(self, rect, event):
+    hover_signal = Signal(BaseEvent)
+
+    def __init__(self, rect: QRectF, event, view:QGraphicsView, parent=None):
         QObject.__init__(self)  # 初始化 QObject
         QGraphicsRectItem.__init__(self, rect)  # 初始化 QGraphicsRectItem
-        self._event:ActivityEvent = event
+        self.event:ActivityEvent = event
+        #delete_button = DeleteButton(parent=graphics_view.viewport())
+        self.view = view
+        self.delete_button:DeleteButton = DeleteButton(parent=self.view.viewport())
+        self.delete_button.setFixedSize(20, 20)
+        self.delete_button.setStyleSheet("""
+			QPushButton {
+				background-color: rgba(255, 80, 80, 0.1);  /* 半透明红色背景 */
+				border: 1px solid rgba(255, 80, 80, 0.3);
+				border-radius: 6px;
+				min-width: 28px;
+				min-height: 28px;
+				padding: 0;
+				padding-top: -2px;  /* 关键对齐参数 */
+				color: #FF5050;
+				font-size: 14px;
+				font-weight: 300;
+				text-align: center;
+			}
+			QPushButton:hover {
+				background-color: rgba(255, 80, 80, 0.15);
+				border: 1px solid rgba(255, 80, 80, 0.5);
+				color: #E03C3C;
+				font-size: 16px;
+			}
+			QPushButton:pressed {
+				background-color: rgba(224, 60, 60, 0.2);
+				border: 1px solid rgba(224, 60, 60, 0.7);
+				color: #C03030;
+				padding-top: 1px;
+			}
+		""")
+        
+        self.delete_button.bind_event(self.event)
+        self.delete_button.clicked.connect(self.on_delete_clicked)
+        self.delete_button.hide()
         self.setAcceptHoverEvents(True)
         self.setBrush(QColor("#f0f0f0"))  
         self.setPen(QPen(QColor(70, 130, 180), 1))
+    def on_delete_clicked(self):
+        log.info(f" weekview:on_delete_clicked 尝试删除事件：{self.event.title}")
+        self.delete_button.hide()
+        self.del_btn_clicked.emit(self.event)  # 发出删除信号        
     def paint(self, painter, option, widget=None):
         # 画背景
         painter.setBrush(self.brush())
@@ -39,15 +82,19 @@ class ScheduleBlockItem(QGraphicsRectItem, QObject):
         painter.setFont(font)
 
         # 显示 event 信息
-        title = self._event.title
-        start = self._event.start_time[-5:]  # 提取 HH:mm
-        end = self._event.end_time[-5:]
+        title = self.event.title
+        start = self.event.start_time[-5:]  # 提取 HH:mm
+        end = self.event.end_time[-5:]
         time_range = f"{start} - {end}"
 
         # 文字显示（最多两行）
         text_rect = self.rect().adjusted(4, 2, -4, -2)  # 留边距
-        text = f"{title}({self._event.repeat_type})\n{time_range}"
-        painter.drawText(text_rect, Qt.AlignLeft | Qt.AlignTop, text)
+        self.text = f"{title}({self.event.repeat_type})\n{time_range}"
+        text_option = QTextOption()
+        text_option.setAlignment(Qt.AlignVCenter)
+        text_option.setWrapMode(QTextOption.WordWrap)
+        painter.drawText(text_rect, self.text, text_option)
+        
 
         
     def mousePressEvent(self, event):
@@ -56,10 +103,28 @@ class ScheduleBlockItem(QGraphicsRectItem, QObject):
     def mouseDoubleClickEvent(self, event):
         self.double_clicked.emit(self.event)
     def hoverEnterEvent(self, event):
-        self.setBrush(QColor("#eee60b"))  # 鼠标悬停时变为黄色
+        self.setBrush(QColor("#eee60b"))
+
+        # 显示按钮在右下角
+        scene = self.scene()
+        view = scene.views()[0]
+        block_br = self.sceneBoundingRect().bottomRight()
+        margin = 6
+        button_scene_pos = QPointF(
+            block_br.x() - self.delete_button.width() - margin,
+            block_br.y() - self.delete_button.height() - margin
+        )
+        button_view_pos = view.mapFromScene(button_scene_pos)
+        self.delete_button.move(button_view_pos)
+        self.delete_button.show()
+        self.delete_button.raise_()
 
     def hoverLeaveEvent(self, event):
         self.setBrush(QColor("#f0f0f0"))  # 鼠标离开时恢复
+        self.delete_button.hide()
+        #if self.connection_line:
+         #   self.scene().removeItem(self.connection_line)
+          #  self.connection_line = None
 
 class WeekDayColumn(QGraphicsRectItem):
     """单日列容器"""
@@ -71,10 +136,13 @@ class WeekDayColumn(QGraphicsRectItem):
 
 class WeekView(QWidget):
     """周视图主组件"""
+    schedule_area_clicked = Signal(object)
+    schedule_del_btn_clicked = Signal(BaseEvent)
     schedule_clicked = Signal(BaseEvent)
+    schedule_double_clicked = Signal(BaseEvent)
     time_clicked = Signal(QDateTime)  # 点击时间格子信号
     add_schedule = Signal(QDateTime)
-    
+    floating_button:FloatingButton = None
     def __init__(self):
         super().__init__()
         self.start_hour = 0  # 开始时间
@@ -93,14 +161,13 @@ class WeekView(QWidget):
         self.update_week(QDate.currentDate())
         
     def init_ui(self):
-        
+     
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.main_layout.setSpacing(0)
        
         # 创建一个包含时间轴和内容视图的主场景
         self.main_scene = QGraphicsScene()
-        
         # 创建主视图
         #self.main_view = QGraphicsView(self.main_scene)
         #self.main_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -108,7 +175,13 @@ class WeekView(QWidget):
         self.main_view = QGraphicsView(self.main_scene)
         self.main_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.main_view.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.main_view.setDragMode(QGraphicsView.ScrollHandDrag)  # 支持拖拽滚动    
+        self.main_view.setDragMode(QGraphicsView.ScrollHandDrag)  # 支持拖拽滚动
+        #self.delete_button = DeleteButton(parent=self.main_view.viewport())
+        #self.delete_button.setFixedSize(20, 20)
+
+		
+    
+        #self.delete_button.hide()    
         self.main_layout.addWidget(self.main_view)    
         # 添加水平滚动条
         #self.horizontal_scrollbar = QScrollBar(Qt.Horizontal)
@@ -188,7 +261,7 @@ class WeekView(QWidget):
     def setup_time_axis(self):
         """初始化时间轴"""
         # 创建时间轴背景
-        bg_rect = QRectF(0, 0, 60, self.time_slot_count * self.hour_height)
+        bg_rect = QRectF(0, 0, 60, 30 + self.time_slot_count * self.hour_height)
         bg_item = QGraphicsRectItem(bg_rect)
         bg_item.setBrush(QColor("#e9e7f2"))
         bg_item.setPen(QPen(Qt.NoPen))
@@ -214,12 +287,12 @@ class WeekView(QWidget):
 
     def update_week(self, week_date: QDate):
         """更新显示指定周"""
-        self.main_scene.clear()
+        #self.main_scene.clear()
         self.setup_time_axis()  # 重新绘制时间轴
         
         # 计算周日期范围
-        monday = week_date.addDays(1 - week_date.dayOfWeek())
-        self.dates = [monday.addDays(i) for i in range(7)]
+        self.monday = week_date.addDays(1 - week_date.dayOfWeek())
+        self.dates = [self.monday.addDays(i) for i in range(7)]
         
         # 创建日期列头
         self.setup_day_headers()
@@ -286,14 +359,23 @@ class WeekView(QWidget):
                 cell_x = 60 + i * self.day_width
                 cell_y = start_y + h * self.hour_height
                 cell_rect = QRectF(0, 0, self.day_width, self.hour_height)
-                cell = ScheduleAreaItem(cell_rect)
+                cell = ScheduleAreaItem(QTime(h,0), QTime(h+1, 0), self.monday.addDays(i) ,cell_rect)
+                #cell.double_clicked.connect(lambda e,cell = cell: self.schedule_area_clicked.emit(e))
+                cell.double_clicked.connect(partial(self.schedule_area_clicked.emit))
                 cell.setPos(cell_x, cell_y)
                 self.main_scene.addItem(cell)      
                 self.cell_map[(i + 1, self.start_hour + h)] = cell         
                 # 绑定点击事件
-                cell.mousePressEvent = lambda event, d=self.dates[i], h=h+self.start_hour: \
-                    self.handle_time_click(d, h, event)
-        
+                #cell.mousePressEvent = lambda event, d=self.dates[i], h=h+self.start_hour: \
+                 #   self.handle_time_click(d, h, event)
+                    
+            line_pen = QPen(QColor("#7a7a79"))  # 统一的灰色分割线颜色
+            line_pen.setWidth(1)  # 统一的线宽，防止出现不同粗细
+            line = self.main_scene.addLine(
+                60 + i * self.day_width, start_y,  # 从每一列的左边缘开始
+                60 + i * self.day_width, start_y + self.time_slot_count * self.hour_height,  # 到每列的底边缘
+                line_pen  # 使用统一的笔刷设置
+            )        
         # 添加贯穿所有列的小时分隔线（与时间轴对齐）
         for h in range(self.time_slot_count + 1):
             y = start_y + h * self.hour_height
@@ -367,14 +449,15 @@ class WeekView(QWidget):
         height = (duration_min / 60) * self.hour_height
 
         rect = QRectF(0, 0, self.day_width - 4, height)
-
-        block = ScheduleBlockItem(rect, event)
+        block = ScheduleBlockItem(rect, event, self.main_view)
+        block.double_clicked.connect(lambda e: self.schedule_double_clicked.emit(e))
+        #block = ScheduleBlockItem(rect, event)
         block.setZValue(1)  # 保证高于所有 cell（它们默认 Z=0）
         block.setPos(cell.pos() + QPointF(2, y))  # 手动设置位置
         self.main_scene.addItem(block)
         self.schedule_block_items.append(block)
         #block.setParentItem(cell)
-        block.clicked.connect(lambda e: self.schedule_clicked.emit(e))       
+        block.del_btn_clicked.connect(lambda e: self.schedule_del_btn_clicked.emit(e))       
         
         # 计算位置
         #col_index = start_dt.date().dayOfWeek() - 1
@@ -406,26 +489,45 @@ class WeekView(QWidget):
                 self.main_scene.removeItem(block)
         self.schedule_block_items.clear()        
     def resizeEvent(self, event):
-        """窗口大小改变时重新绘制"""
         super().resizeEvent(event)
-        #self.recalculate_dimensions()
-        self.update_week(QDate.currentDate())
+        self.recalculate_dimensions()
+        #self.main_view.fitInView(self.main_scene.sceneRect(), Qt.IgnoreAspectRatio)
+        self.main_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.main_view.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        log.info(f"Scene rect:{self.main_scene.sceneRect()}")
+        self.update_view_geometry()
     def recalculate_dimensions(self):
-        view_width = self.viewport().width()
-        view_height = self.viewport().height()
+        """根据当前窗口大小重新计算 day_width 和 hour_height"""
+        view_width = self.width()
+        #view_height = self.height()
         time_column_width = 60
-        header_height = 30
-
+        #header_height = 30
+        current_rect = self.main_scene.sceneRect()  # 获取当前场景的矩形
         self.day_width = (view_width - time_column_width) / 7
-        self.hour_height = (view_height - header_height) / (self.end_hour - self.start_hour)
-        self.time_slot_count = self.end_hour - self.start_hour
+        #self.hour_height = (view_height - header_height) / (self.end_hour - self.start_hour)
+        #self.time_slot_count = self.end_hour - self.start_hour
+        self.main_scene.setSceneRect(0, 0, view_width, current_rect.height())
 
-       
+    def update_view_geometry(self):
+        """根据新的大小更新格子和其他组件的位置"""
+        self.main_scene.clear()  # 清空场景，重新绘制
+        self.setup_time_axis()  # 重新绘制时间轴
+        self.setup_day_headers()  # 重新绘制日期头
+        self.setup_day_columns()  # 重新绘制日期列
+        self.load_schedules()  # 重新加载日程
 
-class ScheduleAreaItem(QGraphicsRectItem):
-    def __init__(self, rect, parent=None):
-        super().__init__(rect, parent)
-        
+   
+
+class ScheduleAreaItem(QObject,QGraphicsRectItem):
+    double_clicked:Signal = Signal(object)
+    def __init__(self, begin_time:QTime, end_time: QTime, date:QDate, rect, parent=None):
+        #super().__init__(rect, parent)
+        QObject.__init__(self, parent)
+        QGraphicsRectItem.__init__(self, rect, parent)
+        self.begin_time = begin_time
+        self.end_time = end_time
+        self.date = date
+
         self.setBrush(QColor("#f0f0f0"))
         self.setPen(QPen(QColor("#0f0000")))
         self.setAcceptHoverEvents(True)
@@ -434,3 +536,6 @@ class ScheduleAreaItem(QGraphicsRectItem):
 
     def hoverLeaveEvent(self, event):
         self.setBrush(QColor("#f0f0f0"))  # 鼠标离开时恢复
+    
+    def mouseDoubleClickEvent(self, event):
+        self.double_clicked.emit((self.begin_time, self.end_time,self.date))

@@ -378,6 +378,10 @@ def receive_signal(recieve_data: tuple) -> None:
 			now_time = now_time.toString("yyyy-MM-dd HH:mm")
 			result = get_latest_ddlevent(now_time)
 			latest_ddlevent = result
+			if(recieve_data[1][1] == "activityevents"):
+				Emitter.instance().send_del_activity_event_signal()
+			else:
+				log.info("名称不对啊")
 			Emitter.instance().send_notice_signal((result,"update"))
 		else:
 			log.error(f"receive_signal:未能连接到数据库，删除{recieve_data[1][1]}类{recieve_data[1][0]}事件失败")
@@ -532,14 +536,14 @@ def get_activity_events_in_week() -> list[BaseEvent]:
 	# 查询所有 ActivityEvent 类型中设置了 repeat 的事件
 	query = """
 		SELECT * FROM activityevents
-		WHERE repeat_type IN ('每周', '每两周')
+		WHERE repeat_type IN ('每周', '每两周', '不重复')
 	"""
 	try:
 		cursor.execute(query)
 		rows = cursor.fetchall()
-		log.info(f"get_events_in_week: 查询到 {len(rows)} 个事件")
+		log.info(f"get_activity_events_in_week: 查询到 {len(rows)} 个事件")
 	except Exception as e:
-		log.error(f"get_events_in_week: 查询失败: {e}")
+		log.error(f"get_activity_events_in_week: 查询失败: {e}")
 		return []
 
   
@@ -551,15 +555,18 @@ def get_activity_events_in_week() -> list[BaseEvent]:
 				continue
 
 			event.id = row[0]
-
+			log.info(f"get_activity_events_in_week:org_data {event.title, event.notes, event.datetime ,event.start_date, event.end_date, event.repeat_days, event.repeat_type}")
 			try:
 				repeat_days = json.loads(event.repeat_days)
-				log.info(f"get_events_in_week: repeat_days 解析成功 {repeat_days}")
+				log.info(f"get_activity_events_in_week: repeat_days 解析成功 {repeat_days}")
 			except Exception as e:
-				log.warning(f"get_events_in_week: repeat_days 解析失败: {event.repeat_days}, 错误: {e}")
+				log.warning(f"get_activity_events_in_week: repeat_days 解析失败: {event.repeat_days}, 错误: {e}")
 				repeat_days = []
+     
 				
 			weekday_map = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+			if  event.repeat_type == "不重复":
+				repeat_days = weekday_map[QDateTime.fromString(event.start_date,"yyyy-MM-dd").date().dayOfWeek() - 1]
 			for i in range(7):  # 遍历周一到周日  # 0=Monday, ..., 6=Sunday
 				weekday_str = weekday_map[i]  # 把 0~6 映射为 "Mon"~"Sun"
 				if weekday_str in repeat_days:
@@ -579,9 +586,9 @@ def get_activity_events_in_week() -> list[BaseEvent]:
 					events.append(clone)
 
 		except Exception as e:
-			log.error(f"get_events_in_week: 解析事件失败（ID={row[0]}）: {e}")
+			log.error(f"get_activity_events_in_week: 解析事件失败（ID={row[0]}）: {e}")
 
-	log.info(f"get_events_in_week: 找到 {len(events)} 个每周重复事件")
+	log.info(f"get_activity_events_in_week: 找到 {len(events)} 个日程事件, clone事件数据为:{[(event.start_date, event.end_date) for event in events]}")
 	return events
 	
 def search_all(keyword: tuple[str]) -> list[BaseEvent]:
