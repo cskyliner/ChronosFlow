@@ -1,7 +1,5 @@
-from operator import truediv
 from common import *
 from Emitter import Emitter
-from functools import partial
 from events.Event import *
 from FontSetting import set_font
 
@@ -93,27 +91,27 @@ class FloatingButton(QPushButton):
 		super().__init__("+", parent)
 		self.setStyleSheet("""
 			QPushButton {
-				background-color: rgba(7, 193, 96, 0.1);  /* 半透明绿色背景 */
-				border: 1px solid rgba(7, 193, 96, 0.3);
+				background-color: rgba(30, 144, 255, 0.6);  /* 半透明绿色背景 */
+				border: 1px solid rgba(30, 112, 255, 0.6);
 				border-radius: 24px;                       /* 圆形 */
 				min-width: 48px;
 				min-height: 48px;
 				padding: 0;
-				color: #07C160;
+				color: white;
 				font-size: 24px;
 				font-weight: 500;
 				text-align: center;				
 			}
 			QPushButton:hover {
-				background-color: rgba(7, 193, 96, 0.15);
-				border: 1px solid rgba(7, 193, 96, 0.5);
-				color: #05974C;
+				background-color: rgba(30, 144, 255, 0.8);
+				border: 1px solid rgba(30, 112, 255, 0.8);
+				color: white;
 				font-size: 26px;                         /* 轻微放大 */
 			}
 			QPushButton:pressed {
-				background-color: rgba(5, 151, 76, 0.2);
-				border: 1px solid rgba(5, 151, 76, 0.7);
-				color: #047245;
+				background-color: rgba(30, 144, 255, 0.9);
+				border: 1px solid rgba(30, 112, 255, 0.9);
+				color: white;
 				padding-top: 2px;                        /* 按压下沉效果 */
 			}
 		""")
@@ -177,10 +175,11 @@ class CustomListItem(QWidget):
 		# 设置消息布局
 		layout = QHBoxLayout(self)
 		layout.setContentsMargins(5, 2, 5, 2)  # 边距：左、上、右、下
+
 		if hasattr(self.nevent,"done"):
 			self.finish_checkbox = QCheckBox()
 			self.finish_checkbox.setChecked(bool(self.nevent.done))
-			self.finish_checkbox.clicked.connect(lambda x:self.this_one_is_finished(x))
+			#self.finish_checkbox.clicked.connect(lambda x:self.this_one_is_finished(x))
 			# 当打勾时触发
 			self.finish_checkbox.clicked.connect(lambda checked: self.make_this_one_finished() if checked else None)
 			# 当取消打勾时触发
@@ -221,24 +220,29 @@ class CustomListItem(QWidget):
 		"""查看后发信号"""
 		self.view_and_edit_signal.emit(self.nevent)
 
-	def this_one_is_finished(self, checked: bool):
-		"""打勾或取消打勾后发信号"""
-		self.nevent.done = checked
+	# def this_one_is_finished(self, checked: bool):
+	# 	"""打勾或取消打勾后发信号"""
+	# 	self.nevent.done = checked
+	# 	if isinstance(self.nevent, DDLEvent):
+	# 		Emitter.instance().send_modify_event_signal(self.nevent.id, "DDL", *self.nevent.to_args())
+	# 	else:
+	# 		log.error(f"{type(self.nevent)}事件未实现完成功能")
+
+	def make_this_one_finished(self):
+		"""标记日程已完成"""
+		self.nevent.done = 1
 		if isinstance(self.nevent, DDLEvent):
 			Emitter.instance().send_modify_event_signal(self.nevent.id, "DDL", *self.nevent.to_args())
 		else:
 			log.error(f"{type(self.nevent)}事件未实现完成功能")
-		if checked:
-			set_font(self.theme_display_label, 3)
-		else:
-			set_font(self.theme_display_label)
-
-
-	def make_this_one_finished(self):
-		"""标记日程已完成"""
 		self.finished_signal.emit(self.nevent)
 
 	def make_this_one_unfinished(self):
+		self.nevent.done = 0
+		if isinstance(self.nevent, DDLEvent):
+			Emitter.instance().send_modify_event_signal(self.nevent.id, "DDL", *self.nevent.to_args())
+		else:
+			log.error(f"{type(self.nevent)}事件未实现完成功能")
 		self.unfinished_signal.emit(self.nevent)
 
 
