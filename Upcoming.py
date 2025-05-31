@@ -1,8 +1,6 @@
-from operator import truediv
 from common import *
 from Emitter import Emitter
-from functools import partial
-from Event import BaseEvent, DDLEvent, ActivityEvent
+from Event import BaseEvent, DDLEvent
 from FontSetting import set_font
 
 log = logging.getLogger("Upcoming")
@@ -180,7 +178,7 @@ class CustomListItem(QWidget):
 
 		self.finish_checkbox = QCheckBox()
 		self.finish_checkbox.setChecked(bool(self.nevent.done))
-		self.finish_checkbox.clicked.connect(lambda x:self.this_one_is_finished(x))
+		#self.finish_checkbox.clicked.connect(lambda x: self.this_one_is_finished(x))
 		# 当打勾时触发
 		self.finish_checkbox.clicked.connect(lambda checked: self.make_this_one_finished() if checked else None)
 		# 当取消打勾时触发
@@ -221,24 +219,29 @@ class CustomListItem(QWidget):
 		"""查看后发信号"""
 		self.view_and_edit_signal.emit(self.nevent)
 
-	def this_one_is_finished(self, checked: bool):
-		"""打勾或取消打勾后发信号"""
-		self.nevent.done = checked
+	# def this_one_is_finished(self, checked: bool):
+	# 	"""打勾或取消打勾后发信号"""
+	# 	self.nevent.done = checked
+	# 	if isinstance(self.nevent, DDLEvent):
+	# 		Emitter.instance().send_modify_event_signal(self.nevent.id, "DDL", *self.nevent.to_args())
+	# 	else:
+	# 		log.error(f"{type(self.nevent)}事件未实现完成功能")
+
+	def make_this_one_finished(self):
+		"""标记日程已完成"""
+		self.nevent.done = 1
 		if isinstance(self.nevent, DDLEvent):
 			Emitter.instance().send_modify_event_signal(self.nevent.id, "DDL", *self.nevent.to_args())
 		else:
 			log.error(f"{type(self.nevent)}事件未实现完成功能")
-		if checked:
-			set_font(self.theme_display_label, 3)
-		else:
-			set_font(self.theme_display_label)
-
-
-	def make_this_one_finished(self):
-		"""标记日程已完成"""
 		self.finished_signal.emit(self.nevent)
 
 	def make_this_one_unfinished(self):
+		self.nevent.done = 0
+		if isinstance(self.nevent, DDLEvent):
+			Emitter.instance().send_modify_event_signal(self.nevent.id, "DDL", *self.nevent.to_args())
+		else:
+			log.error(f"{type(self.nevent)}事件未实现完成功能")
 		self.unfinished_signal.emit(self.nevent)
 
 
