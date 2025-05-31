@@ -94,7 +94,7 @@ class CalendarDayItem(QObject, QGraphicsRectItem):
 		mid_color = palette.color(QPalette.Mid)
 		painter.setPen(QPen(mid_color))  # 边框颜色
 		painter.drawRect(self.rect())
-		painter.setPen(QColor("#08B9FF") if self.is_today else QPen(text_color))  # 日期的颜色
+		painter.setPen(QColor("#1E90FF") if self.is_today else QPen(text_color))  # 日期的颜色
 		if self.date.day() == 1:
 			rect = self.rect()
 			# 月份字体较大
@@ -312,16 +312,19 @@ class CalendarView(QWidget):
 		weekday_names = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
 		weekday_height = 30  # 周几栏高度
 		for col in range(7):
+			palette = QApplication.palette()
+			background_color = palette.color(QPalette.Button)  # 背景色（适配主题）
+			text_color = palette.color(QPalette.Text)
 			rect = QRectF(col * day_width, 0, day_width, weekday_height)
 			weekday_item = QGraphicsRectItem(rect)
-			weekday_item.setBrush(QColor("#f5f5f5"))  # 浅灰色背景
+			weekday_item.setBrush(QBrush(background_color))  # 浅灰色背景
 			weekday_item.setPen(QPen(Qt.NoPen))
 			self.scene.addItem(weekday_item)
 
 			# 添加周几文本
 			text_item = QGraphicsSimpleTextItem(weekday_names[col], weekday_item)
 			text_item.setFont(QFont("Microsoft YaHei", 10, QFont.Bold))
-			text_item.setBrush(QColor("#333333"))  # 深灰色文字
+			text_item.setBrush(QBrush(text_color))  # 深灰色文字
 			# 文本居中
 			text_width = text_item.boundingRect().width()
 			text_item.setPos(rect.x() + (rect.width() - text_width) / 2, rect.y() + 5)
