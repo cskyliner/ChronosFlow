@@ -527,6 +527,8 @@ def receive_signal(receive_data: tuple) -> None:
 			now_time = now_time.toString("yyyy-MM-dd HH:mm")
 			result = EventSQLManager.get_latest_ddlevent(now_time)
 			latest_ddlevent = result
+			if(receive_data[1][1] == "activityevents"):
+				Emitter.instance().send_del_activity_event_signal()
 			Emitter.instance().send_notice_signal((result,"update"))
 		else:
 			log.error(f"receive_signal:未能连接到数据库，删除{receive_data[1][1]}类{receive_data[1][0]}事件失败")

@@ -47,8 +47,8 @@ class DeleteButton(QPushButton):
 		shadow.setColor(QColor(255, 80, 80, 60))
 		shadow.setOffset(0, 2)
 		self.setGraphicsEffect(shadow)
-
-
+	def bind_event(self, event: BaseEvent):
+		self._event = event
 class EyeButton(QPushButton):
 	"""单例眼睛按钮"""
 	_instance = None
@@ -493,7 +493,16 @@ class Upcoming(QListWidget):
 		删除事件
 		:param keep_corresponding_event: 复选框变化时也要调用，当其为True时，不从后端删除
 		"""
+		
+		if isinstance(event, ActivityEvent) and event.datetime is None:
+			log.info (f"ActivityEvent：{event.title} event.datetime:{ event.datetime}")
+			event.datetime = event.start_date + " " + event.start_time
+			log.info (f"ActivityEvent：{event.title} event.datetime:{ event.datetime}")
+		elif isinstance(event, ActivityEvent):
+			log.info (f"ActivityEvent：{event.title} event.datetime:{ event.datetime}")
+			#event.datetime = event.datetime
 		date = event.datetime[:10]
+		log.info(f"date = {date}")
 		# 查找该事件
 		for i in range(len(self.items_of_one_date[date])):
 			if self.items_of_one_date[date][i][0] == event.id:
@@ -564,7 +573,6 @@ class Upcoming(QListWidget):
 			set_font(item)
 			item.setTextAlignment(Qt.AlignCenter)
 			self.addItem(item)
-
 	def show_specific_date(self, date: QDate):
 		"""显示指定日期的日程"""
 		self.clear()
@@ -609,7 +617,6 @@ class Upcoming(QListWidget):
 		self.loading_item = None
 		self.load_more_data()
 		log.info(f"共{self.event_num}条日程")
-
 	def notify_no_events(self):
 		# 创建自定义样式的提示项
 		# 创建提示项
