@@ -292,7 +292,7 @@ class Schedule(QWidget):
 				repeat = self.repeat_combo.currentText()								#是否重复
 				repeat_day = None														#星期几重复
 				if repeat != "不重复":
-					repeat_day = self.chinese_to_english[self.repeat_day_combo.currentText()]
+					repeat_day = [self.chinese_to_english[self.repeat_day_combo.currentText()]]
 				"""输入：标题，每天开始时间，每天结束时间，开始日期，终止日期，笔记，重要程度，重复类型如("weekly"、"biweekly），重复具体星期"""
 				if self.id is None:
 					# 新建事件
