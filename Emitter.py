@@ -65,7 +65,7 @@ class Emitter(QObject):
 
 	def send_notice_signal(self, data):
 		"""向通知栏发送最新数据，回传数据为ddlevent"""
-		log.info(f"向通知栏发送最新数据:{data.title} {data.datetime}")
+		#log.info(f"向通知栏发送最新数据:{data.title} {data.datetime}")
 		self.notice_signal.emit(data)
 
 	# ===对接后端信号函数，发送信号第一个参数为命令====

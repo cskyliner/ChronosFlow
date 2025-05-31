@@ -462,8 +462,8 @@ class SettingsPage(QWidget):
 					# 发送信号通知储存路径
 					Emitter.instance().send_storage_path(
 						os.path.join(settings.get('storage_path', ''), "AppData", "Database"))
-					CourseScheduleImporter.init_importer("/Users/kylin/Desktop/timetable大一下.xls","2025-02-17",16)
-					# CourseScheduleImporter.extract_info()
+					CourseScheduleImporter.init_importer("f:\\大一下信息\\timetable大一下.xls","2025-02-17",16)
+					#CourseScheduleImporter.extract_info()
 
 			except Exception as e:
 				QMessageBox.warning(self, "错误", f"加载设置失败: {str(e)}")

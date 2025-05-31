@@ -426,8 +426,9 @@ class WeekView(QWidget):
             log.error(f"解析 repeat_days 失败: {event.repeat_days} - {e}")
             return        
         if not repeat_days:
+            #repeat_days = []
             log.warning(f"{event.title} 没有 repeat_days")
-            return
+            #return
         #log.info(f"{event.title} repeat_days: {repeat_days} type: {type(repeat_days)}")
 
         #for day_str in repeat_days:
