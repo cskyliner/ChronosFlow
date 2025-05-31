@@ -252,7 +252,7 @@ class SettingsPage(QWidget):
 
 		excel_date_layout = QHBoxLayout()
 		ttl_excel_layout.addLayout(excel_date_layout)
-		start_time_label = QLabel("这个学期开始第一天（周一）的日期")
+		start_time_label = QLabel("这个学期开始第一天（周一）的日期：")
 		set_font(start_time_label)
 		excel_date_layout.addWidget(start_time_label)
 		self.start_date_edit = QDateTimeEdit()

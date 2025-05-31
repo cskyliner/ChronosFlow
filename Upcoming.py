@@ -91,27 +91,27 @@ class FloatingButton(QPushButton):
 		super().__init__("+", parent)
 		self.setStyleSheet("""
 			QPushButton {
-				background-color: rgba(7, 193, 96, 0.1);  /* 半透明绿色背景 */
-				border: 1px solid rgba(7, 193, 96, 0.3);
+				background-color: rgba(30, 144, 255, 0.6);  /* 半透明绿色背景 */
+				border: 1px solid rgba(30, 112, 255, 0.6);
 				border-radius: 24px;                       /* 圆形 */
 				min-width: 48px;
 				min-height: 48px;
 				padding: 0;
-				color: #07C160;
+				color: white;
 				font-size: 24px;
 				font-weight: 500;
 				text-align: center;				
 			}
 			QPushButton:hover {
-				background-color: rgba(7, 193, 96, 0.15);
-				border: 1px solid rgba(7, 193, 96, 0.5);
-				color: #05974C;
+				background-color: rgba(30, 144, 255, 0.8);
+				border: 1px solid rgba(30, 112, 255, 0.8);
+				color: white;
 				font-size: 26px;                         /* 轻微放大 */
 			}
 			QPushButton:pressed {
-				background-color: rgba(5, 151, 76, 0.2);
-				border: 1px solid rgba(5, 151, 76, 0.7);
-				color: #047245;
+				background-color: rgba(30, 144, 255, 0.9);
+				border: 1px solid rgba(30, 112, 255, 0.9);
+				color: white;
 				padding-top: 2px;                        /* 按压下沉效果 */
 			}
 		""")
