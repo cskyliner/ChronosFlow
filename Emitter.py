@@ -20,6 +20,7 @@ class Emitter(QObject):
 	view_and_edit_schedule_signal: Signal = Signal(object)  # 发送查看单条日程信号
 	update_upcoming_event_signal: Signal = Signal(object)  # 向后端发送更新upcoming的回调信号
 	delete_event_signal: Signal = Signal(object)  # 发送删除事件的信号
+	delete_activity_event_signal: Signal = Signal() # 发送删除活动事件的信号以便weekview更新
 	search_all_event_signal: Signal = Signal(object)  # 向后端发送搜索全局事件的信号
 	search_some_columns_event_signal: Signal = Signal(object)  # 向后端发送搜索部分列事件的信号
 	search_time_event_signal: Signal = Signal(object)  # 向后端发送搜索时间范围内事件的信号
@@ -39,7 +40,9 @@ class Emitter(QObject):
 	# ===转发信号函数====
 	def send_refresh_upcoming_signal(self):
 		self.refresh_upcoming_signal.emit()
-
+	def send_del_activity_event_signal(self):
+		self.delete_activity_event_signal.emit()
+   
 	def send_page_change_signal(self, name):
 		"""向 main_stack发送改变页面的信号"""
 		self.page_change_signal.emit(name)
@@ -62,7 +65,7 @@ class Emitter(QObject):
 
 	def send_notice_signal(self, data):
 		"""向通知栏发送最新数据，回传数据为ddlevent"""
-		log.info(f"向通知栏发送最新数据:{data.title} {data.datetime}")
+		#log.info(f"向通知栏发送最新数据:{data.title} {data.datetime}")
 		self.notice_signal.emit(data)
 
 	# ===对接后端信号函数，发送信号第一个参数为命令====

@@ -4,6 +4,7 @@ from PySide6.QtCore import QRectF
 from events.EventManager import *
 from events.EventManager import EventSQLManager
 
+
 log = logging.getLogger(__name__)
 
 
@@ -299,6 +300,11 @@ class CalendarView(QWidget):
 	   # weekday_height = 30  # 固定周几栏高度
 	   # day_height = (h - weekday_height) / 6  # 剩余高度分给日期
 		#self.draw_month(self.current_year, self.current_month, day_width, day_height)
+	def clear_selection(self):
+		for item in self.scene.items():
+			if isinstance(item, CalendarDayItem):
+				item._selected = False
+				item.update()
 
 	def draw_month(self, year, month, day_width=None, day_height=None):
 		self.scene.clear()
@@ -322,7 +328,6 @@ class CalendarView(QWidget):
 			text_item = QGraphicsSimpleTextItem(weekday_names[col], weekday_item)
 			text_item.setFont(QFont("Microsoft YaHei", 10, QFont.Bold))
 			text_item.setBrush(QColor("#333333"))  # 深灰色文字
-			# 文本居中
 			text_width = text_item.boundingRect().width()
 			text_item.setPos(rect.x() + (rect.width() - text_width) / 2, rect.y() + 5)
 		col = 0
