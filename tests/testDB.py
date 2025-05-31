@@ -1,6 +1,6 @@
 import sys,os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from Event import *
+from events.EventManager import *
 
 '''测试添加事件
     DDL类

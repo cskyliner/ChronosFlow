@@ -16,7 +16,6 @@ from PySide6.QtGui import (QIcon, QAction, QPixmap, QColor, QLinearGradient, QPa
 import logging
 import sys
 import os
-import json
 import tkinter as tk
 from tkinter import filedialog
 from datetime import datetime, timedelta
