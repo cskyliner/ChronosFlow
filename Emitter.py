@@ -16,6 +16,7 @@ class Emitter(QObject):
 	search_signal: Signal = Signal(str)  # 发送sidebar搜索文本框的信息
 	modify_event_signal: Signal = Signal(object)  # 发送修改事件的信号
 	storage_path_signal: Signal = Signal(object)  # 发送存储路径的信号
+	school_timetable_path_signal:Signal = Signal(object) #发送课表的信号
 	view_and_edit_schedule_signal: Signal = Signal(object)  # 发送查看单条日程信号
 	update_upcoming_event_signal: Signal = Signal(object)  # 向后端发送更新upcoming的回调信号
 	delete_event_signal: Signal = Signal(object)  # 发送删除事件的信号
@@ -64,7 +65,7 @@ class Emitter(QObject):
 
 	def send_notice_signal(self, data):
 		"""向通知栏发送最新数据，回传数据为ddlevent"""
-		log.info(f"向通知栏发送最新数据{data}")
+		log.info(f"向通知栏发送最新数据:{data.title} {data.datetime}")
 		self.notice_signal.emit(data)
 
 	# ===对接后端信号函数，发送信号第一个参数为命令====
@@ -74,6 +75,14 @@ class Emitter(QObject):
 		log.info(f"发送存储路径信号，存储路径为{path}")
 		out = ("storage_path", path)
 		self.storage_path_signal.emit(out)
+
+	def send_school_timetable_path(self, path, first_day, semester_weeks):
+		"""
+		发送课表信息
+		"""
+		log.info(f"发送课表位置为{path}，该学期起始日期：{first_day}，总周数：{semester_weeks}")
+		out = ("school_timetable_path",(path, first_day,semester_weeks))
+		self.school_timetable_path_signal.emit(out)
 
 	def send_create_event_signal(self, name, *args):
 		"""
@@ -151,7 +160,6 @@ class Emitter(QObject):
 
 	def request_latest_event_signal(self, now_time: QDateTime):
 		"""
-		向后端发送需要更新最新的事件
 		向后端发送需要更新最新的事件
 		"""
 		formatted_time = now_time.toString("yyyy-MM-dd HH:mm")

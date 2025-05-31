@@ -23,8 +23,8 @@ class StrictDynamicLineEdit(QLineEdit):
 		self.setFixedHeight(50)
 
 		self.setStyleSheet("""QLineEdit {
-			background-color: rgba(255, 255, 255, 0.4);  /* 亮色主题半透明 */
-		    color: palette(text);  /* 使用系统文本颜色 */
+			background-color: rgba(255, 255, 255, 0.6); 
+		    color: black; 
 			border: none;
 			border-bottom: 1px solid palette(shadow);
 		}""")
@@ -101,7 +101,7 @@ class Schedule(QWidget):
 		self.group_box = QGroupBox("添加DDL")
 		self.group_box.setStyleSheet("""
     		QGroupBox {
-                border: 1px solid palette(mid);
+                border: 1px solid palette(text);
                 border-radius: 10px;
                 margin-top: 1.5ex;
                 padding: 5px;
@@ -121,13 +121,13 @@ class Schedule(QWidget):
 		group_layout.addWidget(self.theme_text_edit)
 
 		# 创建多行文本框
-		self.text_edit = QPlainTextEdit()
+		self.text_edit = QTextEdit()
 		self.text_edit.setPlaceholderText("内容")
 		# 设置半透明和自适应主题的样式表
 		self.text_edit.setStyleSheet("""
-		    QPlainTextEdit {
-		        background-color: rgba(255, 255, 255, 0.4);  /* 亮色主题半透明 */
-		        color: palette(text);  /* 使用系统文本颜色 */
+		    QTextEdit {
+		        background-color: rgba(255, 255, 255, 0.6); 
+		        color: black;  
 		        border: 1px solid palette(shadow);
 		        border-radius: 4px;
 		    }
@@ -191,21 +191,21 @@ class Schedule(QWidget):
 		self.save_btn.clicked.connect(self.create_new_event)
 		self.save_btn.setMaximumHeight(100)
 		self.save_btn.setMaximumWidth(200)
-		# TODO:半透明
 		self.save_btn.setStyleSheet("""
                 QPushButton {
-                    background-color: rgba(255, 255, 255, 0.4);
+                    background-color: rgba(255, 255, 255, 0.6);
                     border: 1px solid palette(mid);
+                    color: black;
                 	border-radius: 4px;
                     padding: 10px;
                     text-align: center;
                 }
                 QPushButton:hover {
-                    background-color: rgba(255, 255, 255, 0.6); /*轻微高亮*/
+                    background-color: rgba(255, 255, 255, 0.8); /*轻微高亮*/
                     border-radius: 4px;
                 }
                 QPushButton:pressed {
-					background-color: rgba(255, 255, 255, 0.8);
+					background-color: rgba(255, 255, 255, 0.9);
 				}
 							""")
 		set_font(self.save_btn)
@@ -236,13 +236,13 @@ class Schedule(QWidget):
 		_type = self.type_choose_combo.currentText()
 		theme = self.theme_text_edit.text()
 		content = self.text_edit.toPlainText()
-		"""
-		time = QTime(int(self.datetime[0]), int(self.datetime[1]))
-		datetime = QDateTime(self.standard_date, time)
-		datetime_str = datetime.toString("yyyy-MM-dd HH:mm")
-		test_advance_time = datetime.addDays(-1)
-		test_advance_time_str = test_advance_time.toString("yyyy-MM-dd HH:mm")
-  		"""
+
+		#time = QTime(int(self.datetime[0]), int(self.datetime[1]))
+		#datetime = QDateTime(self.standard_date, time)
+		#datetime_str = datetime.toString("yyyy-MM-dd HH:mm")
+		#test_advance_time = datetime.addDays(-1)
+		#test_advance_time_str = test_advance_time.toString("yyyy-MM-dd HH:mm")
+
 		if theme:  # 可以支持只有主题，没有内容，多行文本框会返回空字符串，没有问题
 			if _type == "DDL":
 				self.theme_text_edit.clear()
@@ -294,7 +294,6 @@ class Schedule(QWidget):
 				repeat_day = None														#星期几重复
 				if repeat != "不重复":
 					repeat_day = self.chinese_to_english[self.repeat_day_combo.currentText()]
-				# TODO：传参
 				"""输入：标题，每天开始时间，每天结束时间，开始日期，终止日期，笔记，重要程度，重复类型如("weekly"、"biweekly），重复具体星期"""
 				if self.id is None:
 					# 新建事件

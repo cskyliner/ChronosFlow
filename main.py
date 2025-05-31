@@ -29,6 +29,6 @@ if __name__ == "__main__":
 	app.setApplicationDisplayName("ChronosFlow")
 	app.setWindowIcon(QIcon("pic/todolist.png"))
 	connect_event_signal()  # 连接前后端信号
-	main_window = MainWindow(app, 1000, 600)
+	main_window = MainWindow(app, 1050, 630)
 	main_window.show()
 	app.exec()

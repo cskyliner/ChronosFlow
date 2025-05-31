@@ -9,13 +9,13 @@ from PySide6.QtWidgets import (QApplication, QStyleFactory, QMainWindow, QWidget
 from PySide6.QtCore import (QPropertyAnimation, QEasingCurve, Qt, QDate, QTime, QDateTime, Signal, Slot, QSize, QObject,
 							QPoint, QTimer, QEvent, QPointF, QPersistentModelIndex, QRect, QModelIndex, QFile, QRectF,
 							QFileInfo, QLineF)
+
 from PySide6.QtGui import (QIcon, QAction, QPixmap, QColor, QLinearGradient, QPainter, QMouseEvent,
 						   QPainter, QFontMetrics, QTextCharFormat, QPen, QCursor, QFont, QPalette, QBrush,
 						   QImageReader,QShortcut,QKeySequence, QTextOption)
 import logging
 import sys
 import os
-import json
 import tkinter as tk
 from tkinter import filedialog
 from datetime import datetime, timedelta

@@ -1,7 +1,9 @@
 from common import *
 # ---------------------- 悬浮窗口类 ----------------------
 from Notice import NotificationWidget
-from Event import DDLEvent
+
+from events.Event import *
+
 log = logging.getLogger(__name__)
 class FloatingWindow(QWidget):
 	exit_requested = Signal()  # 完全退出信号
@@ -120,6 +122,7 @@ class FloatingWindow(QWidget):
 	@Slot(object)
 	def show_notification(self, data:tuple):
 		"""显示通知"""
+
 		if(data[0] is None):
 			log.info("暂无通知")
 		else:	
@@ -178,9 +181,11 @@ class FloatingWindow(QWidget):
 class CountdownLabel(QLabel):
 	def __init__(self, event: DDLEvent, parent=None):
 		super().__init__(parent)
+
 		if event is None: 
 			self.setText("        DDL event:无")
 			return
+
 		self._event = event
 		self.end_time = QDateTime.fromString(event.datetime, "yyyy-MM-dd HH:mm")
 		self.notify_time = QDateTime.fromString(event.advance_time, "yyyy-MM-dd HH:mm")
