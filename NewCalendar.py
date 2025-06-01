@@ -255,13 +255,10 @@ class CalendarView(QWidget):
 	# 控制draw_month出发时间，避免第一次初始化时候在resize前draw
 	def showEvent(self, event):
 		super().showEvent(event)
-		self.draw_month(self.current_year, self.current_month)
+		QTimer.singleShot(0, self._delayed_draw)
 
-	def update_title(self):
-		self.title_label.setText(f"{self.current_year}年{self.current_month}月")
+	def _delayed_draw(self):
 
-	def resizeEvent(self, event):
-		super().resizeEvent(event)
 		# 更新标题字体
 		base_width = 700
 		scale = max(min(self.width() / base_width, 2.0), 0.6)  # 缩放范围限制
@@ -289,17 +286,24 @@ class CalendarView(QWidget):
 		day_width = w / 7
 		weekday_height = 30  # 固定周几栏高度
 		day_height = (h - weekday_height) / 6  # 剩余高度分给日期		
+		total_cols = 7
+		total_rows = 6
+		self.scene.setSceneRect(0, 0, total_cols * day_width, weekday_height + total_rows * day_height)
+		self.draw_month(self.current_year, self.current_month)
 		self.view.resetTransform()
-		self.draw_month(self.current_year, self.current_month, day_width, day_height)
 
-		# 更新日历栏大小
-		#btn_height = 40                                         # 顶部按钮栏高度
-		#w = self.width()
-	   # h = self.height() - btn_height
-	   # day_width = w / 7
-	   # weekday_height = 30  # 固定周几栏高度
-	   # day_height = (h - weekday_height) / 6  # 剩余高度分给日期
-		#self.draw_month(self.current_year, self.current_month, day_width, day_height)
+	def update_title(self):
+		self.title_label.setText(f"{self.current_year}年{self.current_month}月")
+
+	def resizeEvent(self, event):
+		super().resizeEvent(event)
+		QTimer.singleShot(0, self._delayed_draw)	
+
+		print("sceneRect:", self.scene.sceneRect())
+		print("viewport size:", self.view.viewport().size())
+		bound = self.scene.itemsBoundingRect()
+		print("itemsBoundingRect:", bound)
+
 	def clear_selection(self):
 		for item in self.scene.items():
 			if isinstance(item, CalendarDayItem):
@@ -357,10 +361,6 @@ class CalendarView(QWidget):
 				col = 0
 				row += 1
 			current = current.addDays(1)
-		total_cols = 7
-		total_rows = 7
-		#self.scene.setSceneRect(0, 0, total_cols * day_width, total_rows * day_height)
-		self.scene.setSceneRect(0, 0, total_cols * day_width, weekday_height + (total_rows - 1) * day_height)
 
 	def go_to_month(self, year: int, month: int):
 		self.current_year = year

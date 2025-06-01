@@ -163,6 +163,7 @@ class MainWindow(QMainWindow):
 					                font-size: 14px;
 						            }
 							    """)
+		self.search_edit.setMinimumWidth(150)
 		self.search_edit.setFixedHeight(38)
 
 		# 回车触发搜索功能
@@ -193,10 +194,11 @@ class MainWindow(QMainWindow):
 		btn.clicked.connect(self.get_search_result)
 
 		upper_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
-		spacer = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
-		upper_layout.addItem(spacer)
-		upper_layout.addWidget(self.search_edit)
-		upper_layout.addWidget(btn)
+		# left_spacer = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
+		# upper_layout.addItem(left_spacer, stretch = 3)
+		upper_layout.addStretch(3)
+		upper_layout.addWidget(self.search_edit,stretch= 1)
+		upper_layout.addWidget(btn,stretch= 1)
 		main_window_layout.addLayout(upper_layout)
 
 		middle_layout = QHBoxLayout()
