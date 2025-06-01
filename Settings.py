@@ -579,8 +579,7 @@ class SettingsPage(QWidget):
 			log.info("设置已保存")
 			# 发送信号通知储存路径
 			Emitter.instance().send_storage_path(os.path.join(settings['storage_path'], "AppData", "Database"))
-			CourseScheduleImporter.init_importer(self.excel_path_edit.text(),self.start_date_edit.date().toString("yyyy-MM-dd"),16)
+			CourseScheduleImporter.init_importer(self.excel_path_edit.text(), self.start_date_edit.date().toString("yyyy-MM-dd"), 16)
 			CourseScheduleImporter.extract_info()
-
 		except Exception as e:
 			QMessageBox.critical(self, "错误", f"保存失败:\n{str(e)}")
