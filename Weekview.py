@@ -9,10 +9,14 @@ class TimeAxisItem(QGraphicsRectItem):
     def __init__(self, rect, time_str):
         super().__init__(rect)
         self.time_str = time_str
+
+        palette = QApplication.palette()
+        self.background_color = palette.color(QPalette.Base)
+        self.text_color = palette.color(QPalette.Text)
         
     def paint(self, painter, option, widget=None):
         painter.setFont(QFont("Arial", 8))
-        painter.setPen(QColor("#20B96A"))
+        painter.setPen(self.text_color)
         painter.drawText(self.rect().adjusted(2, 0, 0, 0), Qt.AlignLeft | Qt.AlignVCenter, self.time_str)
 
 class ScheduleBlockItem(QGraphicsRectItem,QObject):
@@ -28,6 +32,12 @@ class ScheduleBlockItem(QGraphicsRectItem,QObject):
         self.event:ActivityEvent = event
         #delete_button = DeleteButton(parent=graphics_view.viewport())
         self.view = view
+
+        palette = QApplication.palette()
+        self.background_color = palette.color(QPalette.Base)
+        self.text_color = palette.color(QPalette.Text)
+        self.light_color = palette.color(QPalette.Highlight)
+
         self.delete_button:DeleteButton = DeleteButton(parent=self.view.viewport())
         self.delete_button.setFixedSize(20, 20)
         self.delete_button.setStyleSheet("""
@@ -62,8 +72,8 @@ class ScheduleBlockItem(QGraphicsRectItem,QObject):
         self.delete_button.clicked.connect(self.on_delete_clicked)
         self.delete_button.hide()
         self.setAcceptHoverEvents(True)
-        self.setBrush(QColor("#f0f0f0"))  
-        self.setPen(QPen(QColor(70, 130, 180), 1))
+        self.setBrush(QBrush(self.background_color))
+        self.setPen(self.text_color)
 
     def on_delete_clicked(self):
         log.info(f" weekview:on_delete_clicked 尝试删除事件：{self.event.title}")
@@ -77,7 +87,7 @@ class ScheduleBlockItem(QGraphicsRectItem,QObject):
         painter.drawRect(self.rect())
 
         # 设置字体
-        painter.setPen(Qt.black)
+        painter.setPen(self.text_color)
         font = painter.font()
         font.setPointSize(9)
         painter.setFont(font)
@@ -103,7 +113,7 @@ class ScheduleBlockItem(QGraphicsRectItem,QObject):
         self.double_clicked.emit(self.event)
 
     def hoverEnterEvent(self, event):
-        self.setBrush(QColor("#eee60b"))
+        self.setBrush(QBrush(self.light_color))
 
         # 显示按钮在右下角
         scene = self.scene()
@@ -120,7 +130,7 @@ class ScheduleBlockItem(QGraphicsRectItem,QObject):
         self.delete_button.raise_()
 
     def hoverLeaveEvent(self, event):
-        self.setBrush(QColor("#f0f0f0"))  # 鼠标离开时恢复
+        self.setBrush(QBrush(self.background_color))  # 鼠标离开时恢复
         self.delete_button.hide()
         #if self.connection_line:
          #   self.scene().removeItem(self.connection_line)
@@ -131,8 +141,13 @@ class WeekDayColumn(QGraphicsRectItem):
     def __init__(self, rect, date):
         super().__init__(rect)
         self.date = date
-        self.setPen(QPen(QColor("#f15ccc")))
-        self.setBrush(Qt.white)
+
+        palette = QApplication.palette()
+        self.background_color = palette.color(QPalette.Base)
+        self.text_color = palette.color(QPalette.Text)
+
+        self.setPen(self.text_color)
+        self.setBrush(self.background_color)
 
 class WeekView(QWidget):
     """周视图主组件"""
@@ -154,6 +169,11 @@ class WeekView(QWidget):
         self.mp = {"Mon": 1, "Tue": 2, "Wed": 3, "Thu": 4, "Fri": 5, "Sat": 6, "Sun": 7}
         self.schedule_block_items = list()
         self.events = None
+
+        palette = QApplication.palette()
+        self.background_color = palette.color(QPalette.Base)
+        self.text_color = palette.color(QPalette.Text)
+
         self.init_ui()
         self.setup_time_axis()
         self.current_week = QDate.currentDate().weekNumber()[0]
@@ -258,8 +278,8 @@ class WeekView(QWidget):
         # 创建时间轴背景
         bg_rect = QRectF(0, 0, 60, 30 + self.time_slot_count * self.hour_height)
         bg_item = QGraphicsRectItem(bg_rect)
-        bg_item.setBrush(QColor("#e9e7f2"))
-        bg_item.setPen(QPen(Qt.NoPen))
+        bg_item.setBrush(QBrush(self.background_color))
+        bg_item.setPen(self.text_color)
         self.main_scene.addItem(bg_item)
         
         # 绘制时间轴和小时分隔线
@@ -322,13 +342,14 @@ class WeekView(QWidget):
         for i, date in enumerate(self.dates):
             rect = QRectF(60 + i*self.day_width, 0, self.day_width, header_height)
             header = QGraphicsRectItem(rect)
-            header.setBrush(QColor("#46bcef"))
+            header.setBrush(QBrush(self.background_color))
             self.main_scene.addItem(header)
             
             # 添加日期文本
             text = f"{date.month()}月{date.day()}日  {['周一','周二','周三','周四','周五','周六','周日'][i]}"
             text_item = QGraphicsSimpleTextItem(text, header)
             text_item.setFont(QFont("Microsoft YaHei", 9))
+            text_item.setBrush(QBrush(self.text_color))
             text_item.setPos(rect.x() + 12, rect.y() + 5)
             # 假设有一个矩形区域 (x, y, width, height)
 
@@ -363,7 +384,7 @@ class WeekView(QWidget):
                 #cell.mousePressEvent = lambda event, d=self.dates[i], h=h+self.start_hour: \
                  #   self.handle_time_click(d, h, event)
                     
-            line_pen = QPen(QColor("#7a7a79"))  # 统一的灰色分割线颜色
+            line_pen = QPen(self.text_color)  # 统一的灰色分割线颜色
             line_pen.setWidth(1)  # 统一的线宽，防止出现不同粗细
             line = self.main_scene.addLine(
                 60 + i * self.day_width, start_y,  # 从每一列的左边缘开始
@@ -422,7 +443,6 @@ class WeekView(QWidget):
             log.warning(f"{event.title} 没有 repeat_days")
             #return
         #log.info(f"{event.title} repeat_days: {repeat_days} type: {type(repeat_days)}")
-
         #for day_str in repeat_days:
          #   weekday = self.mp.get(day_str)
           #  if weekday is None:
@@ -528,15 +548,18 @@ class ScheduleAreaItem(QObject,QGraphicsRectItem):
         self.begin_time = begin_time
         self.end_time = end_time
         self.date = date
+        palette = QApplication.palette()
+        self.background_color = palette.color(QPalette.Base)
+        self.text_color = palette.color(QPalette.Text)
 
-        self.setBrush(QColor("#f0f0f0"))
-        self.setPen(QPen(QColor("#0f0000")))
+        self.setBrush(QBrush(self.background_color))
+        self.setPen(self.text_color)
         self.setAcceptHoverEvents(True)
     def hoverEnterEvent(self, event):
         self.setBrush(QColor("#2ba4c6"))  # 鼠标悬停时变为金色
 
     def hoverLeaveEvent(self, event):
-        self.setBrush(QColor("#f0f0f0"))  # 鼠标离开时恢复
+        self.setBrush(self.background_color)  # 鼠标离开时恢复
 
     def mouseDoubleClickEvent(self, event):
         self.double_clicked.emit((self.begin_time, self.end_time,self.date))
