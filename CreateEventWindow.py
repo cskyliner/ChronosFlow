@@ -23,8 +23,8 @@ class StrictDynamicLineEdit(QLineEdit):
 		self.setFixedHeight(50)
 
 		self.setStyleSheet("""QLineEdit {
-			background-color: rgba(255, 255, 255, 0.6); 
-		    color: black; 
+			background-color: rgba(215, 190, 130, 0.2); 
+		    color: palette(text); 
 			border: none;
 			border-bottom: 1px solid palette(shadow);
 		}""")
@@ -126,8 +126,8 @@ class Schedule(QWidget):
 		# 设置半透明和自适应主题的样式表
 		self.text_edit.setStyleSheet("""
 		    QTextEdit {
-		        background-color: rgba(255, 255, 255, 0.6); 
-		        color: black;  
+		        background-color: rgba(215, 190, 130, 0.2); 
+		        color: palette(text);  
 		        border: 1px solid palette(shadow);
 		        border-radius: 4px;
 		    }

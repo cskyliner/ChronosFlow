@@ -41,7 +41,7 @@ class MainWindow(QMainWindow):
 		# 获取屏幕尺寸，设置主窗口位置
 		self.resize(width, height)
 		screen_geometry = app.primaryScreen().availableGeometry()
-		self.move(screen_geometry.width() // 2 - width // 2+100, screen_geometry.height() // 2 - height // 2)
+		self.move(screen_geometry.width() // 2 - width // 2, screen_geometry.height() // 2 - height // 2)
 
 		# 动画管理集
 		self.animations: dict[str, QPropertyAnimation] = {}
