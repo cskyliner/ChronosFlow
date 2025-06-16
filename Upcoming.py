@@ -47,8 +47,11 @@ class DeleteButton(QPushButton):
 		shadow.setColor(QColor(255, 80, 80, 60))
 		shadow.setOffset(0, 2)
 		self.setGraphicsEffect(shadow)
+
 	def bind_event(self, event: BaseEvent):
 		self._event = event
+
+
 class EyeButton(QPushButton):
 	"""单例眼睛按钮"""
 	_instance = None
@@ -155,20 +158,30 @@ class CustomListItem(QWidget):
 	finished_signal: Signal = Signal(BaseEvent)
 	unfinished_signal: Signal = Signal(BaseEvent)
 
-	def __init__(self, event: BaseEvent, parent=None):
+	def __init__(self, event: BaseEvent, parent=None, color_choice=0):
 		super().__init__(parent)
 		self.setAttribute(Qt.WA_StyledBackground, True)
 		self.setAutoFillBackground(False)
 		self.setMouseTracking(True)  # 启用鼠标跟踪
-		self.setStyleSheet("""
-		            CustomListItem {
-		                background-color: rgba(255, 255, 255, 0.6);
+
+		colors = (
+			"rgba(210, 125, 150, 0.8)",
+			"rgba(230, 205, 145, 0.8)",
+			"rgba(140, 175, 195, 0.8)",
+			"rgba(150, 165, 135, 0.8)",
+			"rgba(225, 160, 125, 0.8)",
+			"rgba(175, 155, 190, 0.8)"
+		)
+		self.setStyleSheet(f"""
+		            CustomListItem {{
 		                border-radius: 15px;
-		            }
-		            CustomListItem:hover {
-		                background-color: rgba(255, 255, 255, 0.8); /*轻微高亮*/
-		            }
+		                background-color: {colors[color_choice]};
+		            }}
+		            CustomListItem:hover {{
+		                background-color: {colors[color_choice].replace('0.8', '0.9')};
+		            }}
 		        """)
+
 		# 绑定item和对应的event
 		self.nevent = event
 
@@ -176,14 +189,15 @@ class CustomListItem(QWidget):
 		layout = QHBoxLayout(self)
 		layout.setContentsMargins(5, 2, 5, 2)  # 边距：左、上、右、下
 
-		if hasattr(self.nevent,"done"):
+		if hasattr(self.nevent, "done"):
 			self.finish_checkbox = QCheckBox()
 			self.finish_checkbox.setChecked(bool(self.nevent.done))
-			#self.finish_checkbox.clicked.connect(lambda x:self.this_one_is_finished(x))
+			# self.finish_checkbox.clicked.connect(lambda x:self.this_one_is_finished(x))
 			# 当打勾时触发
 			self.finish_checkbox.clicked.connect(lambda checked: self.make_this_one_finished() if checked else None)
 			# 当取消打勾时触发
-			self.finish_checkbox.clicked.connect(lambda checked: self.make_this_one_unfinished() if not checked else None)
+			self.finish_checkbox.clicked.connect(
+				lambda checked: self.make_this_one_unfinished() if not checked else None)
 			layout.addWidget(self.finish_checkbox)
 
 		# 展示主题的标签
@@ -294,7 +308,7 @@ class Upcoming(QListWidget):
 					/* 控制行间距（相邻项的间隔） */
 					margin: 5px;  
 			}
-			""")
+		""")
 
 		self.kind = kind  # 0:Upcoming页面的Upcoming；1:Calendar页面的search_column；2:某个日期的Upcoming
 		self.events_used_to_update: tuple[BaseEvent] = tuple()  # 储存这次需要更新的至多10个数据
@@ -306,6 +320,7 @@ class Upcoming(QListWidget):
 		self.page_num = 10  # 每页显示的事件数
 		self.loading_item = None  # 加载标签
 		self.float_btn: FloatingButton = None  # 悬浮按钮
+		self.color_choice = 0  # 0:red 1:yellow 2:blue 3:green
 
 		if self.kind == 0:
 			self.load_more_data()
@@ -408,9 +423,14 @@ class Upcoming(QListWidget):
 		将每条的日期和已有的日期比较，如果日期已有，插入到这一日期标签的下面；如果没有，新建日期标签
 		self.index_of_data_label的key的形式为event.datetime[:10],仅有年月日
 		"""
-		custom_widget = CustomListItem(event)
+		custom_widget = CustomListItem(event, color_choice=self.color_choice)
+		self.color_choice += 1
+		if self.color_choice == 6:
+			self.color_choice = 0
+
 		item = QListWidgetItem()
 		item.setSizeHint(QSize(custom_widget.sizeHint().width(), 80))  # 设置合适的大小
+
 		# 如果没有对应日期的标签，就加上
 		if not event.datetime[:10] in self.index_of_date_label:
 			self.add_date_label(event.datetime)
@@ -493,14 +513,14 @@ class Upcoming(QListWidget):
 		删除事件
 		:param keep_corresponding_event: 复选框变化时也要调用，当其为True时，不从后端删除
 		"""
-		
+
 		if isinstance(event, ActivityEvent) and event.datetime is None:
-			log.info (f"ActivityEvent：{event.title} event.datetime:{ event.datetime}")
+			log.info(f"ActivityEvent：{event.title} event.datetime:{event.datetime}")
 			event.datetime = event.start_date + " " + event.start_time
-			log.info (f"ActivityEvent：{event.title} event.datetime:{ event.datetime}")
+			log.info(f"ActivityEvent：{event.title} event.datetime:{event.datetime}")
 		elif isinstance(event, ActivityEvent):
-			log.info (f"ActivityEvent：{event.title} event.datetime:{ event.datetime}")
-			#event.datetime = event.datetime
+			log.info(f"ActivityEvent：{event.title} event.datetime:{event.datetime}")
+		# event.datetime = event.datetime
 		date = event.datetime[:10]
 		log.info(f"date = {date}")
 		# 查找该事件
@@ -555,6 +575,7 @@ class Upcoming(QListWidget):
 		self.loading = False
 		self.event_num = 0
 		self.loading_item = None
+		self.color_choice = 0
 		log.info(f"共{self.event_num}条日程")
 		# 连接接收信号
 		Emitter.instance().backend_data_to_frontend_signal.connect(self.get_data)
@@ -573,6 +594,7 @@ class Upcoming(QListWidget):
 			set_font(item)
 			item.setTextAlignment(Qt.AlignCenter)
 			self.addItem(item)
+
 	def show_specific_date(self, date: QDate):
 		"""显示指定日期的日程"""
 		self.clear()
@@ -582,6 +604,7 @@ class Upcoming(QListWidget):
 		self.loading = False
 		self.no_more_events = False
 		self.event_num = 0
+		self.color_choice = 0
 		self.loading_item = None
 		# 连接接收信号
 		Emitter.instance().backend_data_to_frontend_signal.connect(self.get_specific_date_data)
@@ -615,8 +638,10 @@ class Upcoming(QListWidget):
 		self.no_more_events = False
 		self.event_num = 0
 		self.loading_item = None
+		self.color_choice = 0
 		self.load_more_data()
 		log.info(f"共{self.event_num}条日程")
+
 	def notify_no_events(self):
 		# 创建自定义样式的提示项
 		# 创建提示项

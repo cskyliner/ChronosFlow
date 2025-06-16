@@ -8,7 +8,6 @@ class SideBar(QFrame):
 	def __init__(self, parent):
 		super().__init__(parent)
 		self.setFrameShape(QFrame.StyledPanel)
-		# self.setStyleSheet("""background: palette(light);""")
 
 		# ===侧边栏内容===
 		layout = QVBoxLayout()
@@ -31,10 +30,16 @@ class SideBar(QFrame):
 		layout.addItem(spacer)
 
 		# ===添加功能按钮===
-		names = ("Calendar", "Upcoming", "Setting", "Weekview")
-		_names = ("日历", "日程", "设置", "周视图")
+		names = ("Calendar", "Upcoming", "Weekview", "Setting")
+		buttons = [
+			("日历", QStyle.SP_FileDialogListView),
+			("日程", QStyle.SP_FileDialogDetailedView),
+			("周视图", QStyle.SP_FileDialogContentsView),
+			("设置", QStyle.SP_DriveCDIcon)
+		]
+
 		for i in range(len(names)):
-			btn = QPushButton(f"{_names[i]}")
+			btn = QPushButton(f"{buttons[i][0]}")
 			btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
@@ -51,6 +56,12 @@ class SideBar(QFrame):
 				}
             """)
 			set_font(btn, 1)
+
+			# 图标
+			icon = self.style().standardIcon(buttons[i][1])
+			btn.setIcon(icon)
+			btn.setIconSize(QSize(20, 20))
+
 			layout.addWidget(btn)
 			# 连接按钮与切换页面信号
 			btn.clicked.connect(partial(Emitter.instance().send_page_change_signal, names[i]))
