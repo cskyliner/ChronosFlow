@@ -31,15 +31,13 @@ class SideBar(QFrame):
 
 		# ===添加功能按钮===
 		names = ("Calendar", "Upcoming", "Weekview", "Setting")
-		buttons = [
-			("日历", QStyle.SP_FileDialogListView),
-			("日程", QStyle.SP_FileDialogDetailedView),
-			("周视图", QStyle.SP_FileDialogContentsView),
-			("设置", QStyle.SP_DriveCDIcon)
-		]
+		display_names = ("日历", "日程", "周视图", "设置")
+
+		# 根据系统类型选择图标
+		system_icons = self.get_system_appropriate_icons()
 
 		for i in range(len(names)):
-			btn = QPushButton(f"{buttons[i][0]}")
+			btn = QPushButton(display_names[i])
 			btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
@@ -58,7 +56,8 @@ class SideBar(QFrame):
 			set_font(btn, 1)
 
 			# 图标
-			icon = self.style().standardIcon(buttons[i][1])
+			icon_type = system_icons[i]
+			icon = self.style().standardIcon(icon_type)
 			btn.setIcon(icon)
 			btn.setIconSize(QSize(20, 20))
 
@@ -67,3 +66,33 @@ class SideBar(QFrame):
 			btn.clicked.connect(partial(Emitter.instance().send_page_change_signal, names[i]))
 		layout.addStretch()
 		self.setLayout(layout)
+
+
+def get_system_appropriate_icons(self):
+	"""返回当前系统最适合的图标枚举列表"""
+	system_type = sys.platform
+
+	# Windows系统图标
+	if system_type == "windows":
+		return (
+			QStyle.SP_FileDialogListView,  # 日历
+			QStyle.SP_FileDialogDetailedView,  # 日程
+			QStyle.SP_FileDialogContentsView,  # 周视图
+			QStyle.SP_DriveCDIcon  # 设置（使用光盘图标代替齿轮）
+		)
+	# macOS系统图标
+	elif system_type == "macos":
+		return (
+			QStyle.SP_FileDialogListView,  # 日历
+			QStyle.SP_FileDialogDetailedView,  # 日程
+			QStyle.SP_FileDialogContentsView,  # 周视图
+			QStyle.SP_TitleBarMenuButton  # 设置（使用菜单图标）
+		)
+	# Linux及其他系统图标
+	else:
+		return (
+			QStyle.SP_FileDialogListView,  # 日历
+			QStyle.SP_FileDialogDetailedView,  # 日程
+			QStyle.SP_FileDialogContentsView,  # 周视图
+			QStyle.SP_ComputerIcon  # 设置（使用计算机图标）
+		)
