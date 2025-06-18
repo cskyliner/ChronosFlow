@@ -10,3 +10,5 @@ docs/framework_draft.md
 build/
 dist/
 ChronosFlow.spec
+AppData/
+tests/
