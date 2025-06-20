@@ -256,13 +256,35 @@ class SettingsPage(QWidget):
 		set_font(start_time_label)
 		excel_date_layout.addWidget(start_time_label)
 		self.start_date_edit = QDateTimeEdit()
+		self.start_date_edit.setStyleSheet("""
+		        QDateTimeEdit {
+		            padding: 6px;
+		            border: 1px solid palette(midlight);
+		            border-radius: 4px;
+		        }
+		        QDateTimeEdit:hover {
+		            border-color: palette(mid);
+		        }
+		    """)
 		self.start_date_edit.setCalendarPopup(True)
 		calendar = self.start_date_edit.calendarWidget()  # 获取日历控件（QCalendarWidget）
 		calendar.setStyleSheet("""
-								            QCalendarWidget QAbstractItemView:item:hover {  /*鼠标悬停*/
-								                background-color: palette(midlight);
-								            }
-										    """)  # 设置日历样式
+		        QCalendarWidget QAbstractItemView:enabled {
+		            font-size: 12px;
+		            color: palette(text);
+		        }
+		        QCalendarWidget QAbstractItemView:disabled {
+		            color: palette(midlight);
+		        }
+		        QCalendarWidget QAbstractItemView:item:hover {
+		            background-color: #e6f2ff;
+		            color: #0066cc;
+		        }
+		        QCalendarWidget QToolButton {
+		            font-size: 14px;
+		            icon-size: 20px;
+		        }
+		    """)  # 设置日历样式
 		self.start_date_edit.setDisplayFormat("yyyy-MM-dd")
 		excel_date_layout.addWidget(self.start_date_edit)
 		self.start_date_edit.setDate(QDate.currentDate())

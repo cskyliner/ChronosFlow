@@ -4,7 +4,6 @@ from PySide6.QtCore import QRectF
 from events.EventManager import *
 from events.EventManager import EventSQLManager
 
-
 log = logging.getLogger(__name__)
 
 
@@ -142,7 +141,6 @@ class CalendarDayItem(QObject, QGraphicsRectItem):
 		font = painter.font()
 		font.setPointSize(dynamic_font_size)
 		painter.setFont(font)
-		painter.setPen(QPen(text_color))  # 日程颜色
 
 		font_metrics = QFontMetrics(font)
 		line_height = font_metrics.lineSpacing()
@@ -150,14 +148,47 @@ class CalendarDayItem(QObject, QGraphicsRectItem):
 		x = event_area_rect.left()
 		y = event_area_rect.top() + line_height
 
+		bg_colors = (QColor(225, 160, 125), QColor(230, 205, 145), QColor(140, 175, 195), QColor(150, 165, 135))  # 循环颜色
+
 		for i, event in enumerate(self.event[:max_events_to_show]):
-			elided = font_metrics.elidedText(event.title, Qt.ElideRight, int(event_area_rect.width()))
-			painter.drawText(QPointF(x, y + i * line_height), elided)
+			# 计算当前日程条目的背景矩形区域
+			bg_rect = QRectF(
+				event_area_rect.left(),
+				event_area_rect.top() + i * line_height,
+				event_area_rect.width(),
+				line_height
+			)
+
+			# 绘制圆角背景矩形
+			painter.setPen(Qt.NoPen)  # 无边框
+			painter.setBrush(QBrush(bg_colors[i % 3]))
+			painter.drawRoundedRect(bg_rect, 4, 4)  # 4px圆角
+
+			# 绘制文字
+			painter.setPen(QPen(text_color))
+			elided_text = font_metrics.elidedText(event.title, Qt.ElideRight, int(event_area_rect.width()))
+			painter.drawText(bg_rect, Qt.AlignLeft | Qt.AlignVCenter, " " + elided_text)  # 左侧加空格留边距
+
+		# elided = font_metrics.elidedText(event.title, Qt.ElideRight, int(event_area_rect.width()))
+		# painter.drawText(QPointF(x, y + i * line_height), elided)
+
 		event_count = len(self.event)
 		# 超过三条显示更多
 		metrics = QFontMetrics(font)
 		line_h = metrics.lineSpacing()
 		if event_count > max_events_to_show:
+			# 计算背景矩形区域
+			bg_rect = QRectF(
+				event_area_rect.left(),
+				event_area_rect.top() + max_events_to_show * line_h,
+				event_area_rect.width(),
+				line_h
+			)
+
+			painter.setPen(Qt.NoPen)
+			painter.setBrush(QBrush(bg_colors[3]))  # 绿色
+			painter.drawRoundedRect(bg_rect, 4, 4)
+
 			more_font = QFont(font)
 			more_font.setPointSize(font.pointSize() - 1)
 			more_font.setItalic(True)
@@ -165,9 +196,9 @@ class CalendarDayItem(QObject, QGraphicsRectItem):
 			painter.setPen(QPen(text_color))  # "更多"的颜色
 
 			text = f"更多 ({event_count - max_events_to_show})..."
-			r = QRectF(event_area_rect.left(), event_area_rect.top() + max_events_to_show * line_h,
-					   event_area_rect.width(), line_h)
-			painter.drawText(r, Qt.AlignRight | Qt.AlignVCenter, text)
+			# r = QRectF(event_area_rect.left(), event_area_rect.top() + max_events_to_show * line_h,
+			# 		   event_area_rect.width(), line_h)
+			painter.drawText(bg_rect, Qt.AlignRight | Qt.AlignVCenter, text)
 
 
 class CalendarView(QWidget):
@@ -207,7 +238,7 @@ class CalendarView(QWidget):
 				border-radius: 4px;
 			}
 			QPushButton:hover {
-				background-color: palette(mid);
+				background-color: palette(light);
 			}
 			QPushButton:pressed {
 				background-color: palette(mid);
@@ -304,6 +335,16 @@ class CalendarView(QWidget):
 		bound = self.scene.itemsBoundingRect()
 		print("itemsBoundingRect:", bound)
 
+# =======
+	# 更新日历栏大小
+	# btn_height = 40                                         # 顶部按钮栏高度
+	# w = self.width()
+	# h = self.height() - btn_height
+	# day_width = w / 7
+	# weekday_height = 30  # 固定周几栏高度
+	# day_height = (h - weekday_height) / 6  # 剩余高度分给日期
+	# self.draw_month(self.current_year, self.current_month, day_width, day_height)
+
 	def clear_selection(self):
 		for item in self.scene.items():
 			if isinstance(item, CalendarDayItem):
@@ -361,6 +402,12 @@ class CalendarView(QWidget):
 				col = 0
 				row += 1
 			current = current.addDays(1)
+
+		total_cols = 7
+		total_rows = 7
+		# self.scene.setSceneRect(0, 0, total_cols * day_width, total_rows * day_height)
+		self.scene.setSceneRect(0, 0, total_cols * day_width, weekday_height + (total_rows - 1) * day_height)
+
 
 	def go_to_month(self, year: int, month: int):
 		self.current_year = year

@@ -23,8 +23,8 @@ class StrictDynamicLineEdit(QLineEdit):
 		self.setFixedHeight(50)
 
 		self.setStyleSheet("""QLineEdit {
-			background-color: rgba(255, 255, 255, 0.6); 
-		    color: black; 
+			background-color: rgba(215, 190, 130, 0.2); 
+		    color: palette(text); 
 			border: none;
 			border-bottom: 1px solid palette(shadow);
 		}""")
@@ -126,8 +126,8 @@ class Schedule(QWidget):
 		# 设置半透明和自适应主题的样式表
 		self.text_edit.setStyleSheet("""
 		    QTextEdit {
-		        background-color: rgba(255, 255, 255, 0.6); 
-		        color: black;  
+		        background-color: rgba(215, 190, 130, 0.2); 
+		        color: palette(text);  
 		        border: 1px solid palette(shadow);
 		        border-radius: 4px;
 		    }
@@ -159,7 +159,35 @@ class Schedule(QWidget):
 		type_choose_layout.addWidget(type_label)
 
 		self.type_choose_combo = QComboBox()
+		self.type_choose_combo.setStyleSheet("""
+				/* 下拉框基础样式 */
+				QComboBox {
+					font-size: 15px;
+					color: palette(text);    
+					border: 1px solid palette(midlight);    
+					border-radius: 4px;      
+					padding: 3px 6px;
+					min-width: 40px;   
+				}
+			
+				/* 鼠标悬停效果 */
+				QComboBox:hover {
+					border-color: palette(mid);      
+				}
+			
+				/* 下拉列表样式 */
+				QComboBox QAbstractItemView {
+					font-size: 14px;
+					color: palette(text);
+					border: 1px solid palette(mid);   
+					selection-background-color: #e6f2ff; 
+					selection-color: #0066cc;    
+					outline: none;             
+					padding: 4px;                
+				}
+			""")
 		self.type_choose_combo.addItems(("DDL", "日程"))
+		set_font(self.type_choose_combo)
 		self.type_choose_combo.currentTextChanged.connect(self.update_dynamic_widgets)  # 信号
 		type_choose_layout.addWidget(self.type_choose_combo)
 
@@ -193,22 +221,22 @@ class Schedule(QWidget):
 		self.save_btn.setMaximumWidth(200)
 		self.save_btn.setStyleSheet("""
                 QPushButton {
-                    background-color: rgba(255, 255, 255, 0.6);
+                    background-color: transparent;
                     border: 1px solid palette(mid);
-                    color: black;
-                	border-radius: 4px;
-                    padding: 10px;
+                    border-radius: 4px;
+                    padding: 0px;
                     text-align: center;
                 }
                 QPushButton:hover {
-                    background-color: rgba(255, 255, 255, 0.8); /*轻微高亮*/
+                    background-color: palette(midlight); /*轻微高亮*/
                     border-radius: 4px;
                 }
                 QPushButton:pressed {
-					background-color: rgba(255, 255, 255, 0.9);
+					background-color: palette(mid);
 				}
-							""")
+            """)
 		set_font(self.save_btn)
+		self.save_btn.setFixedSize(100, 40)
 		button_layout.addWidget(self.save_btn)
 
 		# 状态栏
@@ -321,35 +349,58 @@ class Schedule(QWidget):
 		"""创建选项1的所有部件并返回列表"""
 		widgets = []
 
+		datetime_edit_style = """
+		        QDateTimeEdit {
+		            padding: 1px;
+		            border: 1px solid palette(midlight);
+		            border-radius: 4px;
+		        }
+		        QDateTimeEdit:hover {
+		            border-color: palette(mid);
+		        }
+		    """
+		calendar_style = """
+		        QCalendarWidget QAbstractItemView:enabled {
+		            color: palette(text);
+		        }
+		        QCalendarWidget QAbstractItemView:disabled {
+		            color: palette(midlight);
+		        }
+		        QCalendarWidget QAbstractItemView:item:hover {
+		            background-color: #e6f2ff;
+		            color: #0066cc;
+		        }
+		        QCalendarWidget QToolButton {
+		            font-size: 14px;
+		            icon-size: 20px;
+		        }
+		    """
+
 		# 截止时间选择框
-		deadline_label = QLabel("截止时间:")
+		deadline_label = QLabel("截止时间：")
 		set_font(deadline_label)
 		self.dynamic_layout.addWidget(deadline_label)
 		widgets.append(deadline_label)
 
 		# 选择截止时间
 		self.deadline_date_edit = QDateTimeEdit()
+		self.deadline_date_edit.setStyleSheet(datetime_edit_style)
 		set_font(self.deadline_date_edit)
 		self.deadline_date_edit.setDisplayFormat("yyyy-MM-dd")
 		self.deadline_date_edit.setDate(QDate.currentDate())
 		self.deadline_date_edit.setCalendarPopup(True)  # 在点击时弹出日历
 		calendar = self.deadline_date_edit.calendarWidget()  # 获取日历控件（QCalendarWidget）
-		calendar.setStyleSheet("""
-										            QCalendarWidget QAbstractItemView:item:hover {  /*鼠标悬停*/
-										                background-color: palette(midlight);
-										            }
-													""")  # 设置日历样式
+		calendar.setStyleSheet(calendar_style) # 设置日历样式
 		self.dynamic_layout.addWidget(self.deadline_date_edit)
 		widgets.append(self.deadline_date_edit)
   
 		self.deadline_time_edit = QDateTimeEdit()
+		self.deadline_time_edit.setStyleSheet(datetime_edit_style)
 		set_font(self.deadline_time_edit)
 		self.deadline_time_edit.setDisplayFormat("HH:mm")
 		self.deadline_time_edit.setTime(QTime.currentTime())
 		self.dynamic_layout.addWidget(self.deadline_time_edit)
 		widgets.append(self.deadline_time_edit)  
-  
-
 
 		ddl_spacer = QWidget()
 		ddl_spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
@@ -357,28 +408,26 @@ class Schedule(QWidget):
 		widgets.append(ddl_spacer)
 
 		# 提醒时间选择框
-		reminder_label = QLabel("提醒时间:")
+		reminder_label = QLabel("提醒时间：")
 		set_font(reminder_label)
 		self.dynamic_layout.addWidget(reminder_label)
 		widgets.append(reminder_label)
 
 		# 选择提醒日期
 		self.reminder_date_edit = QDateTimeEdit()
+		self.reminder_date_edit.setStyleSheet(datetime_edit_style)
 		set_font(self.reminder_date_edit)
 		self.reminder_date_edit.setDisplayFormat("yyyy-MM-dd")
 		self.reminder_date_edit.setDate(QDate.currentDate())
 		self.reminder_date_edit.setCalendarPopup(True)
 		reminder_calendar = self.reminder_date_edit.calendarWidget()
-		reminder_calendar.setStyleSheet("""
-			QCalendarWidget QAbstractItemView:item:hover {
-				background-color: palette(midlight);
-			}
-		""")
+		reminder_calendar.setStyleSheet(calendar_style)
 		self.dynamic_layout.addWidget(self.reminder_date_edit)
 		widgets.append(self.reminder_date_edit)
 
 		# 选择提醒时间
 		self.reminder_time_edit = QDateTimeEdit()
+		self.reminder_time_edit.setStyleSheet(datetime_edit_style)
 		set_font(self.reminder_time_edit)
 		self.reminder_time_edit.setDisplayFormat("HH:mm")
 		self.reminder_time_edit.setTime(QTime.currentTime())
@@ -391,6 +440,34 @@ class Schedule(QWidget):
 		"""创建选项2的所有部件并返回列表"""
 		widgets = []
 
+		datetime_edit_style = """
+				        QDateTimeEdit {
+				            padding: 1px;
+				            border: 1px solid palette(midlight);
+				            border-radius: 4px;
+				        }
+				        QDateTimeEdit:hover {
+				            border-color: palette(mid);
+				        }
+				    """
+		calendar_style = """
+				        QCalendarWidget QAbstractItemView:enabled {
+				            font-size: 12px;
+				            color: palette(text);
+				        }
+				        QCalendarWidget QAbstractItemView:disabled {
+				            color: palette(midlight);
+				        }
+				        QCalendarWidget QAbstractItemView:item:hover {
+				            background-color: #e6f2ff;
+				            color: #0066cc;
+				        }
+				        QCalendarWidget QToolButton {
+				            font-size: 14px;
+				            icon-size: 20px;
+				        }
+				    """
+
 		# 起止时间
 		start_and_end_label = QLabel("起止日期：")
 		set_font(start_and_end_label)
@@ -399,14 +476,11 @@ class Schedule(QWidget):
 		# 起始日期
 		self.start_date_edit = QDateTimeEdit()
 		self.start_date_edit.setDisplayFormat("yyyy-MM-dd")
+		self.start_date_edit.setStyleSheet(datetime_edit_style)
 		self.start_date_edit.setDate(QDate.currentDate())
 		self.start_date_edit.setCalendarPopup(True)
 		calendar = self.start_date_edit.calendarWidget()  # 获取日历控件（QCalendarWidget）
-		calendar.setStyleSheet("""
-						            QCalendarWidget QAbstractItemView:item:hover {  /*鼠标悬停*/
-						                background-color: palette(midlight);
-						            }
-								    """)  # 设置日历样式
+		calendar.setStyleSheet(calendar_style)  # 设置日历样式
 		set_font(self.start_date_edit)
 		self.dynamic_layout.addWidget(self.start_date_edit)
 		widgets.append(self.start_date_edit)
@@ -414,13 +488,14 @@ class Schedule(QWidget):
 		# 起始时间
 		self.start_time_edit = QDateTimeEdit()
 		self.start_time_edit.setDisplayFormat("HH:mm")
+		self.start_time_edit.setStyleSheet(datetime_edit_style)
 		self.start_time_edit.setTime(QTime.currentTime())
 		set_font(self.start_time_edit)
 		self.dynamic_layout.addWidget(self.start_time_edit)
 		widgets.append(self.start_time_edit)
 
 		# '~'标签
-		to_label = QLabel("~")
+		to_label = QLabel(" ~ ")
 		set_font(to_label)
 		self.dynamic_layout.addWidget(to_label)
 		widgets.append(to_label)
@@ -428,14 +503,11 @@ class Schedule(QWidget):
 		# 结束日期
 		self.end_date_edit = QDateTimeEdit()
 		self.end_date_edit.setDisplayFormat("yyyy-MM-dd")
+		self.end_date_edit.setStyleSheet(datetime_edit_style)
 		self.end_date_edit.setDate(QDate.currentDate())
 		self.end_date_edit.setCalendarPopup(True)
 		calendar = self.end_date_edit.calendarWidget()  # 获取日历控件（QCalendarWidget）
-		calendar.setStyleSheet("""
-								    QCalendarWidget QAbstractItemView:item:hover {  /*鼠标悬停*/
-							            background-color: palette(midlight);
-						            }
-								    """)
+		calendar.setStyleSheet(calendar_style)
 		set_font(self.end_date_edit)
 		self.dynamic_layout.addWidget(self.end_date_edit)
 		widgets.append(self.end_date_edit)
@@ -443,6 +515,7 @@ class Schedule(QWidget):
 		# 结束时间
 		self.end_time_edit = QDateTimeEdit()
 		self.end_time_edit.setDisplayFormat("HH:mm")
+		self.end_time_edit.setStyleSheet(datetime_edit_style)
 		self.end_time_edit.setTime(QTime.currentTime())
 		set_font(self.end_time_edit)
 		self.dynamic_layout.addWidget(self.end_time_edit)
@@ -461,6 +534,33 @@ class Schedule(QWidget):
 
 		# 重复
 		self.repeat_combo = QComboBox()
+		self.repeat_combo.setStyleSheet("""
+				/* 下拉框基础样式 */
+				QComboBox {
+					font-size: 15px;
+					color: palette(text);    
+					border: 1px solid palette(midlight);    
+					border-radius: 4px;      
+					padding: 3px 6px; 
+				}
+			
+				/* 鼠标悬停效果 */
+				QComboBox:hover {
+					border-color: palette(mid);      
+				}
+			
+				/* 下拉列表样式 */
+				QComboBox QAbstractItemView {
+					font-size: 14px;
+					color: palette(text);
+					border: 1px solid palette(mid);   
+					selection-background-color: #e6f2ff; 
+					selection-color: palette(text);    
+					outline: none;             
+					padding: 4px;                
+				}
+			
+			""")
 		set_font(self.repeat_combo)
 		repeat_days = ("不重复", "每周", "每两周")
 		self.repeat_combo.addItems(repeat_days)
@@ -469,6 +569,33 @@ class Schedule(QWidget):
 		self.repeat_combo.currentTextChanged.connect(self.update_repeat_dynamic_widgets)
 
 		self.repeat_day_combo = QComboBox()
+		self.repeat_day_combo.setStyleSheet("""
+				/* 下拉框基础样式 */
+				QComboBox {
+					font-size: 15px;
+					color: palette(text);    
+					border: 1px solid palette(midlight);    
+					border-radius: 4px;      
+					padding: 3px 6px; 
+				}
+			
+				/* 鼠标悬停效果 */
+				QComboBox:hover {
+					border-color: palette(mid);      
+				}
+			
+				/* 下拉列表样式 */
+				QComboBox QAbstractItemView {
+					font-size: 14px;
+					color: palette(text);
+					border: 1px solid palette(mid);   
+					selection-background-color: #e6f2ff; 
+					selection-color: palette(text);    
+					outline: none;             
+					padding: 4px;                
+				}
+			
+			""")
 		set_font(self.repeat_day_combo)
 		repeat_days = ("周一", "周二", "周三", "周四", "周五", "周六", "周日")
 		self.repeat_day_combo.addItems(repeat_days)
