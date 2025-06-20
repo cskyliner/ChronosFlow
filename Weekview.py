@@ -177,15 +177,69 @@ class WeekView(QWidget):
         self.init_ui()
         self.setup_time_axis()
         self.current_week = QDate.currentDate().weekNumber()[0]
+        self.current_week_date = QDate.currentDate()
         #log.info(f"self.current_week = {self.current_week}")
-        self.update_week(QDate.currentDate())
-        
+        self.update_week(self.current_week_date.addDays(1 - self.current_week_date.dayOfWeek()))
+        #self.current_week_date = QDate.currentDate()
+        #self.update_week_display(self.current_week_date)
     def init_ui(self):
      
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.main_layout.setSpacing(0)
-       
+        # 添加顶部导航栏
+        self.nav_bar = QHBoxLayout()
+        self.nav_bar.setContentsMargins(10, 5, 10, 5)
+        self.nav_bar.setSpacing(20)
+        
+        # 上周按钮
+        self.prev_week_btn = QLabel("<")
+        self.prev_week_btn.setAlignment(Qt.AlignCenter)
+        self.prev_week_btn.setMinimumSize(30, 30)
+        self.prev_week_btn.setStyleSheet("""
+            QLabel {
+                background-color: #f0f0f0;
+                border-radius: 15px;
+                color: #333;
+                font-size: 20px;
+                font-weight: bold;
+            }
+            QLabel:hover {
+                background-color: #e0e0e0;
+                color: #0078d7;
+            }
+        """)
+        self.prev_week_btn.mousePressEvent = self.on_prev_week_click
+        
+        # 周显示标签
+        self.week_display = QLabel()
+        self.week_display.setAlignment(Qt.AlignCenter)
+        self.week_display.setMinimumHeight(30)
+        self.week_display.setFont(QFont("Microsoft YaHei", 12, QFont.Bold))
+        
+        # 下周按钮
+        self.next_week_btn = QLabel(">")
+        self.next_week_btn.setAlignment(Qt.AlignCenter)
+        self.next_week_btn.setMinimumSize(30, 30)
+        self.next_week_btn.setStyleSheet("""
+            QLabel {
+                background-color: #f0f0f0;
+                border-radius: 15px;
+                color: #333;
+                font-size: 20px;
+                font-weight: bold;
+            }
+            QLabel:hover {
+                background-color: #e0e0e0;
+                color: #0078d7;
+            }
+        """)
+        self.next_week_btn.mousePressEvent = self.on_next_week_click
+        
+        self.nav_bar.addWidget(self.prev_week_btn)
+        self.nav_bar.addWidget(self.week_display)
+        self.nav_bar.addWidget(self.next_week_btn)
+        self.main_layout.addLayout(self.nav_bar)
         # 创建一个包含时间轴和内容视图的主场景
         self.main_scene = QGraphicsScene()
         # 创建主视图
@@ -228,6 +282,29 @@ class WeekView(QWidget):
         # 鼠标滚轮事件
         #self.time_axis_view.wheelEvent = self.main_wheel_event
         #self.content_view.wheelEvent = self.main_wheel_event
+    # 上周按钮点击事件
+    def on_prev_week_click(self, event):
+        if event.button() == Qt.LeftButton:
+            # 计算上周日期
+            prev_week_date = self.monday.addDays(-7)
+            self.update_week(prev_week_date)
+            #self.update_week_display(prev_week_date)
+    
+    # 下周按钮点击事件
+    def on_next_week_click(self, event):
+        if event.button() == Qt.LeftButton:
+            # 计算下周日期
+            next_week_date = self.monday.addDays(7)
+            self.update_week(next_week_date)
+            #self.update_week_display(next_week_date)
+    
+    # 更新周显示标签
+    def update_week_display(self, week_date:QDate):
+        start_date = week_date.toString("MM月dd日")
+        end_date = week_date.addDays(6).toString("MM月dd日")
+        self.week_num = week_date.weekNumber()[0]
+        self.year = week_date.year()
+        self.week_display.setText(f"{self.year}年 第{self.week_num}周 ({start_date}-{end_date})")
         
     def main_wheel_event(self, event):
         """处理主视图的鼠标滚轮事件"""
@@ -299,13 +376,15 @@ class WeekView(QWidget):
         # 设置时间轴视图的位置和大小
         #self.time_axis_view.setSceneRect(0, 0, 60, self.time_slot_count * self.hour_height)
 
-    def update_week(self, week_date: QDate):
+    def update_week(self, monday_date: QDate):
         """更新显示指定周"""
         #self.main_scene.clear()
+        self.clear_schedule_blocks()
+        self.update_week_display(monday_date)
         self.setup_time_axis()  # 重新绘制时间轴
         
         # 计算周日期范围
-        self.monday = week_date.addDays(1 - week_date.dayOfWeek())
+        self.monday = monday_date
         self.dates = [self.monday.addDays(i) for i in range(7)]
         
         # 创建日期列头
@@ -412,15 +491,15 @@ class WeekView(QWidget):
 
     def load_schedules(self):
         """加载周的日程"""
-        #self.clear_schedule_blocks()
+        self.clear_schedule_blocks()
         self.events = []
         first_date = self.dates[0].toString("yyyy-MM-dd")
         end_date = self.dates[-1].toString("yyyy-MM-dd")
         self.events = EventSQLManager.get_events_between_twodays(first_date,end_date)
         if(len(self.events) == 0):
-            log.info(f"Weekview load_schedules: 没有找到任何活动日程")
+            log.info(f"Weekview load_schedules week{self.week_num}({first_date}~{end_date}): 没有找到任何活动日程")
         else:
-            log.info(f"Weekview load_schedules: 找到 {len(self.events)} 条活动日程\n"
+            log.info(f"Weekview load_schedules week{self.week_num}({first_date}~{end_date}): 找到 {len(self.events)} 条活动日程\n"
                      +"\n".join(f"- {event.title} @ {event.start_date}-{event.end_date}" for event in self.events))
             
         for event in self.events:
@@ -462,8 +541,9 @@ class WeekView(QWidget):
             return  # 不在当前视图范围       
         # 计算局部坐标下的 y 和高度
         else:
-            log.info(f"添加的日程:{event.title} (weekday, start_hour) = {key} 对应的时间格子位置x:{cell.x()}, y:{cell.y()}\
-                width:{cell.rect().width()} height:{cell.rect().height()}")
+            pass
+            #log.info(f"添加的日程:{event.title} (weekday, start_hour) = {key} 对应的时间格子位置x:{cell.x()}, y:{cell.y()}\
+                #width:{cell.rect().width()} height:{cell.rect().height()}")
         start_min = start_t.minute()
         y = (start_min / 60) * self.hour_height
         duration_min = max(start_t.secsTo(end_t) // 60, 40)
@@ -499,16 +579,22 @@ class WeekView(QWidget):
         #block = ScheduleBlockItem(rect, event)
         #block.clicked.connect(lambda e: self.schedule_clicked.emit(e))
         #self.main_scene.addItem(block)
+        
     def clear_schedule_blocks(self):
         log.info("clear_schedule_blocks被调用")
-        if(self.schedule_block_items is None):
-            log.info("clear_schedule_blocks: self.schedule_block_items 为空")
+        if not self.schedule_block_items:
+            log.info("clear_schedule_blocks: 没有需要移除的日程块")
             return
-        log.info(f"clear_schedule_blocks: 当前schedule_block_items数量为: {len(self.schedule_block_items)}")
-        for block in self.schedule_block_items:
-            if block.scene():  # 确保 block 仍存在于场景中
-                self.main_scene.removeItem(block)
-        self.schedule_block_items.clear()        
+        
+        log.info(f"clear_schedule_blocks: 正在移除 {len(self.schedule_block_items)} 个日程块")
+        try:
+            for block in self.schedule_block_items:
+                if block.scene():
+                    self.main_scene.removeItem(block)
+        except Exception as e:
+            log.error(f"clear_schedule_blocks: 移除日程块时出错: {e}")
+        self.schedule_block_items.clear()
+        log.info("clear_schedule_blocks: 日程块移除完成")
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self.recalculate_dimensions()

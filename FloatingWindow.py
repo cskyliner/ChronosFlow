@@ -7,10 +7,10 @@ class FloatingWindow(QWidget):
 	show_main_requested = Signal()  # 显示主窗口信号
 	notification_received = Signal(object)  # 通知信号
 
-	def __init__(self, parent=None, show_x=40, show_y=542, width=150, height=150):
+	def __init__(self, parent=None, show_x=40, show_y=532, width=150, height=160):
 		super().__init__(parent)
 		self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
-		self.setFixedSize(150, 150)
+		self.setFixedSize(150, 160)
 		self.notification_widgets = []
 		self.lattest_event = None
 		self._init_ui()
@@ -196,6 +196,7 @@ class CountdownLabel(QLabel):
 		self.update_countdown()  # 初次设置
 
 	def update_countdown(self):
+		self.setWordWrap(True)
 		remaining_end_seconds = QDateTime.currentDateTime().secsTo(self.end_time)
 		remaining_notify_seconds = QDateTime.currentDateTime().secsTo(self.notify_time)
 		if remaining_notify_seconds <= 0 and remaining_end_seconds > 0:
