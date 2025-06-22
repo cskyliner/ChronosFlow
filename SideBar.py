@@ -47,6 +47,7 @@ class SideBar(QFrame):
 			btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
+                    color: black;
                     border: none;
                     padding: 25px;
                     text-align: center;
