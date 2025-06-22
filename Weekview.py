@@ -33,6 +33,10 @@ class ScheduleBlockItem(QGraphicsRectItem,QObject):
         #delete_button = DeleteButton(parent=graphics_view.viewport())
         self.view = view
 
+        self._bg_color = QColor("#DBE6D9")  # 苔藓灰绿
+        self._border_color = QColor("#C5D1C3")  # 边框色
+        self._border_width = 1.0
+
         palette = QApplication.palette()
         self.background_color = palette.color(QPalette.Base)
         self.text_color = palette.color(QPalette.Text)
@@ -82,9 +86,16 @@ class ScheduleBlockItem(QGraphicsRectItem,QObject):
 
     def paint(self, painter, option, widget=None):
         # 画背景
-        painter.setBrush(self.brush())
-        painter.setPen(self.pen())
-        painter.drawRect(self.rect())
+        # 绘制背景
+        painter.setBrush(QBrush(self._bg_color))
+        # 设置边框
+        pen = QPen(self._border_color, self._border_width)
+        if self.isSelected():
+            pen.setStyle(Qt.DashLine)  # 选中时显示虚线边框
+        painter.setPen(pen)
+        # 绘制圆角矩形
+        rect = self.rect().adjusted(1, 1, -1, -1)  # 向内缩进1像素
+        painter.drawRoundedRect(rect, 5, 5)  # 5px圆角
 
         # 设置字体
         painter.setPen(self.text_color)

@@ -23,7 +23,7 @@ class StrictDynamicLineEdit(QLineEdit):
 		self.setFixedHeight(50)
 
 		self.setStyleSheet("""QLineEdit {
-			background-color: rgba(215, 190, 130, 0.2); 
+			background-color: rgba(250, 250, 247, 0.2); 
 		    color: palette(text); 
 			border: none;
 			border-bottom: 1px solid palette(shadow);
@@ -126,7 +126,7 @@ class Schedule(QWidget):
 		# 设置半透明和自适应主题的样式表
 		self.text_edit.setStyleSheet("""
 		    QTextEdit {
-		        background-color: rgba(215, 190, 130, 0.2); 
+		        background-color: rgba(250, 250, 247, 0.2); 
 		        color: palette(text);  
 		        border: 1px solid palette(shadow);
 		        border-radius: 4px;
@@ -164,7 +164,8 @@ class Schedule(QWidget):
 				QComboBox {
 					font-size: 15px;
 					color: palette(text);    
-					border: 1px solid palette(midlight);    
+					border: 1px solid palette(midlight);  
+					background-color: rgba(209,217,224,0.9);  
 					border-radius: 4px;      
 					padding: 3px 6px;
 					min-width: 40px;   
@@ -221,18 +222,18 @@ class Schedule(QWidget):
 		self.save_btn.setMaximumWidth(200)
 		self.save_btn.setStyleSheet("""
                 QPushButton {
-                    background-color: transparent;
+                    background-color: rgba(232,237,223,0.7);
                     border: 1px solid palette(mid);
                     border-radius: 4px;
                     padding: 0px;
                     text-align: center;
                 }
                 QPushButton:hover {
-                    background-color: palette(midlight); /*轻微高亮*/
+                    background-color: rgba(232,237,223,1.0); /*轻微高亮*/
                     border-radius: 4px;
                 }
                 QPushButton:pressed {
-					background-color: palette(mid);
+					background-color: rgba(232,237,223,0.8);
 				}
             """)
 		set_font(self.save_btn)
@@ -354,6 +355,7 @@ class Schedule(QWidget):
 		            padding: 1px;
 		            border: 1px solid palette(midlight);
 		            border-radius: 4px;
+		            background-color: rgba(209,217,224,0.9); 
 		        }
 		        QDateTimeEdit:hover {
 		            border-color: palette(mid);
@@ -444,6 +446,7 @@ class Schedule(QWidget):
 				        QDateTimeEdit {
 				            padding: 1px;
 				            border: 1px solid palette(midlight);
+				            background-color: rgba(209,217,224,0.9); 
 				            border-radius: 4px;
 				        }
 				        QDateTimeEdit:hover {
@@ -539,6 +542,7 @@ class Schedule(QWidget):
 				QComboBox {
 					font-size: 15px;
 					color: palette(text);    
+					background-color: rgba(209,217,224,0.9); 
 					border: 1px solid palette(midlight);    
 					border-radius: 4px;      
 					padding: 3px 6px; 

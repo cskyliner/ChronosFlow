@@ -165,12 +165,12 @@ class CustomListItem(QWidget):
 		self.setMouseTracking(True)  # 启用鼠标跟踪
 
 		colors = (
-			"rgba(210, 125, 150, 0.8)",
-			"rgba(230, 205, 145, 0.8)",
-			"rgba(140, 175, 195, 0.8)",
-			"rgba(150, 165, 135, 0.8)",
-			"rgba(225, 160, 125, 0.8)",
-			"rgba(175, 155, 190, 0.8)"
+			"rgba(210, 125, 150, 0.9)",
+			"rgba(230, 205, 145, 0.9)",
+			"rgba(140, 175, 195, 0.9)",
+			"rgba(150, 165, 135, 0.9)",
+			"rgba(225, 160, 125, 0.9)",
+			"rgba(175, 155, 190, 0.9)"
 		)
 		self.setStyleSheet(f"""
 		            CustomListItem {{
@@ -178,7 +178,7 @@ class CustomListItem(QWidget):
 		                background-color: {colors[color_choice]};
 		            }}
 		            CustomListItem:hover {{
-		                background-color: {colors[color_choice].replace('0.8', '0.9')};
+		                background-color: {colors[color_choice].replace('0.9', '1.0')};
 		            }}
 		        """)
 

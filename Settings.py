@@ -259,6 +259,7 @@ class SettingsPage(QWidget):
 		self.start_date_edit.setStyleSheet("""
 		        QDateTimeEdit {
 		            padding: 6px;
+		            background-color: transparent; 
 		            border: 1px solid palette(midlight);
 		            border-radius: 4px;
 		        }
