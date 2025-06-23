@@ -39,7 +39,7 @@ class ScheduleBlockItem(QGraphicsRectItem,QObject):
 
         palette = QApplication.palette()
         self.background_color = palette.color(QPalette.Base)
-        self.text_color = palette.color(QPalette.Text)
+        self.text_color = QColor("#000000")
         self.light_color = palette.color(QPalette.Highlight)
 
         self.delete_button:DeleteButton = DeleteButton(parent=self.view.viewport())

@@ -152,9 +152,9 @@ class MainWindow(QMainWindow):
 		set_font(self.search_edit)
 		self.search_edit.setStyleSheet("""
 								    QLineEdit {
-								    background: rgba(209,217,224,0.7);
+								    background: transparent;
 						            padding: 8px;
-					                border: 1px solid palette(text);
+					                border: 1px solid #1E90FF;
 					                border-top-left-radius: 19px;     /* 左上角 */
     								border-top-right-radius: 0px;    /* 右上角 */
     								border-bottom-left-radius: 19px;  /* 左下角 */
@@ -173,8 +173,8 @@ class MainWindow(QMainWindow):
 		btn.setIcon(QIcon.fromTheme("system-search"))
 		btn.setStyleSheet("""
 					QPushButton {
-		                background: rgba(209,217,224,0.7);
-		                border: 1px solid palette(text);
+		                background: transparent;
+		                border: 1px solid #1E90FF;
 		                border-top-left-radius: 0px;     /* 左上角 */
     					border-top-right-radius: 19px;    /* 右上角 */
     					border-bottom-left-radius: 0px;  /* 左下角 */
@@ -183,10 +183,10 @@ class MainWindow(QMainWindow):
 		                text-align: center;
 		            }
 		            QPushButton:hover {
-		                background-color: rgba(209,217,224,1.0);
+		                border-color: #24C1FF;
 		            }
 		            QPushButton:pressed {
-						background-color: rgba(209,217,224,0.9);
+						border-color: #42BCFF;
 					}
 				""")
 		btn.setFixedSize(38, 38)
