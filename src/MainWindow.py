@@ -42,7 +42,7 @@ class MainWindow(QMainWindow):
 		# 获取屏幕尺寸，设置主窗口位置
 		self.resize(width, height)
 		screen_geometry = app.primaryScreen().availableGeometry()
-		self.move(screen_geometry.width() // 2 - width // 2+100, screen_geometry.height() // 2 - height // 2)
+		self.move(screen_geometry.width() // 2 - width // 2, screen_geometry.height() // 2 - height // 2)
 
 		# 动画管理集
 		self.animations: dict[str, QPropertyAnimation] = {}
@@ -153,7 +153,7 @@ class MainWindow(QMainWindow):
 								    QLineEdit {
 								    background: transparent;
 						            padding: 8px;
-					                border: 1px solid palette(text);
+					                border: 1px solid #1E90FF;
 					                border-top-left-radius: 19px;     /* 左上角 */
     								border-top-right-radius: 0px;    /* 右上角 */
     								border-bottom-left-radius: 19px;  /* 左下角 */
@@ -172,8 +172,8 @@ class MainWindow(QMainWindow):
 		btn.setIcon(QIcon.fromTheme("system-search"))
 		btn.setStyleSheet("""
 					QPushButton {
-		                background-color: transparent;
-		                border: 1px solid palette(text);
+		                background: transparent;
+		                border: 1px solid #1E90FF;
 		                border-top-left-radius: 0px;     /* 左上角 */
     					border-top-right-radius: 19px;    /* 右上角 */
     					border-bottom-left-radius: 0px;  /* 左下角 */
@@ -182,10 +182,10 @@ class MainWindow(QMainWindow):
 		                text-align: center;
 		            }
 		            QPushButton:hover {
-		                background-color: palette(midlight);
+		                border-color: #24C1FF;
 		            }
 		            QPushButton:pressed {
-						background-color: palette(mid);
+						border-color: #42BCFF;
 					}
 				""")
 		btn.setFixedSize(38, 38)

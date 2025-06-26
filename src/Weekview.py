@@ -32,9 +32,13 @@ class ScheduleBlockItem(QGraphicsRectItem,QObject):
         self.event:ActivityEvent = event
         self.view = view
 
+        self._bg_color = QColor("#DBE6D9")  # 苔藓灰绿
+        self._border_color = QColor("#C5D1C3")  # 边框色
+        self._border_width = 1.0
+
         palette = QApplication.palette()
         self.background_color = palette.color(QPalette.Base)
-        self.text_color = palette.color(QPalette.Text)
+        self.text_color = QColor("#000000")
         self.light_color = palette.color(QPalette.Highlight)
 
         self.delete_button:DeleteButton = DeleteButton(parent=self.view.viewport())
@@ -81,9 +85,16 @@ class ScheduleBlockItem(QGraphicsRectItem,QObject):
 
     def paint(self, painter, option, widget=None):
         # 画背景
-        painter.setBrush(self.brush())
-        painter.setPen(self.pen())
-        painter.drawRect(self.rect())
+        # 绘制背景
+        painter.setBrush(QBrush(self._bg_color))
+        # 设置边框
+        pen = QPen(self._border_color, self._border_width)
+        if self.isSelected():
+            pen.setStyle(Qt.DashLine)  # 选中时显示虚线边框
+        painter.setPen(pen)
+        # 绘制圆角矩形
+        rect = self.rect().adjusted(1, 1, -1, -1)  # 向内缩进1像素
+        painter.drawRoundedRect(rect, 5, 5)  # 5px圆角
 
         # 设置字体
         painter.setPen(self.text_color)
@@ -238,6 +249,55 @@ class WeekView(QWidget):
         self.main_scene = QGraphicsScene()
         # 创建主视图
         self.main_view = QGraphicsView(self.main_scene)
+        self.main_view.setStyleSheet("""
+        /* 垂直滚动条 */
+        QScrollBar:vertical {
+            border: none;
+            background: palette(base);
+            width: 3px;
+            margin: 0px 0px 0px 0px;
+        }
+        QScrollBar::handle:vertical {
+            background: #1E90FF;
+            min-height: 20px;
+            border-radius: 6px;
+        }
+        QScrollBar::handle:vertical:hover {
+            background: #1E90FF;
+        }
+        QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+            border: none;
+            background: none;
+            height: 0px;
+        }
+        QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+            background: none;
+        }
+        
+        /* 水平滚动条 */
+        QScrollBar:horizontal {
+            border: none;
+            background: palette(base);
+            height: 3px;
+            margin: 0px 0px 0px 0px;
+        }
+        QScrollBar::handle:horizontal {
+            background: #1E90FF;
+            min-width: 20px;
+            border-radius: 6px;
+        }
+        QScrollBar::handle:horizontal:hover {
+            background: #1E90FF;
+        }
+        QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+            border: none;
+            background: none;
+            width: 0px;
+        }
+        QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+            background: none;
+        }
+        """)
         self.main_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.main_view.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.main_view.setDragMode(QGraphicsView.ScrollHandDrag)  # 支持拖拽滚动
