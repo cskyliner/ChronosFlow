@@ -1,6 +1,6 @@
-from common import *
-from MainWindow import MainWindow
-from SignalConnect import connect_event_signal
+from src.common import *
+from src.MainWindow import MainWindow
+from src.SignalConnect import connect_event_signal
 logging
 
 def init_platform_style(a):
@@ -22,7 +22,7 @@ logging.basicConfig(
 	]
 )
 
-if __name__ == "__main__":
+def main():
 	app = QApplication(sys.argv)
 	init_platform_style(app)
 	app.setApplicationName("ChronosFlow")

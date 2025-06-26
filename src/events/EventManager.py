@@ -2,8 +2,8 @@ import logging
 import os
 import sqlite3
 from calendar import monthrange
-from common import *
-from Emitter import Emitter
+from src.common import *
+from src.Emitter import Emitter
 from events.Event import *
 # from ioporter.course_importer import CourseScheduleImporter
 import json

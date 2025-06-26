@@ -1,5 +1,5 @@
 # ---------------------- 系统托盘类 ----------------------
-from common import *
+from src.common import *
 
 if sys.platform == 'darwin':
 	import pystray

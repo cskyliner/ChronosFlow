@@ -1,7 +1,7 @@
-from common import *
+from src.common import *
 from functools import partial
-from Emitter import Emitter
-from FontSetting import set_font
+from src.Emitter import Emitter
+from src.FontSetting import set_font
 
 
 class SideBar(QFrame):

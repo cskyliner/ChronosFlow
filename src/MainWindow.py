@@ -1,18 +1,18 @@
-from common import *
-from SideBar import SideBar
-from NewCalendar import CalendarView
+from src.common import *
+from src.SideBar import SideBar
+from src.NewCalendar import CalendarView
 from functools import partial
-from CreateEventWindow import Schedule
-from Emitter import Emitter
-from Settings import SettingsPage
-from Tray import Tray
-from FloatingWindow import FloatingWindow
-from Notice import Notice
-from Upcoming import Upcoming, FloatingButton
-from Weekview import WeekView
-from Weekview import WeekView
-from FontSetting import set_font
-from HeatMap import YearHeatMapView
+from src.CreateEventWindow import Schedule
+from src.Emitter import Emitter
+from src.Settings import SettingsPage
+from src.Tray import Tray
+from src.FloatingWindow import FloatingWindow
+from src.Notice import Notice
+from src.Upcoming import Upcoming, FloatingButton
+from src.Weekview import WeekView
+from src.Weekview import WeekView
+from src.FontSetting import set_font
+from src.HeatMap import YearHeatMapView
 from events.Event import *
 from events.EventManager import EventSQLManager
 import re
