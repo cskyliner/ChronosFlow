@@ -3,12 +3,20 @@ import os
 from src.common import *
 from src.events.Event import *
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SRC_DIR = os.path.join(BASE_DIR, "src")
+sys.path.insert(0, SRC_DIR)
+
 if sys.platform == 'darwin':
-    def get_pync():
-        import pync
-        base_path = getattr(sys, "_MEIPASS", os.path.abspath("."))
-        pync.TERMINAL_NOTIFIER = os.path.join(base_path, "assets", "terminal-notifier")
-        return pync
+	def get_pync():
+		import pync
+		if hasattr(sys, "_MEIPASS"):
+			path =  os.path.join(sys._MEIPASS, "bin/chronos-notifier")
+		path =  os.path.join(BASE_DIR,"bin/chronos-notifier")
+		path = resource_path("bin/chronos-notifier")
+		os.chmod(path, 0o755)
+		pync.TERMINAL_NOTIFIER = path
+		return pync
 log = logging.getLogger(__name__)
 from src.Emitter import Emitter
 
@@ -136,7 +144,16 @@ class NotificationWidget(QFrame):
 		"""8秒后自动关闭"""
 		QTimer.singleShot(8000, self.close)
 
+def safe(s: str) -> str:
+    return s.replace('"', '\\"').replace("\n", " ")
+
 def notify_mac(title, subtitle, message):
+	script = (
+        f'display notification "{safe(message)}" '
+        f'with title "{safe(title)}" '
+        f'subtitle "{safe(subtitle)}" '
+        f'sound name "Ping"'
+    )
 	try:
 		pync = get_pync()
 		pync.notify(
