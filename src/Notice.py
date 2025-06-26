@@ -4,7 +4,7 @@ from events.Event import *
 if sys.platform == 'darwin':
 	import pync
 log = logging.getLogger(__name__)
-from Emitter import Emitter
+from src.Emitter import Emitter
 
 
 class Notice(QObject):
