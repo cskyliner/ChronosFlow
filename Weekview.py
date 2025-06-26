@@ -131,9 +131,6 @@ class ScheduleBlockItem(QGraphicsRectItem,QObject):
     def hoverLeaveEvent(self, event):
         self.setBrush(QBrush(self.background_color))  # 鼠标离开时恢复
         self.delete_button.hide()
-        #if self.connection_line:
-        #   self.scene().removeItem(self.connection_line)
-        #  self.connection_line = None
 
 class WeekDayColumn(QGraphicsRectItem):
     """单日列容器"""

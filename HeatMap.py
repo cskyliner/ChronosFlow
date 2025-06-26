@@ -62,6 +62,7 @@ class MonthBlock(QGraphicsItemGroup):
 
     def build(self):
         first_weekday, days_in_month = monthrange(self.year, self.month)
+        first_weekday = (first_weekday + 1) % 7
         date = QDate(self.year, self.month, 1)
         # 添加月份标题
         is_dark = QApplication.palette().color(QPalette.Window).value() < 128
@@ -102,9 +103,33 @@ class YearHeatMapView(QWidget):
         self.view.setMouseTracking(True)
         self.view.viewport().setMouseTracking(True)
 
-        layout = QVBoxLayout()
-        layout.addWidget(self.view)
-        self.setLayout(layout)
+        # === 顶部导航栏 ===
+        self.prev_btn = QPushButton("◀")
+        self.prev_btn.setFixedSize(30, 30)
+        self.prev_btn.clicked.connect(self.goto_prev_year)
+
+        self.next_btn = QPushButton("▶")
+        self.next_btn.setFixedSize(30, 30)
+        self.next_btn.clicked.connect(self.goto_next_year)
+
+        self.year_label = QLabel(str(self.year))
+        self.year_label.setAlignment(Qt.AlignCenter)
+        self.year_label.setFixedHeight(30)
+
+        nav_layout = QHBoxLayout()
+        nav_layout.setContentsMargins(10, 5, 10, 5)
+        nav_layout.addWidget(self.prev_btn)
+        nav_layout.addStretch()
+        nav_layout.addWidget(self.year_label)
+        nav_layout.addStretch()
+        nav_layout.addWidget(self.next_btn)
+
+        # === 总体布局 ===
+        main_layout = QVBoxLayout()
+        main_layout.addLayout(nav_layout)
+        main_layout.addWidget(self.view)
+        self.setLayout(main_layout)
+
         self.data = {}
         self.get_data()
         self.build_scene()
@@ -158,3 +183,13 @@ class YearHeatMapView(QWidget):
             self.scene.addItem(block)
 
         self.scene.setSceneRect(self.scene.itemsBoundingRect())
+
+    def goto_prev_year(self):
+        self.year -= 1
+        self.year_label.setText(str(self.year))
+        self.refresh(self.year)
+
+    def goto_next_year(self):
+        self.year += 1
+        self.year_label.setText(str(self.year))
+        self.refresh(self.year)
