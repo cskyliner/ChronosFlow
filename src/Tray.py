@@ -1,4 +1,3 @@
-# ---------------------- 系统托盘类 ----------------------
 from common import *
 
 if sys.platform == 'darwin':
@@ -10,6 +9,7 @@ from PIL import Image
 log = logging.getLogger(__name__)
 
 
+# ---------------------- 系统托盘类 ----------------------
 class Tray(QObject):
 	show_main = Signal()
 	show_floating = Signal()

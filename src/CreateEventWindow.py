@@ -23,7 +23,7 @@ class StrictDynamicLineEdit(QLineEdit):
 		self.setFixedHeight(50)
 
 		self.setStyleSheet("""QLineEdit {
-			background-color: rgba(215, 190, 130, 0.2); 
+			background-color: rgba(250, 250, 247, 0.2); 
 		    color: palette(text); 
 			border: none;
 			border-bottom: 1px solid palette(shadow);
@@ -126,7 +126,7 @@ class Schedule(QWidget):
 		# 设置半透明和自适应主题的样式表
 		self.text_edit.setStyleSheet("""
 		    QTextEdit {
-		        background-color: rgba(215, 190, 130, 0.2); 
+		        background-color: rgba(250, 250, 247, 0.2); 
 		        color: palette(text);  
 		        border: 1px solid palette(shadow);
 		        border-radius: 4px;
@@ -160,32 +160,32 @@ class Schedule(QWidget):
 
 		self.type_choose_combo = QComboBox()
 		self.type_choose_combo.setStyleSheet("""
-				/* 下拉框基础样式 */
 				QComboBox {
 					font-size: 15px;
+					background-color: transparent;
 					color: palette(text);    
-					border: 1px solid palette(midlight);    
+					border: 1px solid #1E90FF;    
 					border-radius: 4px;      
-					padding: 3px 6px;
-					min-width: 40px;   
+					padding: 3px 6px; 
 				}
 			
 				/* 鼠标悬停效果 */
 				QComboBox:hover {
-					border-color: palette(mid);      
+					border-color: #24C1FF;      
 				}
 			
 				/* 下拉列表样式 */
 				QComboBox QAbstractItemView {
 					font-size: 14px;
 					color: palette(text);
-					border: 1px solid palette(mid);   
-					selection-background-color: #e6f2ff; 
-					selection-color: #0066cc;    
+					border: 1px solid #1E90FF;   
+					selection-background-color: transparent; 
+					selection-color: #1E90FF;    
 					outline: none;             
 					padding: 4px;                
 				}
 			""")
+		self.type_choose_combo.setMinimumWidth(70)
 		self.type_choose_combo.addItems(("DDL", "日程"))
 		set_font(self.type_choose_combo)
 		self.type_choose_combo.currentTextChanged.connect(self.update_dynamic_widgets)  # 信号
@@ -222,17 +222,16 @@ class Schedule(QWidget):
 		self.save_btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
-                    border: 1px solid palette(mid);
+                    border: 2px solid #E6CD91;
                     border-radius: 4px;
                     padding: 0px;
                     text-align: center;
                 }
                 QPushButton:hover {
-                    background-color: palette(midlight); /*轻微高亮*/
-                    border-radius: 4px;
+					border-color: #E6B50D;
                 }
                 QPushButton:pressed {
-					background-color: palette(mid);
+					border-color: #FFC90E;
 				}
             """)
 		set_font(self.save_btn)
@@ -352,11 +351,12 @@ class Schedule(QWidget):
 		datetime_edit_style = """
 		        QDateTimeEdit {
 		            padding: 1px;
-		            border: 1px solid palette(midlight);
+		            border: 1px solid #1E90FF;
 		            border-radius: 4px;
+		            background-color: transparent; 
 		        }
 		        QDateTimeEdit:hover {
-		            border-color: palette(mid);
+		            border-color: #24C1FF;
 		        }
 		    """
 		calendar_style = """
@@ -443,11 +443,12 @@ class Schedule(QWidget):
 		datetime_edit_style = """
 				        QDateTimeEdit {
 				            padding: 1px;
-				            border: 1px solid palette(midlight);
+				            border: 1px solid #1E90FF;
+				            background-color: transparent; 
 				            border-radius: 4px;
 				        }
 				        QDateTimeEdit:hover {
-				            border-color: palette(mid);
+				            border-color: #24C1FF;
 				        }
 				    """
 		calendar_style = """
@@ -539,25 +540,26 @@ class Schedule(QWidget):
 				QComboBox {
 					font-size: 15px;
 					color: palette(text);    
-					border: 1px solid palette(midlight);    
+					background-color: transparent;
+					border: 1px solid #1E90FF;    
 					border-radius: 4px;      
 					padding: 3px 6px; 
 				}
 			
 				/* 鼠标悬停效果 */
 				QComboBox:hover {
-					border-color: palette(mid);      
+					border-color: #24C1FF;      
 				}
 			
 				/* 下拉列表样式 */
 				QComboBox QAbstractItemView {
 					font-size: 14px;
 					color: palette(text);
-					border: 1px solid palette(mid);   
-					selection-background-color: #e6f2ff; 
-					selection-color: palette(text);    
+					border: 1px solid #1E90FF;   
+					selection-background-color: transparent; 
+					selection-color: #1E90FF;    
 					outline: none;             
-					padding: 4px;                
+					padding: 4px;               
 				}
 			
 			""")
@@ -574,23 +576,24 @@ class Schedule(QWidget):
 				QComboBox {
 					font-size: 15px;
 					color: palette(text);    
-					border: 1px solid palette(midlight);    
+					background-color: transparent;
+					border: 1px solid #1E90FF;    
 					border-radius: 4px;      
 					padding: 3px 6px; 
 				}
 			
 				/* 鼠标悬停效果 */
 				QComboBox:hover {
-					border-color: palette(mid);      
+					border-color: #24C1FF;      
 				}
 			
 				/* 下拉列表样式 */
 				QComboBox QAbstractItemView {
 					font-size: 14px;
 					color: palette(text);
-					border: 1px solid palette(mid);   
-					selection-background-color: #e6f2ff; 
-					selection-color: palette(text);    
+					border: 1px solid #1E90FF;   
+					selection-background-color: transparent; 
+					selection-color: #1E90FF;    
 					outline: none;             
 					padding: 4px;                
 				}

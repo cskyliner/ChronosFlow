@@ -1,7 +1,9 @@
 from common import *
 from Notice import NotificationWidget
 from events.Event import *
+
 log = logging.getLogger(__name__)
+
 class FloatingWindow(QWidget):
 	exit_requested = Signal()  # 完全退出信号
 	show_main_requested = Signal()  # 显示主窗口信号
@@ -130,12 +132,6 @@ class FloatingWindow(QWidget):
 		notification = CountdownLabel(self.lattest_event)
 		self.notification_area.addWidget(notification)
 		notification.show()
-		#self.notification_widgets.append(notification)
-
-		# 自动排列通知
-		# self._arrange_notifications()
-
-
 
 	def paintEvent(self, event):
 		"""绘制背景渐变"""

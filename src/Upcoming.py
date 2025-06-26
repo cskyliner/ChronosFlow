@@ -165,12 +165,12 @@ class CustomListItem(QWidget):
 		self.setMouseTracking(True)  # 启用鼠标跟踪
 
 		colors = (
-			"rgba(210, 125, 150, 0.8)",
-			"rgba(230, 205, 145, 0.8)",
-			"rgba(140, 175, 195, 0.8)",
-			"rgba(150, 165, 135, 0.8)",
-			"rgba(225, 160, 125, 0.8)",
-			"rgba(175, 155, 190, 0.8)"
+			"rgba(210, 125, 150, 0.9)",
+			"rgba(230, 205, 145, 0.9)",
+			"rgba(140, 175, 195, 0.9)",
+			"rgba(150, 165, 135, 0.9)",
+			"rgba(225, 160, 125, 0.9)",
+			"rgba(175, 155, 190, 0.9)"
 		)
 		self.setStyleSheet(f"""
 		            CustomListItem {{
@@ -178,7 +178,7 @@ class CustomListItem(QWidget):
 		                background-color: {colors[color_choice]};
 		            }}
 		            CustomListItem:hover {{
-		                background-color: {colors[color_choice].replace('0.8', '0.9')};
+		                background-color: {colors[color_choice].replace('0.9', '1.0')};
 		            }}
 		        """)
 
@@ -279,23 +279,51 @@ class Upcoming(QListWidget):
         			/* 控制行间距（相邻项的间隔） */
         			margin: 5px;  
         	}
-        	QScrollBar:vertical {
-				background: transparent;
-				width: 8px;
-				margin: 2px;
+			/* 垂直滚动条 */
+			QScrollBar:vertical {
+				border: none;
+				background: palette(base);
+				width: 3px;
+				margin: 0px 0px 0px 0px;
 			}
-			
 			QScrollBar::handle:vertical {
-				background: #808080;
-				min-height: 30px;
-				border-radius: 4px;
+				background: #1E90FF;
+				min-height: 20px;
+				border-radius: 6px;
 			}
-			
+			QScrollBar::handle:vertical:hover {
+				background: #1E90FF;
+			}
 			QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+				border: none;
+				background: none;
 				height: 0px;
 			}
-			
 			QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+				background: none;
+			}
+			
+			/* 水平滚动条 */
+			QScrollBar:horizontal {
+				border: none;
+				background: palette(base);
+				height: 3px;
+				margin: 0px 0px 0px 0px;
+			}
+			QScrollBar::handle:horizontal {
+				background: #1E90FF;
+				min-width: 20px;
+				border-radius: 6px;
+			}
+			QScrollBar::handle:horizontal:hover {
+				background: #1E90FF;
+			}
+			QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+				border: none;
+				background: none;
+				width: 0px;
+			}
+			QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
 				background: none;
 			}
 			QListWidget::item:selected {
