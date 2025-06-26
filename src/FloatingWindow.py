@@ -1,6 +1,6 @@
-from common import *
-from Notice import NotificationWidget
-from events.Event import *
+from src.common import *
+from src.Notice import NotificationWidget
+from src.events.Event import *
 
 log = logging.getLogger(__name__)
 

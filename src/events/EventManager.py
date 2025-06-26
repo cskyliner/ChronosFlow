@@ -1,11 +1,9 @@
-import logging
 import os
 import sqlite3
 from calendar import monthrange
 from common import *
-from Emitter import Emitter
-from events.Event import *
-# from ioporter.course_importer import CourseScheduleImporter
+from src.Emitter import Emitter
+from src.events.Event import *
 import json
 
 log = logging.getLogger(__name__)
@@ -49,6 +47,10 @@ class EventFactory:
 						Emitter.instance().send_notice_signal((n_event,"create"))
 					elif n_event.datetime < EventSQLManager.latest_ddlevent.datetime:
 						log.info(f"EventFactory.create:添加新事件比最新事件更早，更新最新事件为新事件:title：{n_event.title}; notes:{n_event.notes}")
+						EventSQLManager.latest_ddlevent = n_event
+						Emitter.instance().send_notice_signal((n_event,"update"))
+					elif n_event.datetime > now_time >= EventSQLManager.latest_ddlevent.datetime:
+						log.info(f"EventFactory.create:旧事件已经失效，更新最新事件为新事件:title：{n_event.title}; notes:{n_event.notes}")
 						EventSQLManager.latest_ddlevent = n_event
 						Emitter.instance().send_notice_signal((n_event,"update"))
 					else:

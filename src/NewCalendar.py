@@ -1,6 +1,6 @@
-from common import *
-from events.EventManager import *
-from events.EventManager import EventSQLManager
+from src.common import *
+from src.events.EventManager import *
+from src.events.EventManager import EventSQLManager
 
 log = logging.getLogger(__name__)
 

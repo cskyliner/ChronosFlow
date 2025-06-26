@@ -1,7 +1,7 @@
-from common import *
-from Emitter import Emitter
-from events.Event import *
-from FontSetting import set_font
+from src.common import *
+from src.Emitter import Emitter
+from src.events.Event import *
+from src.FontSetting import set_font
 
 log = logging.getLogger("Upcoming")
 

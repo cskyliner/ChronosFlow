@@ -1,8 +1,8 @@
-from common import *
-from Upcoming import FloatingButton, DeleteButton
+from src.common import *
+from src.Upcoming import FloatingButton, DeleteButton
 from functools import partial
-from events.Event import *
-from events.EventManager import EventSQLManager
+from src.events.Event import *
+from src.events.EventManager import EventSQLManager
 log = logging.getLogger(__name__)
 class TimeAxisItem(QGraphicsRectItem):
     """左侧时间轴项"""

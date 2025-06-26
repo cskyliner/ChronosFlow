@@ -1,4 +1,4 @@
-from common import *
+from src.common import *
 
 log = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ class Emitter(QObject):
 		self.refresh_upcoming_signal.emit()
 	def send_del_activity_event_signal(self):
 		self.delete_activity_event_signal.emit()
-   
+
 	def send_page_change_signal(self, name):
 		"""向 main_stack发送改变页面的信号"""
 		self.page_change_signal.emit(name)
@@ -53,7 +53,7 @@ class Emitter(QObject):
 
 	def send_view_and_edit_schedule_signal(self, data: tuple):
 		"""data[0]是一个BaseEvent，储存显示信息；data[1]是告诉navigate_to的信号，再传给后端确保编辑某日程
-  		之后原来的这条日程被覆盖"""
+		之后原来的这条日程被覆盖"""
 		self.view_and_edit_schedule_signal.emit(data)
 
 	# ===转发数据函数====
