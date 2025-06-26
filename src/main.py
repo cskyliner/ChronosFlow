@@ -2,7 +2,6 @@ from common import *
 from MainWindow import MainWindow
 from SignalConnect import connect_event_signal
 
-
 def init_platform_style(a):
 	# 根据系统选择UI风格
 	if sys.platform == "win32":
@@ -22,7 +21,7 @@ logging.basicConfig(
 	]
 )
 
-if __name__ == "__main__":
+def main():
 	app = QApplication(sys.argv)
 	init_platform_style(app)
 	app.setApplicationName("ChronosFlow")

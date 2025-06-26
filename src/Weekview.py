@@ -302,36 +302,7 @@ class WeekView(QWidget):
         self.main_view.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.main_view.setDragMode(QGraphicsView.ScrollHandDrag)  # 支持拖拽滚动
         self.main_layout.addWidget(self.main_view)    
-        # 添加水平滚动条
-        #self.horizontal_scrollbar = QScrollBar(Qt.Horizontal)
-        #self.horizontal_scrollbar.valueChanged.connect(self.horizontal_scroll)
-        
-        # 添加垂直滚动条
-        #self.vertical_scrollbar = QScrollBar(Qt.Vertical)
-        #self.vertical_scrollbar.valueChanged.connect(self.vertical_scroll)
-        
-        # 布局
-        #scroll_layout = QHBoxLayout()
-        #scroll_layout.addWidget(self.main_view)
-        #scroll_layout.addWidget(self.vertical_scrollbar)
-        
-        #self.main_layout.addLayout(scroll_layout)
-        #self.main_layout.addWidget(self.horizontal_scrollbar)
-        
-        # 时间轴视图（作为主场景的一部分）
-        #self.time_axis_view = QGraphicsView(self.main_scene)
-        #self.time_axis_view.setFixedWidth(60)
-        #self.time_axis_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        #self.time_axis_view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        
-        # 主内容视图（作为主场景的一部分）
-        #self.content_view = QGraphicsView(self.main_scene)
-        #self.content_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        #self.content_view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        
-        # 鼠标滚轮事件
-        #self.time_axis_view.wheelEvent = self.main_wheel_event
-        #self.content_view.wheelEvent = self.main_wheel_event
+
     # 上周按钮点击事件
     def on_prev_week_click(self, event):
         if event.button() == Qt.LeftButton:
