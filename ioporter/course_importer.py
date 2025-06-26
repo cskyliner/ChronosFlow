@@ -146,6 +146,3 @@ class CourseScheduleImporter:
         notes = f"上课地点：{result['location']}\n备注：{result['remark']}\n{result['exam_info']}"
         """输入：标题，每天开始时间，每天结束时间，开始日期，终止日期，笔记，重要程度，重复类型如("weekly"、"biweekly），重复具体星期"""
         return EventFactory.create(None, "Activity", True, result["title"], start_time, end_time, start_date_str, end_date_str, notes, "Great", repeat_type, (repeat_day,))
-
-# CourseScheduleImporter.init_importer("/Users/kylin/Desktop/timetable大一下.xls","2025-02-17",16)
-# CourseScheduleImporter.extract_info() 
