@@ -237,6 +237,7 @@ class YearHeatMapView(QWidget):
 
     def get_data(self):
         tmp_data:list[BaseEvent] = []
+        self.data.clear()
         for i in range(1,13):
             tmp_data.extend(EventSQLManager.get_events_in_month(self.year,i))
         for event in tmp_data:
