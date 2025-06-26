@@ -169,9 +169,6 @@ class CalendarDayItem(QObject, QGraphicsRectItem):
 			elided_text = font_metrics.elidedText(event.title, Qt.ElideRight, int(event_area_rect.width()))
 			painter.drawText(bg_rect, Qt.AlignLeft | Qt.AlignVCenter, " " + elided_text)  # 左侧加空格留边距
 
-		# elided = font_metrics.elidedText(event.title, Qt.ElideRight, int(event_area_rect.width()))
-		# painter.drawText(QPointF(x, y + i * line_height), elided)
-
 		event_count = len(self.event)
 		# 超过三条显示更多
 		metrics = QFontMetrics(font)
@@ -196,8 +193,6 @@ class CalendarDayItem(QObject, QGraphicsRectItem):
 			painter.setPen(QPen(text_color))  # "更多"的颜色
 
 			text = f"更多 ({event_count - max_events_to_show})..."
-			# r = QRectF(event_area_rect.left(), event_area_rect.top() + max_events_to_show * line_h,
-			# 		   event_area_rect.width(), line_h)
 			painter.drawText(bg_rect, Qt.AlignRight | Qt.AlignVCenter, text)
 
 
@@ -335,16 +330,6 @@ class CalendarView(QWidget):
 		bound = self.scene.itemsBoundingRect()
 		print("itemsBoundingRect:", bound)
 
-# =======
-	# 更新日历栏大小
-	# btn_height = 40                                         # 顶部按钮栏高度
-	# w = self.width()
-	# h = self.height() - btn_height
-	# day_width = w / 7
-	# weekday_height = 30  # 固定周几栏高度
-	# day_height = (h - weekday_height) / 6  # 剩余高度分给日期
-	# self.draw_month(self.current_year, self.current_month, day_width, day_height)
-
 	def clear_selection(self):
 		for item in self.scene.items():
 			if isinstance(item, CalendarDayItem):
@@ -462,7 +447,7 @@ class CalendarView(QWidget):
 		events = EventSQLManager.get_events_in_month(year, month)
 		if events is not None and len(events) > 0:
 			log.info(f"接收数据成功，共接收 {len(events)} 条数据：\n" +
-					 "\n".join(f"- {event.title} @ {event.datetime}" for event in events))
+					"\n".join(f"- {event.title} @ {event.datetime}" for event in events))
 		self.schedules.clear()
 		for event in events:
 			self.add_schedule(event)

@@ -1,11 +1,11 @@
 from PySide6.QtWidgets import (QApplication, QStyleFactory, QMainWindow, QWidget, QVBoxLayout,
-							   QPushButton, QHBoxLayout, QStackedWidget, QFrame, QLineEdit, QMessageBox, QComboBox,
-							   QSlider, QCheckBox, QGroupBox, QCalendarWidget, QLabel, QFileDialog, QPlainTextEdit,
-							   QSystemTrayIcon, QMenu, QListWidget, QListWidgetItem, QSpacerItem,
-							   QSizePolicy, QFrame, QDateTimeEdit, QGraphicsDropShadowEffect, QCalendarWidget,
-							   QScrollBar, QStyledItemDelegate, QTableView, QInputDialog, QHeaderView, QScrollArea,
-							   QDialog, QTextEdit, QStyleOptionViewItem, QStyle, QAbstractItemView, QGraphicsSimpleTextItem,
-          						QGraphicsView, QGraphicsScene, QGraphicsRectItem, QSplitter, QGraphicsLineItem)
+							QPushButton, QHBoxLayout, QStackedWidget, QFrame, QLineEdit, QMessageBox, QComboBox,
+							QSlider, QCheckBox, QGroupBox, QCalendarWidget, QLabel, QFileDialog, QPlainTextEdit,
+							QSystemTrayIcon, QMenu, QListWidget, QListWidgetItem, QSpacerItem,
+							QSizePolicy, QFrame, QDateTimeEdit, QGraphicsDropShadowEffect, QCalendarWidget,
+							QScrollBar, QStyledItemDelegate, QTableView, QInputDialog, QHeaderView, QScrollArea,
+							QDialog, QTextEdit, QStyleOptionViewItem, QStyle, QAbstractItemView, QGraphicsSimpleTextItem,
+          					QGraphicsView, QGraphicsScene, QGraphicsRectItem, QSplitter, QGraphicsLineItem, QGraphicsItemGroup,QToolTip)
 from PySide6.QtCore import (QPropertyAnimation, QEasingCurve, Qt, QDate, QTime, QDateTime, Signal, Slot, QSize, QObject,
 							QPoint, QTimer, QEvent, QPointF, QPersistentModelIndex, QRect, QModelIndex, QFile, QRectF,
 							QFileInfo, QLineF)

@@ -12,6 +12,7 @@ from Upcoming import Upcoming, FloatingButton
 from Weekview import WeekView
 from Weekview import WeekView
 from FontSetting import set_font
+from HeatMap import YearHeatMapView
 from events.Event import *
 from events.EventManager import EventSQLManager
 import re
@@ -77,13 +78,10 @@ class MainWindow(QMainWindow):
 		self.setup_main_window()  # 日历窗口（主界面）
 		self.setup_create_event_window()  # 日程填写窗口
 		self.setup_upcoming_window()  # 日程展示窗口
-		self.setup_week_view_window()
+		self.setup_week_view_window() # 周视图窗口
+		self.setup_heatmap_window() # 热力图窗口
 		Emitter.instance().delete_activity_event_signal.connect(self.week_view.update_view_geometry)
 		self.navigate_to("Calendar", self.main_stack)
-		cur_month = QDate.currentDate().month()
-		cur_year = QDate.currentDate().year()
-		# self.get_events_in_month_from_backend(cur_year, cur_month)
-		# self.load_event_in_calendar(self.upcoming.events)
 		# 初始化通知系统
 		self.notice_system = Notice()
 		# 用于在通知时自动显示悬浮窗
@@ -112,7 +110,7 @@ class MainWindow(QMainWindow):
 
 	def setup_main_window(self):
 		"""
-		main_window创建
+		main_window创建，即主日历窗口
 		"""
 		self.main_window = QWidget()
 		main_window_layout = QVBoxLayout()  # 内容区域布局
@@ -123,8 +121,10 @@ class MainWindow(QMainWindow):
 		upper_layout = QHBoxLayout()
 		upper_layout.setSpacing(0)
 		# 添加'<'按钮
-		sidebar_btn = QPushButton("<")
+		sidebar_btn = QPushButton("")
 		sidebar_btn.setFixedSize(35, 30)
+		sidebar_btn.setIcon(QIcon("pic/sidebar1.png"))
+		sidebar_btn.setIconSize(QSize(24, 24))
 		sidebar_btn.setStyleSheet("""
 				                QPushButton {
 				                    background-color: transparent;
@@ -145,8 +145,7 @@ class MainWindow(QMainWindow):
 		set_font(sidebar_btn, 4)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
-		# 添加search文本框
-		# 左侧文本框
+		# 添加上方search文本框
 		self.search_edit = QLineEdit()
 		self.search_edit.setPlaceholderText("搜索")
 		set_font(self.search_edit)
@@ -165,11 +164,10 @@ class MainWindow(QMainWindow):
 							    """)
 		self.search_edit.setMinimumWidth(150)
 		self.search_edit.setFixedHeight(38)
-
 		# 回车触发搜索功能
 		self.search_edit.returnPressed.connect(self.get_search_result)
 
-		# 右侧按钮
+		# 右侧搜索按钮
 		btn = QPushButton()
 		btn.setIcon(QIcon.fromTheme("system-search"))
 		btn.setStyleSheet("""
@@ -194,8 +192,8 @@ class MainWindow(QMainWindow):
 		btn.clicked.connect(self.get_search_result)
 
 		upper_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
-		# left_spacer = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
-		# upper_layout.addItem(left_spacer, stretch = 3)
+		
+		#将上方按钮统一布局后加入主布局
 		upper_layout.addStretch(3)
 		upper_layout.addWidget(self.search_edit,stretch= 1)
 		upper_layout.addWidget(btn,stretch= 1)
@@ -204,7 +202,6 @@ class MainWindow(QMainWindow):
 		middle_layout = QHBoxLayout()
 		# 创建日历界面
 		self.main_window_calendar = CalendarView()
-		# self.main_window_calendar.setGridVisible(False)
 		self.main_window_calendar.double_clicked.connect(
 			lambda date: self.navigate_to("Upcoming", self.main_stack, date))
 		self.main_window_calendar.view_single_day.connect(
@@ -222,11 +219,11 @@ class MainWindow(QMainWindow):
 
 		# 创建悬浮按钮
 		float_btn = FloatingButton(self.main_window)
-		float_btn.move(50, 50)  # 初始位置
-		float_btn.raise_()  # 确保在最上层
+		float_btn.move(50, 50)  										# 初始位置
+		float_btn.raise_()  											# 确保在最上层
 		float_btn.clicked.connect(partial(self.navigate_to, "Schedule", self.main_stack))
 
-		self.add_page(self.main_stack, self.main_window, "Calendar")  # main_window是日历，故名为Calendar
+		self.add_page(self.main_stack, self.main_window, "Calendar")  	# main_window是日历，故名为Calendar
 
 	def setup_create_event_window(self):
 		"""
@@ -243,8 +240,10 @@ class MainWindow(QMainWindow):
 		btn_layout.setContentsMargins(0, 0, 0, 0)  # 移除边距
 		schedule_layout.addLayout(btn_layout)
 
-		sidebar_btn = QPushButton("<")
+		sidebar_btn = QPushButton("")
 		sidebar_btn.setFixedSize(35, 30)
+		sidebar_btn.setIcon(QIcon("pic/sidebar1.png"))
+		sidebar_btn.setIconSize(QSize(24, 24))
 		sidebar_btn.setStyleSheet("""
 				                QPushButton {
 				                    background-color: transparent;
@@ -293,6 +292,7 @@ class MainWindow(QMainWindow):
 		self.schedule = Schedule()
 		schedule_layout.addWidget(self.schedule)
 		self.add_page(self.main_stack, self.create_event_window, "Schedule")
+
 	def setup_week_view_window(self):
 		"""创建周视图窗口"""
 		self.week_view_window = QWidget()
@@ -307,8 +307,10 @@ class MainWindow(QMainWindow):
 		week_view_layout.addLayout(btn_layout)
 
 		# 侧边栏切换按钮
-		sidebar_btn = QPushButton("<")
+		sidebar_btn = QPushButton("")
 		sidebar_btn.setFixedSize(35, 30)
+		sidebar_btn.setIcon(QIcon("pic/sidebar1.png"))
+		sidebar_btn.setIconSize(QSize(24, 24))
 		sidebar_btn.setStyleSheet("""
 				                QPushButton {
 				                    background-color: transparent;
@@ -366,6 +368,73 @@ class MainWindow(QMainWindow):
 		self.week_view.schedule_del_btn_clicked.connect(lambda event: Emitter.instance().send_delete_event_signal(event.id, event.table_name()))
 		self.week_view.schedule_double_clicked.connect(lambda event: self.check_one_schedule((event,)))
 
+	def setup_heatmap_window(self):
+		self.heatmap_window = QWidget()
+		# 内容区域布局
+		heatmap_layout = QVBoxLayout()
+		heatmap_layout.setSpacing(0)
+		heatmap_layout.setContentsMargins(20, 5, 20, 20)
+		self.heatmap_window.setLayout(heatmap_layout)
+
+		# 顶部按钮布局
+		btn_layout = QHBoxLayout()
+		btn_layout.setContentsMargins(0, 0, 0, 0)  # 移除边距
+		heatmap_layout.addLayout(btn_layout)
+
+		# 侧边栏切换按钮
+		sidebar_btn = QPushButton("")
+		sidebar_btn.setFixedSize(35, 30)
+		sidebar_btn.setIcon(QIcon("pic/sidebar1.png"))
+		sidebar_btn.setIconSize(QSize(24, 24))
+		sidebar_btn.setStyleSheet("""
+				                QPushButton {
+				                    background-color: transparent;
+				                    border: none;
+				                    border-radius: 5px;
+				                    padding: 5;
+		    						margin: 0;
+				                    text-align: center;
+				                    color: palette(text);
+				                }
+				                QPushButton:hover {
+				                    background-color: palette(midlight);
+				                }
+				                QPushButton:pressed {
+									background-color: palette(mid);
+								}
+				            """)
+		set_font(sidebar_btn, 4)
+		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
+
+		# 返回按钮，回到calendar
+		return_btn = QPushButton("✕")
+		return_btn.setFixedSize(35, 30)
+		return_btn.setStyleSheet("""
+				                QPushButton {
+				                    background-color: transparent;
+				                    border-radius: 5px;
+				                    padding: 5;
+		    						margin: 0;
+				                    text-align: center;
+				                    color: palette(text);
+				                }
+				                QPushButton:hover {
+				                	color: #E61B23;
+				                }
+				                QPushButton:pressed {
+									color: #B8281C;
+								}
+				            """)
+		set_font(return_btn, 1)
+		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
+
+		btn_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
+		btn_layout.addWidget(return_btn, alignment=Qt.AlignmentFlag.AlignRight)
+		# 加入热力图
+		self.heatmap_view = YearHeatMapView(year=2025)	# 这里年份暂时这样处理
+		heatmap_layout.addWidget(self.heatmap_view)
+		self.add_page(self.main_stack, self.heatmap_window, "HeatMap")
+
 	def setup_setting_window(self):
 		"""创建设置栏"""
 		self.setting_window = QWidget()
@@ -378,8 +447,10 @@ class MainWindow(QMainWindow):
 		btn_layout.setContentsMargins(0, 0, 0, 0)  # 移除边距
 		setting_layout.addLayout(btn_layout)
 
-		sidebar_btn = QPushButton("<")
+		sidebar_btn = QPushButton("")
 		sidebar_btn.setFixedSize(35, 30)
+		sidebar_btn.setIcon(QIcon("pic/sidebar1.png"))
+		sidebar_btn.setIconSize(QSize(24, 24))
 		sidebar_btn.setStyleSheet("""
 				                QPushButton {
 				                    background-color: transparent;
@@ -442,8 +513,10 @@ class MainWindow(QMainWindow):
 		btn_layout.setContentsMargins(0, 0, 0, 0)  # 移除边距
 		layout.addLayout(btn_layout)
 
-		sidebar_btn = QPushButton("<")
+		sidebar_btn = QPushButton("")
 		sidebar_btn.setFixedSize(35, 30)
+		sidebar_btn.setIcon(QIcon("pic/sidebar1.png"))
+		sidebar_btn.setIconSize(QSize(24, 24))
 		sidebar_btn.setStyleSheet("""
 				                QPushButton {
 				                    background-color: transparent;
@@ -551,6 +624,8 @@ class MainWindow(QMainWindow):
 				self.main_window_calendar.refresh()
 			elif name == "Weekview":
 				self.week_view.load_schedules()
+			elif name == "HeatMap":
+				self.heatmap_view.refresh(year=2025)
 			stack.setCurrentIndex(self.main_stack_map[name])
 			log.info(f"跳转到{name}页面，日期为{date.toString() if date else date}")
 		else:
@@ -572,7 +647,7 @@ class MainWindow(QMainWindow):
 			self.schedule.type_choose_combo.setCurrentText("DDL")
 			self.schedule.type_choose_combo.setEnabled(False)
 		elif isinstance(event,ActivityEvent):
-			# TODO: 编辑日程时候对于事件的恢复
+			# 编辑日程时候对于事件的恢复
 			self.schedule.id = event.id
 			self.schedule.start_date_edit.setDate(QDate.fromString(event.start_date, "yyyy-MM-dd"))
 			self.schedule.start_time_edit.setTime(QTime.fromString(event.start_time, "HH:mm"))
@@ -581,7 +656,7 @@ class MainWindow(QMainWindow):
 			self.schedule.repeat_combo.setCurrentText(event.repeat_type)
 			if event.repeat_type != '不重复':
 				english_to_chinese = {'Mon': '周一', 'Tue': '周二', 'Wed': '周三', 'Thu': '周四', 'Fri': '周五',
-									  'Sat': '周六', 'Sun': '周日'}
+									'Sat': '周六', 'Sun': '周日'}
 				weekdays = json.loads(event.repeat_days)
 				# 这里暂时只能选一周内的一天
 				self.schedule.repeat_day_combo.setCurrentText(english_to_chinese[weekdays[0]])
@@ -645,11 +720,15 @@ class MainWindow(QMainWindow):
 		if self.sidebar_visible:
 			self.animations["sidebar"].setStartValue(0)
 			self.animations["sidebar"].setEndValue(230)
-			btn.setText("<")
+			btn.setIcon(QIcon("pic/sidebar1.png"))
+			btn.setIconSize(QSize(24, 24))
+			btn.setText("")
 		else:
 			self.animations["sidebar"].setStartValue(230)
 			self.animations["sidebar"].setEndValue(0)
-			btn.setText(">")
+			btn.setIcon(QIcon("pic/sidebar2.png"))
+			btn.setIconSize(QSize(24, 24))
+			btn.setText("")
 
 		self.animations["sidebar"].start()
 

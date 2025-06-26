@@ -30,11 +30,12 @@ class SideBar(QFrame):
 		layout.addItem(spacer)
 
 		# ===添加功能按钮===
-		names = ("Calendar", "Upcoming", "Weekview", "Setting")
+		names = ("Calendar", "Upcoming", "Weekview", "HeatMap", "Setting")
 		buttons = [
 			("日历", QStyle.SP_FileDialogListView),
 			("日程", QStyle.SP_FileDialogDetailedView),
 			("周视图", QStyle.SP_FileDialogContentsView),
+			("热力图", QStyle.SP_FileDialogDetailedView),
 			("设置", QStyle.SP_DriveCDIcon)
 		]
 
@@ -58,8 +59,12 @@ class SideBar(QFrame):
 			set_font(btn, 1)
 
 			# 图标
-			icon = self.style().standardIcon(buttons[i][1])
-			btn.setIcon(icon)
+			if i == 3:
+				# 如果为热力图，使用自定义图标
+				btn.setIcon(QIcon("pic/heat-map.svg"))
+			else:
+				icon = self.style().standardIcon(buttons[i][1])
+				btn.setIcon(icon)
 			btn.setIconSize(QSize(20, 20))
 
 			layout.addWidget(btn)
