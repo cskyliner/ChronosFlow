@@ -1,6 +1,6 @@
-from src.common import *
-from src.Emitter import Emitter
-from src.FontSetting import set_font
+from common import *
+from Emitter import Emitter
+from FontSetting import set_font
 
 log = logging.getLogger(__name__)
 

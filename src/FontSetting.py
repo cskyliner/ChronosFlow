@@ -1,5 +1,4 @@
-from src.common import *
-from PySide6.QtGui import QFont
+from common import *
 
 log = logging.getLogger("FontSetting")
 

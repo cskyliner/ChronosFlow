@@ -1,7 +1,9 @@
-from src.common import *
-from src.Notice import NotificationWidget
+from common import *
+from Notice import NotificationWidget
 from events.Event import *
+
 log = logging.getLogger(__name__)
+
 class FloatingWindow(QWidget):
 	exit_requested = Signal()  # 完全退出信号
 	show_main_requested = Signal()  # 显示主窗口信号

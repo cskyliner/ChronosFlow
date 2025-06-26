@@ -1,6 +1,6 @@
-from src.Emitter import Emitter
+from Emitter import Emitter
 from events.EventManager import receive_signal,request_signal
-from src.common import logging
+from common import logging
 log = logging.getLogger(__name__)
 
 

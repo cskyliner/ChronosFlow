@@ -1,8 +1,8 @@
-from src.common import *
-from src.Emitter import Emitter
+from common import *
+from Emitter import Emitter
 from ioporter.course_importer import CourseScheduleImporter
 import json
-from src.FontSetting import set_font
+from FontSetting import set_font
 
 log = logging.getLogger(__name__)
 

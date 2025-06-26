@@ -1,5 +1,5 @@
-from src.common import *
-from src.Upcoming import FloatingButton, DeleteButton
+from common import *
+from Upcoming import FloatingButton, DeleteButton
 from functools import partial
 from events.Event import *
 from events.EventManager import EventSQLManager

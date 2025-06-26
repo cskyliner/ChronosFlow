@@ -1,4 +1,4 @@
-from src.common import *
+from common import *
 
 log = logging.getLogger(__name__)
 

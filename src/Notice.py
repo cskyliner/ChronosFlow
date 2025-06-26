@@ -1,4 +1,4 @@
-from src.common import *
+from common import *
 from events.Event import *
 
 if sys.platform == 'darwin':

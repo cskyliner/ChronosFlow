@@ -1,6 +1,4 @@
-from src.common import *
-from PySide6.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsRectItem, QGraphicsItem, QSizePolicy
-from PySide6.QtCore import QRectF
+from common import *
 from events.EventManager import *
 from events.EventManager import EventSQLManager
 

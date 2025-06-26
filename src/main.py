@@ -1,7 +1,6 @@
-from src.common import *
-from src.MainWindow import MainWindow
-from src.SignalConnect import connect_event_signal
-logging
+from common import *
+from MainWindow import MainWindow
+from SignalConnect import connect_event_signal
 
 def init_platform_style(a):
 	# 根据系统选择UI风格
