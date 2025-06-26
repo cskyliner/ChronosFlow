@@ -136,7 +136,6 @@ class YearHeatMapView(QWidget):
 
     def refresh(self,year:int):
         self.year = year
-        self.data = {}
         self.get_data()
         self.build_scene()
 
