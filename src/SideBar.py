@@ -12,7 +12,6 @@ class SideBar(QFrame):
 		# ===侧边栏内容===
 		layout = QVBoxLayout()
 		layout.setContentsMargins(10, 10, 10, 20)
-
 		name_label = QLabel("ChronosFlow")
 		name_label.setAlignment(Qt.AlignCenter)
 		font = QFont("Helvetica Neue", 24, QFont.Bold)  # 更具未来感的字体
@@ -24,7 +23,6 @@ class SideBar(QFrame):
 		    font-family: 'Helvetica Neue', sans-serif;
 		""")
 		layout.addWidget(name_label)
-
 		# 把sidebar撑开
 		spacer = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
 		layout.addItem(spacer)
@@ -44,6 +42,7 @@ class SideBar(QFrame):
 			btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
+                    color: palette(text);
                     border: none;
                     padding: 25px;
                     text-align: center;

@@ -15,7 +15,6 @@ def get_month_range(year: int, month: int):
 	end_date = start_date.addDays(41)  # 到最后补齐42个格
 	return start_date, end_date
 
-
 class CalendarDayItem(QObject, QGraphicsRectItem):
 	"""
 	单元格
