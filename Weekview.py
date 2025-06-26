@@ -249,6 +249,55 @@ class WeekView(QWidget):
         self.main_scene = QGraphicsScene()
         # 创建主视图
         self.main_view = QGraphicsView(self.main_scene)
+        self.main_view.setStyleSheet("""
+        /* 垂直滚动条 */
+        QScrollBar:vertical {
+            border: none;
+            background: palette(base);
+            width: 3px;
+            margin: 0px 0px 0px 0px;
+        }
+        QScrollBar::handle:vertical {
+            background: #1E90FF;
+            min-height: 20px;
+            border-radius: 6px;
+        }
+        QScrollBar::handle:vertical:hover {
+            background: #1E90FF;
+        }
+        QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+            border: none;
+            background: none;
+            height: 0px;
+        }
+        QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+            background: none;
+        }
+        
+        /* 水平滚动条 */
+        QScrollBar:horizontal {
+            border: none;
+            background: palette(base);
+            height: 3px;
+            margin: 0px 0px 0px 0px;
+        }
+        QScrollBar::handle:horizontal {
+            background: #1E90FF;
+            min-width: 20px;
+            border-radius: 6px;
+        }
+        QScrollBar::handle:horizontal:hover {
+            background: #1E90FF;
+        }
+        QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+            border: none;
+            background: none;
+            width: 0px;
+        }
+        QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+            background: none;
+        }
+        """)
         self.main_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.main_view.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.main_view.setDragMode(QGraphicsView.ScrollHandDrag)  # 支持拖拽滚动
