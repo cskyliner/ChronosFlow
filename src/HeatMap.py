@@ -153,20 +153,67 @@ class YearHeatMapView(QWidget):
         self.view.viewport().setMouseTracking(True)
 
         # === 顶部导航栏 ===
+        # 美化后的年份导航栏
         self.prev_btn = QPushButton("◀")
+        #self.prev_btn.setAlignment(Qt.AlignCenter)
         self.prev_btn.setFixedSize(30, 30)
+        self.prev_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #f0f0f0;
+                border-radius: 15px;
+                color: #333;
+                font-size: 20px;
+                font-weight: bold;
+                border: none;
+            }
+            QPushButton:hover {
+                background-color: #e0e0e0;
+                color: #0078d7;
+            }
+            QPushButton:pressed {
+                background-color: #d0d0d0;
+            }
+        """)
+        self.prev_btn.setCursor(Qt.PointingHandCursor)
         self.prev_btn.clicked.connect(self.goto_prev_year)
 
         self.next_btn = QPushButton("▶")
+        #self.next_btn.setAlignment(Qt.AlignCenter)
         self.next_btn.setFixedSize(30, 30)
+        self.next_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #f0f0f0;
+                border-radius: 15px;
+                color: #333;
+                font-size: 20px;
+                font-weight: bold;
+                border: none;
+            }
+            QPushButton:hover {
+                background-color: #e0e0e0;
+                color: #0078d7;
+            }
+            QPushButton:pressed {
+                background-color: #d0d0d0;
+            }
+        """)
+        self.next_btn.setCursor(Qt.PointingHandCursor)
         self.next_btn.clicked.connect(self.goto_next_year)
 
         self.year_label = QLabel(str(self.year))
         self.year_label.setAlignment(Qt.AlignCenter)
         self.year_label.setFixedHeight(30)
+        self.year_label.setStyleSheet("""
+            QLabel {
+                font-size: 16px;
+                font-weight: bold;
+                color: #333;
+            }
+        """)
 
         nav_layout = QHBoxLayout()
         nav_layout.setContentsMargins(10, 5, 10, 5)
+        nav_layout.setSpacing(15)  # 增加按钮和标签之间的间距
         nav_layout.addWidget(self.prev_btn)
         nav_layout.addStretch()
         nav_layout.addWidget(self.year_label)
@@ -190,6 +237,7 @@ class YearHeatMapView(QWidget):
 
     def get_data(self):
         tmp_data:list[BaseEvent] = []
+        self.data.clear()
         for i in range(1,13):
             tmp_data.extend(EventSQLManager.get_events_in_month(self.year,i))
         for event in tmp_data:
