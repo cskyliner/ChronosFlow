@@ -8,15 +8,7 @@ SRC_DIR = os.path.join(BASE_DIR, "src")
 sys.path.insert(0, SRC_DIR)
 
 if sys.platform == 'darwin':
-	def get_pync():
-		import pync
-		if hasattr(sys, "_MEIPASS"):
-			path =  os.path.join(sys._MEIPASS, "bin/chronos-notifier")
-		path =  os.path.join(BASE_DIR,"bin/chronos-notifier")
-		path = resource_path("bin/chronos-notifier")
-		os.chmod(path, 0o755)
-		pync.TERMINAL_NOTIFIER = path
-		return pync
+	import pync
 log = logging.getLogger(__name__)
 from src.Emitter import Emitter
 
@@ -155,7 +147,6 @@ def notify_mac(title, subtitle, message):
         f'sound name "Ping"'
     )
 	try:
-		pync = get_pync()
 		pync.notify(
 			message,
 			title = title,
