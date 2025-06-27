@@ -1,5 +1,5 @@
-# project Untitled
-- [Preparation](#preparation)
+# 目录
+- [程序开发准备与功能介绍](#程序开发准备与功能介绍)
   - [Python Essential](#python-essential)
   - [版本控制与协作](#版本控制与协作)
     - [分支策略](#分支策略)
@@ -7,7 +7,7 @@
   - [类似开源项目](#类似开源项目)
   - [核心功能](#核心功能)
   - [主要功能](#主要功能)
-- [文件及class功能设计](#文件及class功能设计)
+- [项目模块与类设计](#项目模块与类设计)
   - [run](#run) 
   - [main](#main)
   - [Event](#event)
@@ -24,22 +24,23 @@
   - [Tray](#tray)
   - [FloatingWindow](#floatingwindow)
   - [course_importer](#course_importer)
-- [页面设计](#页面设计)
+  - [页面设计](#页面设计)
+- [小组成员分工情况](#小组成员分工情况)
+- [项目总结与反思](#项目总结与反思)
 
 
-# Preparation
+# 程序开发准备与功能介绍
 
-## Python Essential:
-conda\
-Python3.10\
-[sqlite3](https://docs.python.org/3/library/sqlite3.html)\
-[PySide6](https://doc.qt.io/qtforpython-6/index.html)(>=6.72)\
-[PEP 8 代码风格规范](https://peps.python.org/pep-0008/)\
-具体要求详见[requirements.txt](https://github.com/cskyliner/ChronosFlow/blob/main/requirements.txt)
-...
+## Essential:
+主要开发工具:\
+Python3.10,
+[sqlite3](https://docs.python.org/3/library/sqlite3.html),
+[PySide6](https://doc.qt.io/qtforpython-6/index.html)(>=6.72),
+...\
+**具体要求详见[requirements.txt](https://github.com/cskyliner/ChronosFlow/blob/main/requirements.txt)**
 
 ## 版本控制与协作
-[本项目GitHub网址](https://github.com/cskyliner/ChronosFlow)
+**[本项目GitHub网址](https://github.com/cskyliner/ChronosFlow)**
 
 ### 分支策略
 `main`(稳定版) + `docs`(更新开发文档) + `userX/*`(开发分支)
@@ -78,20 +79,20 @@ Python3.10\
 对Event采取不同分类：\
 DDL直接使用截止日期和提前通知；\
 日程（Activity）则为长期打卡任务或长时任务段，实现重复提醒操作
-5. 课表：\
+5. **课表**：\
 支持excel导入（北京大学春秋季课表已经过验证），尽可能减少手动操作
-6. 快速检索：\
+6. **快速检索**：\
 根据日期、标题或tag准确搜索，词语之间留有空格可支持多关键词搜索。
-7. 数据统计与可视化处理：
+7. **数据统计与可视化处理**：
 年度热力图直观显示活动密度
-...
-# 文件及class功能设计
+
+# 项目模块与类设计
 ## run：
 项目运行入口
 ## main：
-实现主窗口的创建、信号连接即SignalConnect、读取logging配置及检测系统类型
+实现主窗口的创建、信号连接(SignalConnect)、读取logging配置及检测系统类型进行适配
 ## Event: 
-事件日程基类：
+设置不同事件类：
 *Activity（日程）*、*DDL（截止日期）*...
 ## EventManager：
 管理事件:\
@@ -147,10 +148,11 @@ plyer.notification（通用桌面通知）：
 悬浮窗支持显示最近一次DDL倒计时
 ## course_importer
 导入课表逻辑，借用pandas处理excel文件，通过正则表达式适配PKU春秋季课表，后续对于更广泛课表的支持有待更新
-...
-
-# 页面设计
+## 页面设计
 [qss](https://doc.qt.io/qtforpython-6/tutorials/basictutorial/widgetstyling.html#tutorial-widgetstyling)(类似前端css)自定义qtUI格式\
 **图标与背景图案设计**:
-支持导入自定义背景、借用开源的svg和png作为图标、支持深浅系统主题适应（每次更改需要重启）
+支持导入自定义背景、借用开源的svg和png图案作为图标统一放在assets中管理、支持深浅系统主题适应（每次更改需要重启）
 
+# 小组成员分工情况
+
+# 项目总结与反思
