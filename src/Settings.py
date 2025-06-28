@@ -3,9 +3,17 @@ from src.Emitter import Emitter
 from src.ioporter.course_importer import CourseScheduleImporter
 import json
 from src.FontSetting import set_font
-
+from src.AIChat import LLMAssistantPage
 log = logging.getLogger(__name__)
 
+class SettingsDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("设置")
+        self.setMinimumSize(700, 500)
+        layout = QVBoxLayout()
+        layout.addWidget(SettingsPage(self))
+        self.setLayout(layout)
 
 class SettingsPage(QWidget):
     """设置页面"""
@@ -140,6 +148,57 @@ class SettingsPage(QWidget):
         notification_layout.addWidget(self.notify_type_combo)
 
         notification_group.setLayout(notification_layout)
+        # AI接口设置组
+        ai_group = QGroupBox("AI 接口设置")
+        ai_group.setStyleSheet("""
+                QGroupBox {
+                    border: 1px solid palette(text);
+                    border-radius: 10px;
+                    margin-top: 1.5ex;
+                    padding: 5px;
+                }
+                QGroupBox::title {
+                    subcontrol-origin: margin;
+                    left: 10px;
+                    padding: 0 3px;
+                }
+            """)
+        set_font(ai_group)
+        ai_layout = QVBoxLayout()
+
+        # # OpenAI API Key
+        # openai_layout = QHBoxLayout()
+        # openai_label = QLabel("OpenAI API Key:")
+        # set_font(openai_label)
+        # self.openai_api_edit = QLineEdit()
+        # self.openai_api_edit.setPlaceholderText("请输入 OpenAI API 密钥")
+        # self.openai_api_edit.setStyleSheet("""QLineEdit {
+        #     border-radius: 5px;
+        #     border:1px solid #1E90FF;
+        #     background:transparent
+        # }""")
+        # set_font(self.openai_api_edit)
+        # openai_layout.addWidget(openai_label)
+        # openai_layout.addWidget(self.openai_api_edit)
+        # ai_layout.addLayout(openai_layout)
+
+        # DeepSeek API Key
+        deepseek_layout = QHBoxLayout()
+        deepseek_label = QLabel("DeepSeek API Key:")
+        set_font(deepseek_label)
+        self.deepseek_api_edit = QLineEdit()
+        self.deepseek_api_edit.setPlaceholderText("请输入 DeepSeek API 密钥")
+        self.deepseek_api_edit.setStyleSheet("""QLineEdit {
+            border-radius: 5px;
+            border:1px solid #1E90FF;
+            background:transparent
+        }""")
+        set_font(self.deepseek_api_edit)
+        deepseek_layout.addWidget(deepseek_label)
+        deepseek_layout.addWidget(self.deepseek_api_edit)
+        ai_layout.addLayout(deepseek_layout)
+
+        ai_group.setLayout(ai_layout)
 
         # 音量设置组
         volume_group = QGroupBox("音量设置")
@@ -328,6 +387,35 @@ class SettingsPage(QWidget):
         excel_layout.addWidget(excel_btn)
 
         excel_group.setLayout(ttl_excel_layout)
+        # 新增：手动导入按钮
+        import_btn_layout = QHBoxLayout()
+        import_btn_layout.addStretch()  # 将按钮靠右对齐
+        import_btn = QPushButton("手动导入")
+        import_btn.setFixedSize(100, 30)
+        import_btn.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;
+                border: 1px solid #1E90FF;
+                border-radius: 4px;
+                padding: 0px;
+                text-align: center;
+            }
+            QPushButton:hover {
+                border-color: #24C1FF;
+            }
+            QPushButton:pressed {
+                background-color: #24C1FF;
+            }
+        """)
+        set_font(import_btn)
+        import_btn.clicked.connect(lambda: CourseScheduleImporter.init_importer(
+            self.excel_path_edit.text(),
+            self.start_date_edit.date().toString("yyyy-MM-dd"),
+            16
+        ))
+        import_btn.clicked.connect(lambda: CourseScheduleImporter.extract_info())
+        import_btn_layout.addWidget(import_btn)
+        ttl_excel_layout.addLayout(import_btn_layout)
 
         # 保存按钮
         save_btn = QPushButton("保存设置")
@@ -359,6 +447,7 @@ class SettingsPage(QWidget):
         layout.addWidget(volume_group)
         volume_group.hide()
         layout.addWidget(wallpaper_group)
+        layout.addWidget(ai_group)
         layout.addWidget(excel_group)
         layout.addStretch()
         layout.addWidget(save_btn, alignment=Qt.AlignRight)
@@ -442,7 +531,6 @@ class SettingsPage(QWidget):
         """获取配置文件路径"""
         # 获取默认存储路径
         config_dir = self.get_default_storage_path()
-        # config_dir = os.path.join(os.environ['USERPROFILE'], 'AppData', 'Local', 'MyApp')
         os.makedirs(config_dir, exist_ok=True)
         return os.path.join(config_dir, 'settings.json')
 
@@ -474,6 +562,10 @@ class SettingsPage(QWidget):
                     self.wallpaper_path = settings.get('wallpaper_path', '')
                     self.wallpaper_path_edit.setText(self.wallpaper_path)
 
+                    # 加载API
+                    self.api = settings.get('deepseek_api_key','')
+                    self.deepseek_api_edit.setText(self.api)
+
                     #课表
                     self.start_date_edit.setDate(QDate.fromString(settings.get('course_start_date'), "yyyy-MM-dd"))
                     self.excel_path=settings.get('excel_path','')
@@ -495,6 +587,7 @@ class SettingsPage(QWidget):
                 "notification_type": "系统通知",
                 "volume": 50,
                 "wallpaper_path": "无壁纸",
+                "deepseek_api_key": "None",
                 "excel_path": "无课表",
                 'course_start_date': "无"
             }
@@ -510,6 +603,7 @@ class SettingsPage(QWidget):
                 self.volume_slider.setValue(volume)
                 self.update_volume_label(volume)
                 self.wallpaper_path_edit.setText(default_settings["wallpaper_path"])
+                self.deepseek_api_edit.setText(default_settings['deepseek_api_key'])
                 self.excel_path_edit.setText(default_settings["excel_path"])
                 self.start_date_edit.setDate(QDate.currentDate())
 
@@ -530,6 +624,7 @@ class SettingsPage(QWidget):
             'notification_type': self.notify_type_combo.currentText(),
             'volume': self.volume_slider.value(),
             'wallpaper_path': self.wallpaper_path_edit.text(),
+            'deepseek_api_key': self.deepseek_api_edit.text(), 
             'excel_path': self.excel_path_edit.text(),
             'course_start_date': self.start_date_edit.date().toString("yyyy-MM-dd"),
             'last_modified': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -578,6 +673,7 @@ class SettingsPage(QWidget):
     通知类型: {settings['notification_type']}
     音量级别: {settings['volume']}%
     壁纸路径: {settings['wallpaper_path']}%
+    deepseekAPIKEY：{settings['deepseek_api_key']}%
     最后修改: {settings['last_modified']}
 
     === 原始JSON数据 ===
@@ -599,6 +695,6 @@ class SettingsPage(QWidget):
             # 发送信号通知储存路径
             Emitter.instance().send_storage_path(os.path.join(settings['storage_path'], "AppData", "Database"))
             CourseScheduleImporter.init_importer(self.excel_path_edit.text(), self.start_date_edit.date().toString("yyyy-MM-dd"), 16)
-            CourseScheduleImporter.extract_info()
+            # CourseScheduleImporter.extract_info()
         except Exception as e:
             QMessageBox.critical(self, "错误", f"保存失败:\n{str(e)}")

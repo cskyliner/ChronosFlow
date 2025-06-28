@@ -14,6 +14,7 @@ from src.FontSetting import set_font
 from src.HeatMap import YearHeatMapView
 from src.events.Event import *
 from src.events.EventManager import EventSQLManager
+from src.AIChat import LLMAssistantPage
 import re
 log = logging.getLogger(__name__)
 
@@ -78,7 +79,9 @@ class MainWindow(QMainWindow):
 		self.setup_create_event_window()  # 日程填写窗口
 		self.setup_upcoming_window()  # 日程展示窗口
 		self.setup_week_view_window() # 周视图窗口
+		self.setup_week_view_window() # 周视图窗口
 		self.setup_heatmap_window() # 热力图窗口
+		self.setup_aichat_window() # ai助手窗口
 		Emitter.instance().delete_activity_event_signal.connect(self.week_view.update_view_geometry)
 		self.navigate_to("Calendar", self.main_stack)
 		# 初始化通知系统
@@ -95,6 +98,9 @@ class MainWindow(QMainWindow):
 
 		# 设置壁纸
 		self.set_wallpaper(self.setting.wallpaper_path)
+
+		# 设置APIKEY
+		self.set_API_Key(self.setting.api)
 
 		# 安装事件过滤器，处理Calendar页面的侧边栏的收放
 		self.main_stack.installEventFilter(self)
@@ -440,6 +446,75 @@ class MainWindow(QMainWindow):
 		heatmap_layout.addWidget(self.heatmap_view)
 		self.add_page(self.main_stack, self.heatmap_window, "HeatMap")
 
+	def setup_aichat_window(self):
+		self.aichat_window = QWidget()
+		# 内容区域布局
+		aichat_layout = QVBoxLayout()
+		aichat_layout.setSpacing(0)
+		aichat_layout.setContentsMargins(20, 5, 20, 20)
+		self.aichat_window.setLayout(aichat_layout)
+
+		# 顶部按钮布局
+		btn_layout = QHBoxLayout()
+		btn_layout.setContentsMargins(0, 0, 0, 0)  # 移除边距
+		aichat_layout.addLayout(btn_layout)
+
+		# 侧边栏切换按钮
+		sidebar_btn = QPushButton("")
+		sidebar_btn.setFixedSize(35, 30)
+		icon_path = os.path.join(os.environ["CHRONOSFLOW_RES"], "sidebar1.png")
+		pixmap = QPixmap(icon_path)
+		sidebar_btn.setIcon(QIcon(pixmap))
+		sidebar_btn.setIconSize(QSize(24, 24))
+		sidebar_btn.setStyleSheet("""
+				                QPushButton {
+				                    background-color: transparent;
+				                    border: none;
+				                    border-radius: 5px;
+				                    padding: 5;
+		    						margin: 0;
+				                    text-align: center;
+				                    color: palette(text);
+				                }
+				                QPushButton:hover {
+				                    background-color: palette(midlight);
+				                }
+				                QPushButton:pressed {
+									background-color: palette(mid);
+								}
+				            """)
+		set_font(sidebar_btn, 4)
+		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
+
+		# 返回按钮，回到calendar
+		return_btn = QPushButton("✕")
+		return_btn.setFixedSize(35, 30)
+		return_btn.setStyleSheet("""
+				                QPushButton {
+				                    background-color: transparent;
+				                    border-radius: 5px;
+				                    padding: 5;
+		    						margin: 0;
+				                    text-align: center;
+				                    color: palette(text);
+				                }
+				                QPushButton:hover {
+				                	color: #E61B23;
+				                }
+				                QPushButton:pressed {
+									color: #B8281C;
+								}
+				            """)
+		set_font(return_btn, 1)
+		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
+
+		btn_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
+		btn_layout.addWidget(return_btn, alignment=Qt.AlignmentFlag.AlignRight)
+		# 加入热力图
+		self.aichat_view = LLMAssistantPage()	# 这里年份暂时这样处理
+		aichat_layout.addWidget(self.aichat_view)
+		self.add_page(self.main_stack, self.aichat_window, "AIChat")
+
 	def setup_setting_window(self):
 		"""创建设置栏"""
 		self.setting_window = QWidget()
@@ -635,6 +710,8 @@ class MainWindow(QMainWindow):
 				self.week_view.load_schedules()
 			elif name == "HeatMap":
 				self.heatmap_view.refresh(year=2025)
+			elif name == "AIChat":
+				pass
 			stack.setCurrentIndex(self.main_stack_map[name])
 			log.info(f"跳转到{name}页面，日期为{date.toString() if date else date}")
 		else:
@@ -887,3 +964,9 @@ class MainWindow(QMainWindow):
 				        """)
 		else:
 			log.error("警告：壁纸路径无效")
+
+	def set_API_Key(self, api):
+		if api == "":
+			log.error("警告：API密钥为空")
+		else:
+			self.aichat_view.api_key = api
