@@ -1,8 +1,8 @@
-from common import *
-from Emitter import Emitter
-from ioporter.course_importer import CourseScheduleImporter
+from src.common import *
+from src.Emitter import Emitter
+from src.ioporter.course_importer import CourseScheduleImporter
 import json
-from FontSetting import set_font
+from src.FontSetting import set_font
 
 log = logging.getLogger(__name__)
 
@@ -316,6 +316,7 @@ class SettingsPage(QWidget):
                     text-align: center;
                 }
                 QPushButton:hover {
+
                     border-color: #24C1FF; /*轻微高亮*/
                 }
                 QPushButton:pressed {
@@ -537,7 +538,6 @@ class SettingsPage(QWidget):
         if not settings['storage_path']:
             QMessageBox.critical(self, "错误", "必须选择有效的存储目录！")
             return
-
         try:
             # 创建数据目录结构
             data_dir = self.get_data_dir()

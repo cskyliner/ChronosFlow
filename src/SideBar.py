@@ -1,7 +1,7 @@
-from common import *
+from src.common import *
 from functools import partial
-from Emitter import Emitter
-from FontSetting import set_font
+from src.Emitter import Emitter
+from src.FontSetting import set_font
 
 
 class SideBar(QFrame):
@@ -60,7 +60,9 @@ class SideBar(QFrame):
 			# 图标
 			if i == 3:
 				# 如果为热力图，使用自定义图标
-				btn.setIcon(QIcon("pic/heat-map.svg"))
+				img_path = os.path.join(os.environ["CHRONOSFLOW_RES"], "heat-map.svg")
+				pixmap = QPixmap(img_path)
+				btn.setIcon(QIcon(pixmap))
 			else:
 				icon = self.style().standardIcon(buttons[i][1])
 				btn.setIcon(icon)
