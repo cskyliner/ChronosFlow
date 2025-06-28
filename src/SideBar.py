@@ -4,6 +4,7 @@ from src.Emitter import Emitter
 from src.FontSetting import set_font
 from src.Settings import SettingsDialog
 
+
 class SideBar(QFrame):
 	def __init__(self, parent):
 		super().__init__(parent)
