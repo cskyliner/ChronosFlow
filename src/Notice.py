@@ -1,11 +1,22 @@
-from common import *
-from events.Event import *
+import sys
+import os
+from src.common import *
+from src.events.Event import *
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SRC_DIR = os.path.join(BASE_DIR, "src")
+sys.path.insert(0, SRC_DIR)
 
 if sys.platform == 'darwin':
 	import pync
 log = logging.getLogger(__name__)
 from src.Emitter import Emitter
 
+def resource_path(relative_path):
+	"""兼容 PyInstaller 打包与调试模式"""
+	if hasattr(sys, '_MEIPASS'):
+		return os.path.join(sys._MEIPASS, relative_path)
+	return os.path.abspath(relative_path)
 
 class Notice(QObject):
 	notify_to_floating_window = Signal(object)  # 向悬浮窗发送通知信号(标题，内容，颜色代码)
@@ -18,10 +29,7 @@ class Notice(QObject):
 		self.scheduled_notices = []  # 存储计划通知
 		self.if_backend_exist_event = True
 		self.latest_event: DDLEvent = None
-		self.if_backend_exist_event = True
-		self.latest_event: DDLEvent = None
 		self.timer = QTimer()
-		# self.timer.timeout.connect(self.check_notices)
 		self.timer.timeout.connect(self.check_notice)
 		self.timer.start(1000)  # 每秒检查一次
 		Emitter.instance().notice_signal.connect(self.update_latest_event)
@@ -29,22 +37,17 @@ class Notice(QObject):
 	def check_notice(self):
 		if not self.if_backend_exist_event:
 		# 	"""如果后端没有存储任何事件，不进行提醒"""
-			#log.info(f"后端暂无最新DDL事件，不进行提醒")
 			return
 		current = QDateTime.currentDateTime()
 		if self.latest_event:
-
-			#log.info(f"当前Notice储存最新事件{self.latest_event.title}；提醒时间{self.latest_event.advance_time}")
-
 			notify_time = QDateTime.fromString(self.latest_event.advance_time, "yyyy-MM-dd HH:mm")
+			log.info(f"{self.latest_event.title} - {self.latest_event.notes}-{notify_time}")
 			if self.latest_event and current >= notify_time:
 				log.info(f"提醒: {self.latest_event.title} - {self.latest_event.notes}")
 				if sys.platform == "darwin":
-					pync.notify(self.latest_event.notes, title='ChronosFlow', subtitle=self.latest_event.title,
-								sound='Ping')
+					notify_mac(title='ChronosFlow', subtitle=self.latest_event.title,message=self.latest_event.notes)
 				else:
 					self.notify_show_floating_window.emit()
-					#self.notify_to_floating_window.emit((self.latest_event,))
 					self.notify_to_tray.emit((self.latest_event,))
 
 				self.latest_event = None
@@ -66,6 +69,7 @@ class Notice(QObject):
 			# 说明后端有更新，需要重新获取最新消息
 			self.latest_event = latest_event_info[0]
 			if self.latest_event:
+				self.if_backend_exist_event = True
 				log.info(f"tag：{tag} 最新DDLEvent：{self.latest_event.title}; 提醒时间{self.latest_event.advance_time}; 截止时间{self.latest_event.datetime}")		
 			else:
 				log.info(f"暂无DDLEvent")
@@ -78,6 +82,7 @@ class Notice(QObject):
 				self.if_backend_exist_event = False
 			else:
 				self.latest_event = latest_event_info[0]
+				self.if_backend_exist_event = True
 				log.info(
 					f"tag：{tag}最新DDLEvent：{self.latest_event.title}; 提醒时间{self.latest_event.advance_time}; 截止时间{self.latest_event.datetime}")
 		"""把消息传递给悬浮窗以便于展示"""
@@ -130,3 +135,23 @@ class NotificationWidget(QFrame):
 	def _start_close_timer(self):
 		"""8秒后自动关闭"""
 		QTimer.singleShot(8000, self.close)
+
+def safe(s: str) -> str:
+    return s.replace('"', '\\"').replace("\n", " ")
+
+def notify_mac(title, subtitle, message):
+	script = (
+        f'display notification "{safe(message)}" '
+        f'with title "{safe(title)}" '
+        f'subtitle "{safe(subtitle)}" '
+        f'sound name "Ping"'
+    )
+	try:
+		pync.notify(
+			message,
+			title = title,
+			subtitle = subtitle,
+			sound = "Ping"
+		)
+	except Exception as e:
+		print(f"[通知失败] {e}")

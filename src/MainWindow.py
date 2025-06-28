@@ -1,20 +1,19 @@
-from common import *
-from SideBar import SideBar
-from NewCalendar import CalendarView
+from src.common import *
+from src.SideBar import SideBar
+from src.NewCalendar import CalendarView
 from functools import partial
-from CreateEventWindow import Schedule
-from Emitter import Emitter
-from Settings import SettingsPage
-from Tray import Tray
-from FloatingWindow import FloatingWindow
-from Notice import Notice
-from Upcoming import Upcoming, FloatingButton
-from Weekview import WeekView
-from Weekview import WeekView
-from FontSetting import set_font
-from HeatMap import YearHeatMapView
-from events.Event import *
-from events.EventManager import EventSQLManager
+from src.CreateEventWindow import Schedule
+from src.Emitter import Emitter
+from src.Settings import SettingsPage
+from src.Tray import Tray
+from src.FloatingWindow import FloatingWindow
+from src.Notice import Notice
+from src.Upcoming import Upcoming, FloatingButton
+from src.Weekview import WeekView
+from src.FontSetting import set_font
+from src.HeatMap import YearHeatMapView
+from src.events.Event import *
+from src.events.EventManager import EventSQLManager
 import re
 log = logging.getLogger(__name__)
 
@@ -102,8 +101,6 @@ class MainWindow(QMainWindow):
 		self.search_column.installEventFilter(self)
 		self.search_edit.installEventFilter(self)
 
-	# 或许可以有
-	# self.setWindowIcon(QIcon(self._get_icon_path()))
 	# === App 菜单栏（仅 macOS 显示）===
 	def show_about_dialog(self):
 		QMessageBox.about(self, "About ChronosFlow", "This is ChronosFlow.\nA beautiful task planner.")
@@ -123,7 +120,9 @@ class MainWindow(QMainWindow):
 		# 添加'<'按钮
 		sidebar_btn = QPushButton("")
 		sidebar_btn.setFixedSize(35, 30)
-		sidebar_btn.setIcon(QIcon("pic/sidebar1.png"))
+		icon_path = os.path.join(os.environ["CHRONOSFLOW_RES"], "sidebar1.png")
+		pixmap = QPixmap(icon_path)
+		sidebar_btn.setIcon(QIcon(pixmap))
 		sidebar_btn.setIconSize(QSize(24, 24))
 		sidebar_btn.setStyleSheet("""
 				                QPushButton {
@@ -242,7 +241,9 @@ class MainWindow(QMainWindow):
 
 		sidebar_btn = QPushButton("")
 		sidebar_btn.setFixedSize(35, 30)
-		sidebar_btn.setIcon(QIcon("pic/sidebar1.png"))
+		icon_path = os.path.join(os.environ["CHRONOSFLOW_RES"], "sidebar1.png")
+		pixmap = QPixmap(icon_path)
+		sidebar_btn.setIcon(QIcon(pixmap))
 		sidebar_btn.setIconSize(QSize(24, 24))
 		sidebar_btn.setStyleSheet("""
 				                QPushButton {
@@ -309,7 +310,9 @@ class MainWindow(QMainWindow):
 		# 侧边栏切换按钮
 		sidebar_btn = QPushButton("")
 		sidebar_btn.setFixedSize(35, 30)
-		sidebar_btn.setIcon(QIcon("pic/sidebar1.png"))
+		icon_path = os.path.join(os.environ["CHRONOSFLOW_RES"], "sidebar1.png")
+		pixmap = QPixmap(icon_path)
+		sidebar_btn.setIcon(QIcon(pixmap))
 		sidebar_btn.setIconSize(QSize(24, 24))
 		sidebar_btn.setStyleSheet("""
 				                QPushButton {
@@ -384,7 +387,9 @@ class MainWindow(QMainWindow):
 		# 侧边栏切换按钮
 		sidebar_btn = QPushButton("")
 		sidebar_btn.setFixedSize(35, 30)
-		sidebar_btn.setIcon(QIcon("pic/sidebar1.png"))
+		icon_path = os.path.join(os.environ["CHRONOSFLOW_RES"], "sidebar1.png")
+		pixmap = QPixmap(icon_path)
+		sidebar_btn.setIcon(QIcon(pixmap))
 		sidebar_btn.setIconSize(QSize(24, 24))
 		sidebar_btn.setStyleSheet("""
 				                QPushButton {
@@ -449,7 +454,9 @@ class MainWindow(QMainWindow):
 
 		sidebar_btn = QPushButton("")
 		sidebar_btn.setFixedSize(35, 30)
-		sidebar_btn.setIcon(QIcon("pic/sidebar1.png"))
+		icon_path = os.path.join(os.environ["CHRONOSFLOW_RES"], "sidebar1.png")
+		pixmap = QPixmap(icon_path)
+		sidebar_btn.setIcon(QIcon(pixmap))
 		sidebar_btn.setIconSize(QSize(24, 24))
 		sidebar_btn.setStyleSheet("""
 				                QPushButton {
@@ -515,7 +522,9 @@ class MainWindow(QMainWindow):
 
 		sidebar_btn = QPushButton("")
 		sidebar_btn.setFixedSize(35, 30)
-		sidebar_btn.setIcon(QIcon("pic/sidebar1.png"))
+		icon_path = os.path.join(os.environ["CHRONOSFLOW_RES"], "sidebar1.png")
+		pixmap = QPixmap(icon_path)
+		sidebar_btn.setIcon(QIcon(pixmap))
 		sidebar_btn.setIconSize(QSize(24, 24))
 		sidebar_btn.setStyleSheet("""
 				                QPushButton {
@@ -720,13 +729,17 @@ class MainWindow(QMainWindow):
 		if self.sidebar_visible:
 			self.animations["sidebar"].setStartValue(0)
 			self.animations["sidebar"].setEndValue(230)
-			btn.setIcon(QIcon("pic/sidebar1.png"))
+			icon_path = os.path.join(os.environ["CHRONOSFLOW_RES"], "sidebar1.png")
+			pixmap = QPixmap(icon_path)
+			btn.setIcon(QIcon(pixmap))
 			btn.setIconSize(QSize(24, 24))
 			btn.setText("")
 		else:
 			self.animations["sidebar"].setStartValue(230)
 			self.animations["sidebar"].setEndValue(0)
-			btn.setIcon(QIcon("pic/sidebar2.png"))
+			icon_path = os.path.join(os.environ["CHRONOSFLOW_RES"], "sidebar2.png")
+			pixmap = QPixmap(icon_path)
+			btn.setIcon(QIcon(pixmap))
 			btn.setIconSize(QSize(24, 24))
 			btn.setText("")
 

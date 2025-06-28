@@ -1,4 +1,4 @@
-from common import *
+from src.common import *
 
 if sys.platform == 'darwin':
 	import pystray
@@ -52,8 +52,9 @@ class Tray(QObject):
 		self.tray = QSystemTrayIcon(self)
 
 		# 加载 .icns 图标
-		icns_path = os.path.abspath("pic/icon.iconset/icon_512x512@2x.png")
-		icon = QIcon(icns_path)
+		img_path = os.path.join(os.environ["CHRONOSFLOW_RES"], "icon.iconset/icon_512x512@2x.png")
+		pixmap = QPixmap(img_path)
+		icon = QIcon(pixmap)
 		self.tray.setIcon(icon)
 
 		menu = QMenu()

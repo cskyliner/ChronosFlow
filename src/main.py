@@ -1,6 +1,6 @@
-from common import *
-from MainWindow import MainWindow
-from SignalConnect import connect_event_signal
+from src.common import *
+from src.MainWindow import MainWindow
+from src.SignalConnect import connect_event_signal
 
 def init_platform_style(a):
 	# 根据系统选择UI风格
@@ -26,7 +26,8 @@ def main():
 	init_platform_style(app)
 	app.setApplicationName("ChronosFlow")
 	app.setApplicationDisplayName("ChronosFlow")
-	app.setWindowIcon(QIcon("pic/todolist.png"))
+	icon_path = os.path.join(os.environ["CHRONOSFLOW_RES"], "todolist.png")
+	app.setWindowIcon(QIcon(icon_path))
 	connect_event_signal()  # 连接前后端信号
 	main_window = MainWindow(app, 1050, 630)
 	main_window.show()
