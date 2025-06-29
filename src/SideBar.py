@@ -11,11 +11,11 @@ class SideBar(QFrame):
         self.setFrameShape(QFrame.StyledPanel)
         self.setStyleSheet(
             """
-				SideBar {
+                SideBar {
                 background-color: palette(midlight);
             }
 
-			"""
+            """
         )
 
         # ===侧边栏内容===
@@ -26,11 +26,11 @@ class SideBar(QFrame):
         font = QFont("Helvetica Neue", 24, QFont.Bold)  # 更具未来感的字体
         name_label.setFont(font)
         name_label.setStyleSheet("""
-		    color: #1E90FF; /* 蓝色字体 */
-		    font-size: 24px;
-		    letter-spacing: 2px; /* 增加字母间距 */
-		    font-family: 'Helvetica Neue', sans-serif;
-		""")
+            color: #1E90FF; /* 蓝色字体 */
+            font-size: 24px;
+            letter-spacing: 2px; /* 增加字母间距 */
+            font-family: 'Helvetica Neue', sans-serif;
+        """)
         layout.addWidget(name_label)
         # 把sidebar撑开
         spacer = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
@@ -39,12 +39,12 @@ class SideBar(QFrame):
         # ===添加功能按钮===
         names = ("Calendar", "Upcoming", "Weekview", "HeatMap","AIChat")
         buttons = [
-			("日历", QStyle.SP_FileDialogListView),
-			("日程", QStyle.SP_FileDialogDetailedView),
-			("周视图", QStyle.SP_FileDialogContentsView),
-			("热力图", QStyle.SP_FileDialogDetailedView),
-			("AI助手", QStyle.SP_FileDialogDetailedView)
-		]
+            ("日历", QStyle.SP_FileDialogListView),
+            ("日程", QStyle.SP_FileDialogDetailedView),
+            ("周视图", QStyle.SP_FileDialogContentsView),
+            ("热力图", QStyle.SP_FileDialogDetailedView),
+            ("AI助手", QStyle.SP_FileDialogDetailedView)
+        ]
 
         for i in range(len(names)):
             btn = QPushButton(f"{buttons[i][0]}")
@@ -61,11 +61,10 @@ class SideBar(QFrame):
                     border-radius: 4px;
                 }
                 QPushButton:pressed {
-					background-color: palette(mid);
-				}
+                    background-color: palette(mid);
+                }
             """)
             set_font(btn, 1)
-
             # 图标
             if i == 0:
                 img_path = os.path.join(os.environ["CHRONOSFLOW_RES"], "calendar.svg")
@@ -103,19 +102,19 @@ class SideBar(QFrame):
         setting_button.setIcon(QIcon(pixmap))
         setting_button.setIconSize(QSize(20, 20))
         setting_button.setStyleSheet("""
-		    QPushButton {
-		        background-color: transparent;
-		        border: none;
-		        padding: 5px;
-		    }
-		    QPushButton:hover {
-		        background-color: palette(light);
-		        border-radius: 5px;
-		    }
-		    QPushButton:pressed {
-		        background-color: palette(mid);
-		    }
-		""")
+            QPushButton {
+                background-color: transparent;
+                border: none;
+                padding: 5px;
+            }
+            QPushButton:hover {
+                background-color: palette(light);
+                border-radius: 5px;
+            }
+            QPushButton:pressed {
+                background-color: palette(mid);
+            }
+        """)
         layout.addWidget(setting_button, alignment=Qt.AlignHCenter)
         setting_button.clicked.connect(self.open_setting)
         self.setLayout(layout)
