@@ -375,7 +375,10 @@ class SettingsPage(QWidget):
                     text-align: center;
                 }
                 QPushButton:hover {
+<<<<<<< HEAD
 
+=======
+>>>>>>> 55ca6c53ecc30a00124bda240d1bb9782609b883
                     border-color: #24C1FF; /*轻微高亮*/
                 }
                 QPushButton:pressed {
