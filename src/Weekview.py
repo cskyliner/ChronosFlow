@@ -485,7 +485,7 @@ class WeekView(QWidget):
         self.events = []
         first_date = self.dates[0].toString("yyyy-MM-dd")
         end_date = self.dates[-1].toString("yyyy-MM-dd")
-        self.events = EventSQLManager.get_events_between_twodays(first_date,end_date)
+        self.events = EventSQLManager.get_activities_between_twodays(first_date,end_date)
         if(len(self.events) == 0):
             log.info(f"Weekview load_schedules week{self.week_num}({first_date}~{end_date}): 没有找到任何活动日程")
         else:
