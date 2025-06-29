@@ -8,23 +8,23 @@
   - [核心功能](#核心功能)
   - [主要功能](#主要功能)
 - [项目模块与类设计](#项目模块与类设计)
-  - [run](#run) 
-  - [main](#main)
-  - [Event](#event)
-  - [EventManager](#eventmanager)
-  - [Notice](#notice)
-  - [MainWindow](#mainwindow)
-  - [Calendar](#calendar)
-  - [Emitter](#emitter)
-  - [CreateEventWindow](#createeventwindowschedule)
-  - [Settings](#settings)
-  - [SideBar](#siderbar)
-  - [common](#common)
-  - [SignalConnect](#signalconnect)
-  - [Tray](#tray)
-  - [FloatingWindow](#floatingwindow)
-  - [course_importer](#course_importer)
-  - [AIChat](#aichat)
+  - [run:项目入口](#run) 
+  - [main:初始化](#main)
+  - [Event:事件类管理](#event)
+  - [EventManager:后端数据处理](#eventmanager)
+  - [Notice:通知](#notice)
+  - [MainWindow:主窗口](#mainwindow)
+  - [Calendar:日历](#calendar)
+  - [Emitter:信号枢纽](#emitter)
+  - [CreateEventWindow:新建事件](#createeventwindowschedule)
+  - [Settings:设置](#settings)
+  - [SideBar:侧边栏](#siderbar)
+  - [common:库总结](#common)
+  - [SignalConnect:信号初始化连接](#signalconnect)
+  - [Tray:程序托盘](#tray)
+  - [FloatingWindow:系统悬浮窗](#floatingwindow)
+  - [course_importer:导入课表](#course_importer)
+  - [AIChat:AI助手](#aichat)
   - [页面设计](#页面设计)
 - [小组成员分工情况](#小组成员分工情况)
 - [项目总结与反思](#项目总结与反思)
@@ -129,24 +129,22 @@ DDL直接使用截止日期和提前通知；
 ## main：
 实现主窗口的创建、信号连接(SignalConnect)、读取logging配置及检测系统类型进行适配
 ## Event: 
-设置不同事件类：
+从BaseEvent出发设置不同事件子类：
 *Activity（日程）*、*DDL（截止日期）*...
 ## EventManager：
 管理事件:\
 EventFactory(增删改事件)\
-对SQL库进行操作:
-+ 搜索事件（关键词或时间范围）
-+ 对接前端
-+ 回传数据
+对SQLite存储的数据进行操作:
++ 搜索查找事件（关键词或时间范围）
++ 接收前端命令
++ 回传数据到前端
 ## Notice:
-QSystemTrayIcon（Qt 托盘通知）任务栏：
-处理UI设计，通知管理，菜单弹出设计\
-plyer.notification（通用桌面通知）：
-任务临近提醒，窗口弹出，后端对接\
-保存通知信息，连接系统时间，按时发送信号给托盘和悬浮窗
+QSystemTrayIcon（Qt 托盘通知）实现任务栏\
+plyer.notification实现通用桌面通知（这里因为macOS和Windows的差别，macOS使用的pync进行系统通知）\
+做到了保存通知信息，连接系统时间，按时发送信号给托盘和悬浮窗，任务临近提醒，系统通知窗口弹出\
 ## MainWindow: 
 主窗口类\
-存储多个主窗口样式(stack)
+存储多个主窗口样式(stack)，初始化各个设置
 ## Calendar:
 月分级日历展示
 使用QGraphicsRectItem组建绘制日历格子，双击后到该日的事件页面，shift键加单击可以多选
@@ -187,7 +185,7 @@ plyer.notification（通用桌面通知）：
 ## course_importer
 导入课表逻辑，借用pandas处理excel文件，通过正则表达式适配PKU春秋季课表，后续对于更广泛课表的支持有待更新
 ## AIChat
-实现了ai日程规划助手，通过结合用户的需求和起止日期之间的日程和DDL，借助用户在设置中提供APIKEY选择的LLM来规划日程，目前仅支持deepseek的openai接口，其他LLM有待更新支持
+实现了ai日程规划助手，通过结合用户的需求和调用后端起止日期之间的日程和DDL数据，借助用户在设置中提供APIKEY选择的LLM规划日程，目前仅支持deepseek的openai接口，我们留有设计空余，其他LLM有待更新支持
 ## 页面美化
 [qss](https://doc.qt.io/qtforpython-6/tutorials/basictutorial/widgetstyling.html#tutorial-widgetstyling)(类似前端css)自定义qtUI格式\
 **图标与背景图案设计**:
@@ -197,13 +195,14 @@ plyer.notification（通用桌面通知）：
 
 **刘昕泽**：MainWindow页面框架与页面切换，创建事件界面，日程界面，日历界面搜索栏，各页面美化，系统深、浅主题适配，壁纸添加
 
-**王思明**：系统托盘，通知提醒，悬浮窗，设置界面，周视图界面
+**王思明**：系统托盘，通知提醒，悬浮窗，设置界面、周视图界面设计
 
-**左若麟**：事件类设计，后端数据处理，日历界面设计，热力图界面设计，课表导入，AI助手开发
+**左若麟**：事件类设计，后端数据处理以及前后端信号链接，日历、热力图界面框架实现，课表导入，AI助手
 
 # 项目总结与反思
 
-本项目受Thing3等日程管理软件启发，也源于我们组内成员在日常学习中对 DDL 管理的迫切需求，而日常免费工具中普遍缺乏对北大课表导入与日程管理功能的兼容支持，因此我们希望开发一款**专为PKUer设计的免费开源日程管理软件**，以“实用、简洁、可视、便捷”为核心设计理念。\
-由于Python丰富第三方库支持和高效开发能力，我们小组最后决定选择Python作为开发语言，采用PySide6进行界面UI设计。作为大一学生，小组成员均为首次尝试GitHub协作开发，尽管遭遇了代码冲突、分支管理和版本控制等诸多挑战，但我们也逐步掌握了开源协作的规范与工作流程\
-当然由于时间、能力所限，项目依然存在许多不足。有一些功能，比如日记，任务分级规划等没能实现；界面设计也尚显简陋，未能打磨精细，仍有较大提升空间。不过在开发过程中，我们发现了团队协作相比于个人开发的优势，通过向LLM的虚心请教和与bug的斗智斗勇，我们对于复杂结构与逻辑有了更好的把握能力，而且对于这种后端数据存储加前端可视展示的程序有了更深入的了解。\
-我们欢迎用户与开发者通过 Issue 提出反馈与建议，以助力项目不断完善、持续进化。
+本项目受Thing3等日程管理软件启发，也源于我们组内成员在日常学习中对DDL管理的迫切需求。而日常市场免费工具中难以兼容北大课表导入与个性化日程管理，因此我们希望开发一款**专为PKUer设计的免费开源日程管理软件**，以“**实用、简洁、可视、便捷**”为核心设计理念。\
+考虑到Python丰富第三方库支持和高效开发能力，我们小组决定选择**Python**作为开发语言，采用**PySide6**进行界面UI设计。作为大一学生，小组成员均为首次尝试GitHub多人协作开发，尽管遭遇了**代码冲突、分支管理、commit规范、环境冲突和版本控制**等诸多挑战，但我们也逐步掌握了规范的协作流程与开源实践方法。\
+当然由于时间、能力所限，项目依然存在许多不足。部分功能(如日记、任务分级规划)尚未实现；界面设计也尚显简陋，缺乏统一视觉美学优化打磨；早期开发阶段对Git的和前后端衔接部分理解不足导致进展较慢，而设计重心又过于注重实际和复现，缺少创新性与独特性，后续陆续添加了一些新功能，但是由于时间仓促，新功能的完善程度还不高，比如热力图的可交互性不强，同时多个功能之间的协同有待提高。\
+在开发过程中，我们发现了团队协作的优势。通过**前后端分离设计**，**组件式开发**，**明确分工定期PR**，实现了“1+1+1>3”的效果；在向LLM的虚心请教和与bug的斗智斗勇的过程中，尤其是开发调用系统通知进行即时提醒和后台运行的模块，我们对于复杂结构与逻辑有了更好的把握能力，并且对于这种后端数据存储加前端可视展示的程序有了更深入的了解；我们也对**SQLite本地存储结构、pandas数据处理、QSS样式美化、Qt信号槽机制**等核心技术有了深入理解。\
+未来我们计划继续打磨界面交互体验、强化功能协同性，并探索引入更多AI能力，同时也欢迎用户与开发者通过Issue和PR提出反馈与建议，以助力项目不断完善、迭代优化。
