@@ -32,13 +32,13 @@ class ScheduleBlockItem(QGraphicsRectItem,QObject):
         self.event:ActivityEvent = event
         self.view = view
 
-        self._bg_color = QColor("#DBE6D9")  # 苔藓灰绿
-        self._border_color = QColor("#C5D1C3")  # 边框色
+        self._border_color = QColor("#DDAE02")  
         self._border_width = 1.0
 
         palette = QApplication.palette()
         self.background_color = palette.color(QPalette.Base)
-        self.text_color = QColor("#000000")
+        self._bg_color = palette.color(QPalette.Base)
+        self.text_color = palette.color(QPalette.Text)
         self.light_color = palette.color(QPalette.Highlight)
 
         self.delete_button:DeleteButton = DeleteButton(parent=self.view.viewport())
@@ -70,7 +70,7 @@ class ScheduleBlockItem(QGraphicsRectItem,QObject):
 				padding-top: 1px;
 			}
 		""")
-        
+
         self.delete_button.bind_event(self.event)
         self.delete_button.clicked.connect(self.on_delete_clicked)
         self.delete_button.hide()
@@ -118,7 +118,7 @@ class ScheduleBlockItem(QGraphicsRectItem,QObject):
 
     def mousePressEvent(self, event):
         self.clicked.emit(self.event)
-        
+
     def mouseDoubleClickEvent(self, event):
         self.double_clicked.emit(self.event)
 
