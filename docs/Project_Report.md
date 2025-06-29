@@ -141,7 +141,7 @@ EventFactory(增删改事件)\
 ## Notice:
 QSystemTrayIcon（Qt 托盘通知）实现任务栏\
 plyer.notification实现通用桌面通知（这里因为macOS和Windows的差别，macOS使用的pync进行系统通知）\
-做到了保存通知信息，连接系统时间，按时发送信号给托盘和悬浮窗，任务临近提醒，系统通知窗口弹出\
+做到了保存通知信息，连接系统时间，按时发送信号给托盘和悬浮窗，任务临近提醒，系统通知窗口弹出
 ## MainWindow: 
 主窗口类\
 存储多个主窗口样式(stack)，初始化各个设置
