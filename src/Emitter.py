@@ -16,6 +16,7 @@ class Emitter(QObject):
 	search_signal: Signal = Signal(str)  # 发送sidebar搜索文本框的信息
 	modify_event_signal: Signal = Signal(object)  # 发送修改事件的信号
 	storage_path_signal: Signal = Signal(object)  # 发送存储路径的信号
+	send_API_key_signal: Signal = Signal(str) 	# 发送设置API密钥的信号
 	school_timetable_path_signal:Signal = Signal(object) #发送课表的信号
 	view_and_edit_schedule_signal: Signal = Signal(object)  # 发送查看单条日程信号
 	update_upcoming_event_signal: Signal = Signal(object)  # 向后端发送更新upcoming的回调信号
@@ -27,7 +28,6 @@ class Emitter(QObject):
 	backend_data_to_frontend_signal: Signal = Signal(object)  # 向前端发送后端数据的信号
 	notice_signal: Signal = Signal(object)  # 向通知栏发送最新数据
 	latest_event_signal: Signal = Signal(object)  # 处理前端通知更新最新数据
-
 	@staticmethod
 	def instance() -> "Emitter":
 		if Emitter._instance is None:
@@ -55,7 +55,11 @@ class Emitter(QObject):
 		"""data[0]是一个BaseEvent，储存显示信息；data[1]是告诉navigate_to的信号，再传给后端确保编辑某日程
 		之后原来的这条日程被覆盖"""
 		self.view_and_edit_schedule_signal.emit(data)
-
+	
+	def send_API_key(self,api):
+		"""发送设置中的API文件"""
+		self.send_API_key_signal.emit(api)
+		
 	# ===转发数据函数====
 
 	def send_backend_data_to_frontend_signal(self, data):

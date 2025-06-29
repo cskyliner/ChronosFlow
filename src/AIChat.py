@@ -9,7 +9,8 @@ class LLMAssistantPage(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.init_ui()
-        self.api_key = os.getenv("OPENAI_API_KEY")
+        self.LLM = None
+        self.api_key = None
 
     def init_ui(self):
         self.setWindowTitle("AI 日程助手")
@@ -160,8 +161,8 @@ class LLMAssistantPage(QWidget):
 
     def query_llm(self):
         prompt = self.prompt_edit.toPlainText().strip()
-        if not self.api_key:
-            QMessageBox.critical(self, "API Key Error", "OPENAI_API_KEY not set in environment variables.")
+        if not self.api_key or self.LLM is None:
+            QMessageBox.critical(self, "API Key Error", "还未设置LLM模型")
             return
         if not prompt:
             QMessageBox.warning(self, "输入错误", "Prompt 不能为空")
@@ -171,16 +172,23 @@ class LLMAssistantPage(QWidget):
         events:list[BaseEvent] = EventSQLManager.get_events_between_twodays(start_date,end_date)
         full_prompt = self.build_prompt(events,start_date,end_date,prompt)
         log.info(f"用户需求为{full_prompt}")
+        log.info(f"当前API为{self.api_key}")
         try:
-            # 此处临时设置为deepseek，以后可以改进为其他模型，这里借鉴了deepseek官方文档(https://api-docs.deepseek.com/zh-cn/)
+            # 此处仅支持deepseek，以后可以改进为其他模型，这里借鉴了deepseek官方文档(https://api-docs.deepseek.com/zh-cn/)
+            if self.LLM == "deepseek":
+                self.base_url = "https://api.deepseek.com"
+                self.model = "deepseek-chat"
+            else:
+                self.base_url = ""
+                self.model = ""
             client = OpenAI(
                 api_key=self.api_key,
-                base_url="https://api.deepseek.com"
+                base_url=self.base_url
             )
             self.response_view.clear()
 
             stream = client.chat.completions.create(
-                model="deepseek-chat",
+                model=self.model,
                 messages=[
                     {"role": "system", "content": "你是一个智能时间管理助手，会根据用户的日程和DDL以及用户提出的需求，生成合理的日程规划"},
                     {"role": "user", "content": full_prompt}
