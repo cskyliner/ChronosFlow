@@ -32,7 +32,7 @@ class ScheduleBlockItem(QGraphicsRectItem,QObject):
         self.event:ActivityEvent = event
         self.view = view
 
-        self._border_color = QColor("#E7CC00")  
+        self._border_color = QColor("#DDAE02")  
         self._border_width = 1.0
 
         palette = QApplication.palette()
