@@ -103,7 +103,6 @@ class MainWindow(QMainWindow):
 		self.set_API_Key(self.setting.api)
 		# 设置API密钥信号和保存设置的连接
 		Emitter.instance().send_API_key_signal.connect(self.set_API_Key)
-
 		# 安装事件过滤器，处理Calendar页面的侧边栏的收放
 		self.main_stack.installEventFilter(self)
 		self.search_column.installEventFilter(self)
