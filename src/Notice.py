@@ -134,7 +134,7 @@ class NotificationWidget(QFrame):
 
 	def _start_close_timer(self):
 		"""8秒后自动关闭"""
-		QTimer.singleShot(8000, self.close)
+		QTimer.singleShot(8000, self.deleteLater)
 
 def safe(s: str) -> str:
     return s.replace('"', '\\"').replace("\n", " ")

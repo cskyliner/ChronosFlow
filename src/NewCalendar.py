@@ -474,10 +474,8 @@ class CalendarView(QWidget):
 		menu = QMenu()
 		if len(selected_dates) == 1:
 			menu.addAction("查看当天日程", lambda: self.view_single_day.emit(date))
-			# TODO:
-			menu.addAction("删除该日全部事件", lambda: self.delete_events_for_day(selected_dates[0]))
+			menu.addAction("删除该日全部事件", lambda: self.sent_delete_events_for_day(selected_dates[0]))
 		else:
-			# TODO:
 			menu.addAction(f"删除所选 {len(selected_dates)} 天事件", lambda: self.delete_multiple_days(selected_dates))
 
 		menu.exec(pos)
@@ -487,3 +485,33 @@ class CalendarView(QWidget):
 		self.handle_page_changed(self.current_year, self.current_month)
 		self.draw_month(self.current_year, self.current_month)
 		self.update_title()
+	
+	def delete_multiple_days(self,dates:list[QDate]):
+		for date in dates:
+			self.sent_delete_events_for_day(date)
+				
+	def sent_delete_events_for_day(self,date:QDate):
+		# 连接接收信号
+		Emitter.instance().backend_data_to_frontend_signal.connect(self.delete_events_for_day)
+		# 发送请求信号
+		Emitter.instance().request_update_specific_date_upcoming_event_signal(date)
+		# 断开接收信号连接
+		Emitter.instance().backend_data_to_frontend_signal.disconnect(self.delete_events_for_day)
+	
+	def delete_events_for_day(self,events:tuple[BaseEvent]):
+		for event in events:
+			self.delete_one_item(event)
+		self.refresh()
+
+	def delete_one_item(self, event: BaseEvent):
+		"""
+		删除事件
+		"""
+		if isinstance(event, ActivityEvent) and event.datetime is None:
+			event.datetime = event.start_date + " " + event.start_time
+			log.info(f"删除ActivityEvent：{event.title} event.datetime:{event.datetime}")
+		elif isinstance(event, ActivityEvent):
+			log.info(f"删除ActivityEvent：{event.title} event.datetime:{event.datetime}")
+		date = event.datetime[:10]
+		log.info(f"删除date = {date}")
+		Emitter.instance().send_delete_event_signal(event.id, event.table_name())

@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (QApplication, QStyleFactory, QMainWindow, QWidget
           					QGraphicsView, QGraphicsScene, QGraphicsRectItem, QSplitter, QGraphicsLineItem, QGraphicsItemGroup,QToolTip,QGraphicsItem,QDateEdit)
 from PySide6.QtCore import (QPropertyAnimation, QEasingCurve, Qt, QDate, QTime, QDateTime, Signal, Slot, QSize, QObject,
 							QPoint, QTimer, QEvent, QPointF, QPersistentModelIndex, QRect, QModelIndex, QFile, QRectF,
-							QFileInfo, QLineF)
+							QFileInfo, QLineF,QCoreApplication)
 from PySide6.QtGui import (QIcon, QAction, QPixmap, QColor, QLinearGradient, QPainter, QMouseEvent,
 						   QPainter, QFontMetrics, QTextCharFormat, QPen, QCursor, QFont, QPalette, QBrush,
 						   QImageReader,QShortcut,QKeySequence, QTextOption)
