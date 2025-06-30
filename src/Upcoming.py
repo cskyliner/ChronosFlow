@@ -1,6 +1,7 @@
 from src.common import *
 from src.Emitter import Emitter
 from src.events.Event import *
+from src.MainWindow import *
 from src.FontSetting import set_font
 
 log = logging.getLogger("Upcoming")
@@ -416,7 +417,7 @@ class Upcoming(QListWidget):
 		"""从后端加载特定日期的数据"""
 		if data is not None and len(data) > 0:
 			log.info(f"get_specific_date_data:接收数据成功，共接收 {len(data)} 条数据：\n" +
-					 "\n".join(f"- {event.title} @ {event.datetime}" for event in data))
+					"\n".join(f"- {event.title} @ {event.datetime}" for event in data))
 			self.events_used_to_update = data
 			self.event_num += len(data)
 		else:
@@ -434,7 +435,7 @@ class Upcoming(QListWidget):
 		"""从后端加载数据"""
 		if data is not None and len(data) > 0:
 			log.info(f"接收数据成功，共接收 {len(data)} 条数据：\n" +
-					 "\n".join(f"- {event.title} @ {event.datetime}" for event in data))
+					"\n".join(f"- {event.title} @ {event.datetime}" for event in data))
 			self.events_used_to_update = data
 			self.event_num += len(data)
 		else:
