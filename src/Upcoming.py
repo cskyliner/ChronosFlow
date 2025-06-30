@@ -368,7 +368,6 @@ class Upcoming(QListWidget):
 				log.info("正在加载数据，请稍等……")
 			elif self.no_more_events:
 				log.info("没有更多数据了，停止加载……")
-				self.notify_no_events()
 			else:
 				log.error("未知错误，无法加载数据")
 
