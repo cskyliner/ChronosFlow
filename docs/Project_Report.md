@@ -4,7 +4,6 @@
   - [版本控制与协作](#版本控制与协作)
     - [分支策略](#分支策略)
     - [commit规范](#commit规范)
-  - [类似开源项目](#类似开源项目)
   - [核心功能](#核心功能)
   - [主要功能](#主要功能)
 - [项目模块与类设计](#项目模块与类设计)
@@ -57,14 +56,7 @@ Python3.10,
 |docs| 修改文档|
 |style| 格式调整|
 |refactor|重构代码（无功能影响）|
-## 类似开源项目：
-往年程设：\
-[MindfulMeadow](https://github.com/MindfulMeadow-Dev-Team/MindfulMeadow),
-[MindFlow](https://github.com/Oscarhouhyk/MindFlow),
-[Qt_taskorganizer](https://github.com/MethierAdde/Qt_taskorganizer)\
-开源项目：\
-[Beaverhabits](https://github.com/daya0576/beaverhabits),
-[Reminders](https://github.com/remindersdevs/Reminders?tab=readme-ov-file)
+
 ## 核心功能：
 	日程管理，时间记录，任务规划
 
@@ -113,7 +105,7 @@ DDL直接使用截止日期和提前通知；
 
 8. **AI日程规划助手**：  
 根据用户本地数据，调用LLM进行日程规划  
-<img src="AI助手展示.png" alt="AI Assistant" width="350"/>
+<img src="AIChat.png" alt="AI Assistant" width="350"/>
 
 9. **设置**：  
 可以指定设置的数据的存储目录、选择壁纸、输入密钥、导入课表  
