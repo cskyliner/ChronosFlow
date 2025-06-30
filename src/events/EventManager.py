@@ -1,11 +1,9 @@
-import logging
 import os
 import sqlite3
 from calendar import monthrange
 from common import *
-from Emitter import Emitter
-from events.Event import *
-# from ioporter.course_importer import CourseScheduleImporter
+from src.Emitter import Emitter
+from src.events.Event import *
 import json
 
 log = logging.getLogger(__name__)
@@ -49,6 +47,10 @@ class EventFactory:
 						Emitter.instance().send_notice_signal((n_event,"create"))
 					elif n_event.datetime < EventSQLManager.latest_ddlevent.datetime:
 						log.info(f"EventFactory.create:添加新事件比最新事件更早，更新最新事件为新事件:title：{n_event.title}; notes:{n_event.notes}")
+						EventSQLManager.latest_ddlevent = n_event
+						Emitter.instance().send_notice_signal((n_event,"update"))
+					elif n_event.datetime > now_time >= EventSQLManager.latest_ddlevent.datetime:
+						log.info(f"EventFactory.create:旧事件已经失效，更新最新事件为新事件:title：{n_event.title}; notes:{n_event.notes}")
 						EventSQLManager.latest_ddlevent = n_event
 						Emitter.instance().send_notice_signal((n_event,"update"))
 					else:
@@ -102,7 +104,8 @@ class EventSQLManager:
 		now_time = QDateTime.currentDateTime()
 		now_time = now_time.toString("yyyy-MM-dd HH:mm")
 		cls.latest_ddlevent = cls.get_latest_ddlevent(now_time)
-		log.info(f"数据库初始化成功，最新ddl事件：{cls.latest_ddlevent.title}")
+		if cls.latest_ddlevent is not None:
+			log.info(f"数据库初始化成功，最新ddl事件：{cls.latest_ddlevent.title}")
 
 	# ===管理全局id表===
 	@classmethod
@@ -238,13 +241,13 @@ class EventSQLManager:
 		return events
 	
 	@classmethod
-	def get_events_between_twodays(cls, start_date:str, end_date:str) -> list[BaseEvent]:
+	def get_activities_between_twodays(cls, start_date:str, end_date:str) -> list[BaseEvent]:
 		"""
-		获取两个时间点之间的所有日程（暂时不加ddlevent)
+		获取两个时间点之间的所有日程
 		"""
 		# 验证输入
 		if start_date > end_date:
-			log.warning(f"get_events_between_twodays:无效的起始日期输入: {start_date}-{end_date}")
+			log.warning(f"get_activities_between_twodays:无效的起始日期输入: {start_date}-{end_date}")
 			return []
 		# 构造 SQL 查询：同时匹配年份和月份
 
@@ -278,6 +281,62 @@ class EventSQLManager:
 				log.error(f"get_events_in_month:解析activity事件失败（ID={row[0]}）: {e}")
 
 		log.info(f"get_events_in_month:找到 {len(events)} 个事件（{start_date}-{end_date}）")
+		return events
+	
+	@classmethod
+	def get_events_between_twodays(cls, start_date: str, end_date: str) -> list[BaseEvent]:
+		"""
+		获取两个时间点之间的所有日程（包含DDL和Activity）
+		"""
+		if start_date > end_date:
+			log.warning(f"get_events_between_twodays: 无效的日期范围: {start_date} - {end_date}")
+			return []
+
+		events: list[BaseEvent] = []
+
+		# 查询DDL
+		ddl_query = f"""
+			SELECT * FROM ddlevents 
+			WHERE date(datetime) >= ? AND date(datetime) <= ?
+			ORDER BY datetime ASC
+		"""
+		try:
+			cls.cursor.execute(ddl_query, (start_date, end_date))
+			ddl_rows = cls.cursor.fetchall()
+			for row in ddl_rows:
+				try:
+					event: DDLEvent = EventFactory.create(None, "DDL", False, *row[1:])
+					if event is not None:
+						event.id = row[0]
+						events.append(event)
+				except Exception as e:
+					log.error(f"get_events_between_twodays: 解析 DDL 事件失败 (ID={row[0]}): {e}")
+		except Exception as e:
+			log.error(f"get_events_between_twodays: 查询 DDL 事件失败: {e}")
+
+		# 查询Activity事件
+		activity_query = f"""
+			SELECT * FROM activityevents
+			WHERE date(start_date) <= ? AND date(end_date) >= ?
+			ORDER BY date(start_date) ASC, time(start_time) ASC
+		"""
+		try:
+			cls.cursor.execute(activity_query, (end_date, start_date))
+			activity_rows = cls.cursor.fetchall()
+			for row in activity_rows:
+				try:
+					paras = list(row[1:])
+					paras[-1] = json.loads(paras[-1])  # 处理 repeat_day
+					event: ActivityEvent = EventFactory.create(None, "Activity", False, *paras)
+					if event is not None:
+						event.id = row[0]
+						events += event.expand(start_date, end_date)
+				except Exception as e:
+					log.error(f"get_events_between_twodays: 解析 Activity 事件失败 (ID={row[0]}): {e}")
+		except Exception as e:
+			log.error(f"get_events_between_twodays: 查询 Activity 事件失败: {e}")
+
+		log.info(f"get_events_between_twodays: 共找到 {len(events)} 个事件（{start_date} ~ {end_date}）")
 		return events
 	
 	@classmethod

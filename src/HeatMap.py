@@ -1,7 +1,7 @@
-from common import *
+from src.common import *
 from calendar import monthrange
-from events.Event import *
-from events.EventManager import EventSQLManager
+from src.events.Event import *
+from src.events.EventManager import EventSQLManager
 
 LIGHT_THEME_COLORS = [
     "#eeeeee", "#c6e48b", "#7bc96f", "#239a3b", "#196127"
@@ -232,6 +232,7 @@ class YearHeatMapView(QWidget):
 
     def refresh(self,year:int):
         self.year = year
+        self.data = {}
         self.get_data()
         self.build_scene()
 

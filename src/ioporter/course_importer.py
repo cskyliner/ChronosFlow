@@ -1,9 +1,8 @@
 from PySide6.QtCore import QDate
-from events.Event import *
-from events.EventManager import *
+from src.events.Event import *
+from src.events.EventManager import *
 import pandas as pd
 import re
-import logging
 log = logging.getLogger(__name__)
 class CourseScheduleImporter:
     in_path:str = None

@@ -1,20 +1,20 @@
-from common import *
-from SideBar import SideBar
-from NewCalendar import CalendarView
+from src.common import *
+from src.SideBar import SideBar
+from src.NewCalendar import CalendarView
 from functools import partial
-from CreateEventWindow import Schedule
-from Emitter import Emitter
-from Settings import SettingsPage
-from Tray import Tray
-from FloatingWindow import FloatingWindow
-from Notice import Notice
-from Upcoming import Upcoming, FloatingButton
-from Weekview import WeekView
-from Weekview import WeekView
-from FontSetting import set_font
-from HeatMap import YearHeatMapView
-from events.Event import *
-from events.EventManager import EventSQLManager
+from src.CreateEventWindow import Schedule
+from src.Emitter import Emitter
+from src.Settings import SettingsPage
+from src.Tray import Tray
+from src.FloatingWindow import FloatingWindow
+from src.Notice import Notice
+from src.Upcoming import Upcoming, FloatingButton
+from src.Weekview import WeekView
+from src.FontSetting import set_font
+from src.HeatMap import YearHeatMapView
+from src.events.Event import *
+from src.events.EventManager import EventSQLManager
+from src.AIChat import LLMAssistantPage
 import re
 log = logging.getLogger(__name__)
 
@@ -79,7 +79,9 @@ class MainWindow(QMainWindow):
 		self.setup_create_event_window()  # 日程填写窗口
 		self.setup_upcoming_window()  # 日程展示窗口
 		self.setup_week_view_window() # 周视图窗口
+		self.setup_week_view_window() # 周视图窗口
 		self.setup_heatmap_window() # 热力图窗口
+		self.setup_aichat_window() # ai助手窗口
 		Emitter.instance().delete_activity_event_signal.connect(self.week_view.update_view_geometry)
 		self.navigate_to("Calendar", self.main_stack)
 		# 初始化通知系统
@@ -97,13 +99,16 @@ class MainWindow(QMainWindow):
 		# 设置壁纸
 		self.set_wallpaper(self.setting.wallpaper_path)
 
+		# 设置APIKEY
+		self.set_API_Key(self.setting.api)
+		# 设置API密钥信号和保存设置的连接
+		Emitter.instance().send_API_key_signal.connect(self.set_API_Key)
+
 		# 安装事件过滤器，处理Calendar页面的侧边栏的收放
 		self.main_stack.installEventFilter(self)
 		self.search_column.installEventFilter(self)
 		self.search_edit.installEventFilter(self)
 
-	# 或许可以有
-	# self.setWindowIcon(QIcon(self._get_icon_path()))
 	# === App 菜单栏（仅 macOS 显示）===
 	def show_about_dialog(self):
 		QMessageBox.about(self, "About ChronosFlow", "This is ChronosFlow.\nA beautiful task planner.")
@@ -123,25 +128,27 @@ class MainWindow(QMainWindow):
 		# 添加'<'按钮
 		sidebar_btn = QPushButton("")
 		sidebar_btn.setFixedSize(35, 30)
-		sidebar_btn.setIcon(QIcon("pic/sidebar1.png"))
+		icon_path = os.path.join(os.environ["CHRONOSFLOW_RES"], "sidebar1.png")
+		pixmap = QPixmap(icon_path)
+		sidebar_btn.setIcon(QIcon(pixmap))
 		sidebar_btn.setIconSize(QSize(24, 24))
 		sidebar_btn.setStyleSheet("""
-				                QPushButton {
-				                    background-color: transparent;
-				                    border: none;
-				                    border-radius: 5px;
-				                    padding: 5;
-		    						margin: 0;
-				                    text-align: center;
-				                    color: palette(text);
-				                }
-				                QPushButton:hover {
-				                    background-color: palette(midlight);
-				                }
-				                QPushButton:pressed {
+								QPushButton {
+									background-color: transparent;
+									border: none;
+									border-radius: 5px;
+									padding: 5;
+									margin: 0;
+									text-align: center;
+									color: palette(text);
+								}
+								QPushButton:hover {
+									background-color: palette(midlight);
+								}
+								QPushButton:pressed {
 									background-color: palette(mid);
 								}
-				            """)
+							""")
 		set_font(sidebar_btn, 4)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
@@ -150,18 +157,18 @@ class MainWindow(QMainWindow):
 		self.search_edit.setPlaceholderText("搜索")
 		set_font(self.search_edit)
 		self.search_edit.setStyleSheet("""
-								    QLineEdit {
-								    background: transparent;
-						            padding: 8px;
-					                border: 1px solid #1E90FF;
-					                border-top-left-radius: 19px;     /* 左上角 */
-    								border-top-right-radius: 0px;    /* 右上角 */
-    								border-bottom-left-radius: 19px;  /* 左下角 */
-    								border-bottom-right-radius: 0px; /* 右下角 */
-    								border-right: none;
-					                font-size: 14px;
-						            }
-							    """)
+									QLineEdit {
+									background: transparent;
+									padding: 8px;
+									border: 1px solid #1E90FF;
+									border-top-left-radius: 19px;     /* 左上角 */
+									border-top-right-radius: 0px;    /* 右上角 */
+									border-bottom-left-radius: 19px;  /* 左下角 */
+									border-bottom-right-radius: 0px; /* 右下角 */
+									border-right: none;
+									font-size: 14px;
+									}
+								""")
 		self.search_edit.setMinimumWidth(150)
 		self.search_edit.setFixedHeight(38)
 		# 回车触发搜索功能
@@ -172,19 +179,19 @@ class MainWindow(QMainWindow):
 		btn.setIcon(QIcon.fromTheme("system-search"))
 		btn.setStyleSheet("""
 					QPushButton {
-		                background: transparent;
-		                border: 1px solid #1E90FF;
-		                border-top-left-radius: 0px;     /* 左上角 */
-    					border-top-right-radius: 19px;    /* 右上角 */
-    					border-bottom-left-radius: 0px;  /* 左下角 */
-    					border-bottom-right-radius: 19px; /* 右下角 */
-		                padding: 25px;
-		                text-align: center;
-		            }
-		            QPushButton:hover {
-		                border-color: #24C1FF;
-		            }
-		            QPushButton:pressed {
+						background: transparent;
+						border: 1px solid #1E90FF;
+						border-top-left-radius: 0px;     /* 左上角 */
+						border-top-right-radius: 19px;    /* 右上角 */
+						border-bottom-left-radius: 0px;  /* 左下角 */
+						border-bottom-right-radius: 19px; /* 右下角 */
+						padding: 25px;
+						text-align: center;
+					}
+					QPushButton:hover {
+						border-color: #24C1FF;
+					}
+					QPushButton:pressed {
 						border-color: #42BCFF;
 					}
 				""")
@@ -242,25 +249,27 @@ class MainWindow(QMainWindow):
 
 		sidebar_btn = QPushButton("")
 		sidebar_btn.setFixedSize(35, 30)
-		sidebar_btn.setIcon(QIcon("pic/sidebar1.png"))
+		icon_path = os.path.join(os.environ["CHRONOSFLOW_RES"], "sidebar1.png")
+		pixmap = QPixmap(icon_path)
+		sidebar_btn.setIcon(QIcon(pixmap))
 		sidebar_btn.setIconSize(QSize(24, 24))
 		sidebar_btn.setStyleSheet("""
-				                QPushButton {
-				                    background-color: transparent;
-				                    border: none;
-				                    border-radius: 5px;
-				                    padding: 5;
-		    						margin: 0;
-				                    text-align: center;
-				                    color: palette(text);
-				                }
-				                QPushButton:hover {
-				                    background-color: palette(midlight);
-				                }
-				                QPushButton:pressed {
+								QPushButton {
+									background-color: transparent;
+									border: none;
+									border-radius: 5px;
+									padding: 5;
+									margin: 0;
+									text-align: center;
+									color: palette(text);
+								}
+								QPushButton:hover {
+									background-color: palette(midlight);
+								}
+								QPushButton:pressed {
 									background-color: palette(mid);
 								}
-				            """)
+							""")
 		set_font(sidebar_btn, 4)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
@@ -268,21 +277,21 @@ class MainWindow(QMainWindow):
 		return_btn = QPushButton("✕")
 		return_btn.setFixedSize(35, 30)
 		return_btn.setStyleSheet("""
-				                QPushButton {
-				                    background-color: transparent;
-				                    border-radius: 5px;
-				                    padding: 5;
-		    						margin: 0;
-				                    text-align: center;
-				                    color: palette(text);
-				                }
-				                QPushButton:hover {
-				                	color: #E61B23;
-				                }
-				                QPushButton:pressed {
+								QPushButton {
+									background-color: transparent;
+									border-radius: 5px;
+									padding: 5;
+									margin: 0;
+									text-align: center;
+									color: palette(text);
+								}
+								QPushButton:hover {
+									color: #E61B23;
+								}
+								QPushButton:pressed {
 									color: #B8281C;
 								}
-				            """)
+							""")
 		set_font(return_btn, 1)
 		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
 
@@ -309,25 +318,27 @@ class MainWindow(QMainWindow):
 		# 侧边栏切换按钮
 		sidebar_btn = QPushButton("")
 		sidebar_btn.setFixedSize(35, 30)
-		sidebar_btn.setIcon(QIcon("pic/sidebar1.png"))
+		icon_path = os.path.join(os.environ["CHRONOSFLOW_RES"], "sidebar1.png")
+		pixmap = QPixmap(icon_path)
+		sidebar_btn.setIcon(QIcon(pixmap))
 		sidebar_btn.setIconSize(QSize(24, 24))
 		sidebar_btn.setStyleSheet("""
-				                QPushButton {
-				                    background-color: transparent;
-				                    border: none;
-				                    border-radius: 5px;
-				                    padding: 5;
-		    						margin: 0;
-				                    text-align: center;
-				                    color: palette(text);
-				                }
-				                QPushButton:hover {
-				                    background-color: palette(midlight);
-				                }
-				                QPushButton:pressed {
+								QPushButton {
+									background-color: transparent;
+									border: none;
+									border-radius: 5px;
+									padding: 5;
+									margin: 0;
+									text-align: center;
+									color: palette(text);
+								}
+								QPushButton:hover {
+									background-color: palette(midlight);
+								}
+								QPushButton:pressed {
 									background-color: palette(mid);
 								}
-				            """)
+							""")
 		set_font(sidebar_btn, 4)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
@@ -335,21 +346,21 @@ class MainWindow(QMainWindow):
 		return_btn = QPushButton("✕")
 		return_btn.setFixedSize(35, 30)
 		return_btn.setStyleSheet("""
-				                QPushButton {
-				                    background-color: transparent;
-				                    border-radius: 5px;
-				                    padding: 5;
-		    						margin: 0;
-				                    text-align: center;
-				                    color: palette(text);
-				                }
-				                QPushButton:hover {
-				                	color: #E61B23;
-				                }
-				                QPushButton:pressed {
+								QPushButton {
+									background-color: transparent;
+									border-radius: 5px;
+									padding: 5;
+									margin: 0;
+									text-align: center;
+									color: palette(text);
+								}
+								QPushButton:hover {
+									color: #E61B23;
+								}
+								QPushButton:pressed {
 									color: #B8281C;
 								}
-				            """)
+							""")
 		set_font(return_btn, 1)
 		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
 
@@ -384,25 +395,27 @@ class MainWindow(QMainWindow):
 		# 侧边栏切换按钮
 		sidebar_btn = QPushButton("")
 		sidebar_btn.setFixedSize(35, 30)
-		sidebar_btn.setIcon(QIcon("pic/sidebar1.png"))
+		icon_path = os.path.join(os.environ["CHRONOSFLOW_RES"], "sidebar1.png")
+		pixmap = QPixmap(icon_path)
+		sidebar_btn.setIcon(QIcon(pixmap))
 		sidebar_btn.setIconSize(QSize(24, 24))
 		sidebar_btn.setStyleSheet("""
-				                QPushButton {
-				                    background-color: transparent;
-				                    border: none;
-				                    border-radius: 5px;
-				                    padding: 5;
-		    						margin: 0;
-				                    text-align: center;
-				                    color: palette(text);
-				                }
-				                QPushButton:hover {
-				                    background-color: palette(midlight);
-				                }
-				                QPushButton:pressed {
+								QPushButton {
+									background-color: transparent;
+									border: none;
+									border-radius: 5px;
+									padding: 5;
+									margin: 0;
+									text-align: center;
+									color: palette(text);
+								}
+								QPushButton:hover {
+									background-color: palette(midlight);
+								}
+								QPushButton:pressed {
 									background-color: palette(mid);
 								}
-				            """)
+							""")
 		set_font(sidebar_btn, 4)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
@@ -410,21 +423,21 @@ class MainWindow(QMainWindow):
 		return_btn = QPushButton("✕")
 		return_btn.setFixedSize(35, 30)
 		return_btn.setStyleSheet("""
-				                QPushButton {
-				                    background-color: transparent;
-				                    border-radius: 5px;
-				                    padding: 5;
-		    						margin: 0;
-				                    text-align: center;
-				                    color: palette(text);
-				                }
-				                QPushButton:hover {
-				                	color: #E61B23;
-				                }
-				                QPushButton:pressed {
+								QPushButton {
+									background-color: transparent;
+									border-radius: 5px;
+									padding: 5;
+									margin: 0;
+									text-align: center;
+									color: palette(text);
+								}
+								QPushButton:hover {
+									color: #E61B23;
+								}
+								QPushButton:pressed {
 									color: #B8281C;
 								}
-				            """)
+							""")
 		set_font(return_btn, 1)
 		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
 
@@ -434,6 +447,75 @@ class MainWindow(QMainWindow):
 		self.heatmap_view = YearHeatMapView(year=2025)	# 这里年份暂时这样处理
 		heatmap_layout.addWidget(self.heatmap_view)
 		self.add_page(self.main_stack, self.heatmap_window, "HeatMap")
+
+	def setup_aichat_window(self):
+		self.aichat_window = QWidget()
+		# 内容区域布局
+		aichat_layout = QVBoxLayout()
+		aichat_layout.setSpacing(0)
+		aichat_layout.setContentsMargins(20, 5, 20, 20)
+		self.aichat_window.setLayout(aichat_layout)
+
+		# 顶部按钮布局
+		btn_layout = QHBoxLayout()
+		btn_layout.setContentsMargins(0, 0, 0, 0)  # 移除边距
+		aichat_layout.addLayout(btn_layout)
+
+		# 侧边栏切换按钮
+		sidebar_btn = QPushButton("")
+		sidebar_btn.setFixedSize(35, 30)
+		icon_path = os.path.join(os.environ["CHRONOSFLOW_RES"], "sidebar1.png")
+		pixmap = QPixmap(icon_path)
+		sidebar_btn.setIcon(QIcon(pixmap))
+		sidebar_btn.setIconSize(QSize(24, 24))
+		sidebar_btn.setStyleSheet("""
+								QPushButton {
+									background-color: transparent;
+									border: none;
+									border-radius: 5px;
+									padding: 5;
+									margin: 0;
+									text-align: center;
+									color: palette(text);
+								}
+								QPushButton:hover {
+									background-color: palette(midlight);
+								}
+								QPushButton:pressed {
+									background-color: palette(mid);
+								}
+							""")
+		set_font(sidebar_btn, 4)
+		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
+
+		# 返回按钮，回到calendar
+		return_btn = QPushButton("✕")
+		return_btn.setFixedSize(35, 30)
+		return_btn.setStyleSheet("""
+								QPushButton {
+									background-color: transparent;
+									border-radius: 5px;
+									padding: 5;
+									margin: 0;
+									text-align: center;
+									color: palette(text);
+								}
+								QPushButton:hover {
+									color: #E61B23;
+								}
+								QPushButton:pressed {
+									color: #B8281C;
+								}
+							""")
+		set_font(return_btn, 1)
+		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
+
+		btn_layout.addWidget(sidebar_btn, alignment=Qt.AlignmentFlag.AlignLeft)
+		btn_layout.addWidget(return_btn, alignment=Qt.AlignmentFlag.AlignRight)
+		# 加入热力图
+		self.aichat_view = LLMAssistantPage()	# 这里年份暂时这样处理
+		aichat_layout.addWidget(self.aichat_view)
+		self.add_page(self.main_stack, self.aichat_window, "AIChat")
 
 	def setup_setting_window(self):
 		"""创建设置栏"""
@@ -449,25 +531,27 @@ class MainWindow(QMainWindow):
 
 		sidebar_btn = QPushButton("")
 		sidebar_btn.setFixedSize(35, 30)
-		sidebar_btn.setIcon(QIcon("pic/sidebar1.png"))
+		icon_path = os.path.join(os.environ["CHRONOSFLOW_RES"], "sidebar1.png")
+		pixmap = QPixmap(icon_path)
+		sidebar_btn.setIcon(QIcon(pixmap))
 		sidebar_btn.setIconSize(QSize(24, 24))
 		sidebar_btn.setStyleSheet("""
-				                QPushButton {
-				                    background-color: transparent;
-				                    border: none;
-				                    border-radius: 5px;
-				                    padding: 5;
-		    						margin: 0;
-				                    text-align: center;
-				                    color: palette(text);
-				                }
-				                QPushButton:hover {
-				                    background-color: palette(midlight);
-				                }
-				                QPushButton:pressed {
+								QPushButton {
+									background-color: transparent;
+									border: none;
+									border-radius: 5px;
+									padding: 5;
+									margin: 0;
+									text-align: center;
+									color: palette(text);
+								}
+								QPushButton:hover {
+									background-color: palette(midlight);
+								}
+								QPushButton:pressed {
 									background-color: palette(mid);
 								}
-				            """)
+							""")
 		set_font(sidebar_btn, 4)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
@@ -475,21 +559,21 @@ class MainWindow(QMainWindow):
 		return_btn = QPushButton("✕")
 		return_btn.setFixedSize(35, 30)
 		return_btn.setStyleSheet("""
-				                QPushButton {
-				                    background-color: transparent;
-				                    border-radius: 5px;
-				                    padding: 5;
-		    						margin: 0;
-				                    text-align: center;
-				                    color: palette(text);
-				                }
-				                QPushButton:hover {
-				                	color: #E61B23;
-				                }
-				                QPushButton:pressed {
+								QPushButton {
+									background-color: transparent;
+									border-radius: 5px;
+									padding: 5;
+									margin: 0;
+									text-align: center;
+									color: palette(text);
+								}
+								QPushButton:hover {
+									color: #E61B23;
+								}
+								QPushButton:pressed {
 									color: #B8281C;
 								}
-				            """)
+							""")
 		set_font(return_btn, 1)
 		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
 
@@ -515,25 +599,27 @@ class MainWindow(QMainWindow):
 
 		sidebar_btn = QPushButton("")
 		sidebar_btn.setFixedSize(35, 30)
-		sidebar_btn.setIcon(QIcon("pic/sidebar1.png"))
+		icon_path = os.path.join(os.environ["CHRONOSFLOW_RES"], "sidebar1.png")
+		pixmap = QPixmap(icon_path)
+		sidebar_btn.setIcon(QIcon(pixmap))
 		sidebar_btn.setIconSize(QSize(24, 24))
 		sidebar_btn.setStyleSheet("""
-				                QPushButton {
-				                    background-color: transparent;
-				                    border: none;
-				                    border-radius: 5px;
-				                    padding: 5;
-		    						margin: 0;
-				                    text-align: center;
-				                    color: palette(text);
-				                }
-				                QPushButton:hover {
-				                    background-color: palette(midlight);
-				                }
-				                QPushButton:pressed {
+								QPushButton {
+									background-color: transparent;
+									border: none;
+									border-radius: 5px;
+									padding: 5;
+									margin: 0;
+									text-align: center;
+									color: palette(text);
+								}
+								QPushButton:hover {
+									background-color: palette(midlight);
+								}
+								QPushButton:pressed {
 									background-color: palette(mid);
 								}
-				            """)
+							""")
 		set_font(sidebar_btn, 4)
 		sidebar_btn.clicked.connect(partial(self.toggle_sidebar, btn=sidebar_btn))
 
@@ -541,21 +627,21 @@ class MainWindow(QMainWindow):
 		return_btn = QPushButton("✕")
 		return_btn.setFixedSize(35, 30)
 		return_btn.setStyleSheet("""
-				                QPushButton {
-				                    background-color: transparent;
-				                    border-radius: 5px;
-				                    padding: 5;
-		    						margin: 0;
-				                    text-align: center;
-				                    color: palette(text);
-				                }
-				                QPushButton:hover {
-				                	color: #E61B23;
-				                }
-				                QPushButton:pressed {
+								QPushButton {
+									background-color: transparent;
+									border-radius: 5px;
+									padding: 5;
+									margin: 0;
+									text-align: center;
+									color: palette(text);
+								}
+								QPushButton:hover {
+									color: #E61B23;
+								}
+								QPushButton:pressed {
 									color: #B8281C;
 								}
-				            """)
+							""")
 		set_font(return_btn, 1)
 		return_btn.clicked.connect(partial(self.navigate_to, "Calendar", self.main_stack))
 
@@ -626,6 +712,8 @@ class MainWindow(QMainWindow):
 				self.week_view.load_schedules()
 			elif name == "HeatMap":
 				self.heatmap_view.refresh(year=2025)
+			elif name == "AIChat":
+				pass
 			stack.setCurrentIndex(self.main_stack_map[name])
 			log.info(f"跳转到{name}页面，日期为{date.toString() if date else date}")
 		else:
@@ -720,13 +808,17 @@ class MainWindow(QMainWindow):
 		if self.sidebar_visible:
 			self.animations["sidebar"].setStartValue(0)
 			self.animations["sidebar"].setEndValue(230)
-			btn.setIcon(QIcon("pic/sidebar1.png"))
+			icon_path = os.path.join(os.environ["CHRONOSFLOW_RES"], "sidebar1.png")
+			pixmap = QPixmap(icon_path)
+			btn.setIcon(QIcon(pixmap))
 			btn.setIconSize(QSize(24, 24))
 			btn.setText("")
 		else:
 			self.animations["sidebar"].setStartValue(230)
 			self.animations["sidebar"].setEndValue(0)
-			btn.setIcon(QIcon("pic/sidebar2.png"))
+			icon_path = os.path.join(os.environ["CHRONOSFLOW_RES"], "sidebar2.png")
+			pixmap = QPixmap(icon_path)
+			btn.setIcon(QIcon(pixmap))
 			btn.setIconSize(QSize(24, 24))
 			btn.setText("")
 
@@ -761,10 +853,32 @@ class MainWindow(QMainWindow):
 	def quit_application(self):
 		"""退出程序"""
 		log.info("quit_application 方法被调用")
-		self.tray.shutdown()
-		if not self.floating_window is None:
-			self.floating_window.close()
-		QApplication.quit()
+
+		# 隐藏所有窗口（关键）
+		self.hide()
+		for widget in QApplication.topLevelWidgets():
+			try:
+				widget.hide()
+				widget.clearFocus()
+			except Exception as e:
+				log.warning(f"隐藏窗口失败: {e}")
+		# 安全关闭托盘与悬浮窗
+		if hasattr(self, "tray") and self.tray:
+			try:
+				self.tray.deleteLater()
+			except Exception as e:
+				log.warning(f"托盘关闭异常: {e}")
+
+		if hasattr(self, "floating_window") and self.floating_window:
+			try:
+				self.floating_window.setVisible(False)
+				self.floating_window.deleteLater()
+			except Exception as e:
+				log.warning(f"悬浮窗关闭异常: {e}")
+
+		# 使用 QTimer 延后退出，避免 Qt 内部对象未完全释放
+		QTimer.singleShot(150, QCoreApplication.quit)
+		QTimer.singleShot(200, lambda: os._exit(0))
 
 	def closeEvent(self, event):
 		"""重写关闭事件"""
@@ -865,12 +979,20 @@ class MainWindow(QMainWindow):
 
 			# 更新样式表
 			self.main_stack.setStyleSheet(f"""
-				            QStackedWidget {{
-				                background-image: url({path});
-				                background-position: center;
-				                background-repeat: no-repeat;
-				                background-size: contain;
-				            }}
-				        """)
+							QStackedWidget {{
+								background-image: url({path});
+								background-position: center;
+								background-repeat: no-repeat;
+								background-size: contain;
+							}}
+						""")
 		else:
 			log.error("警告：壁纸路径无效")
+
+	def set_API_Key(self, api):
+		if api == "":
+			self.aichat_view.api_key = None
+			self.aichat_view.LLM = None
+		else:
+			self.aichat_view.LLM = "deepseek"
+			self.aichat_view.api_key = api

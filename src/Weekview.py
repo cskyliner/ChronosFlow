@@ -1,8 +1,8 @@
-from common import *
-from Upcoming import FloatingButton, DeleteButton
+from src.common import *
+from src.Upcoming import FloatingButton, DeleteButton
 from functools import partial
-from events.Event import *
-from events.EventManager import EventSQLManager
+from src.events.Event import *
+from src.events.EventManager import EventSQLManager
 log = logging.getLogger(__name__)
 class TimeAxisItem(QGraphicsRectItem):
     """左侧时间轴项"""
@@ -32,13 +32,13 @@ class ScheduleBlockItem(QGraphicsRectItem,QObject):
         self.event:ActivityEvent = event
         self.view = view
 
-        self._bg_color = QColor("#DBE6D9")  # 苔藓灰绿
-        self._border_color = QColor("#C5D1C3")  # 边框色
+        self._border_color = QColor("#DDAE02")  
         self._border_width = 1.0
 
         palette = QApplication.palette()
         self.background_color = palette.color(QPalette.Base)
-        self.text_color = QColor("#000000")
+        self._bg_color = palette.color(QPalette.Base)
+        self.text_color = palette.color(QPalette.Text)
         self.light_color = palette.color(QPalette.Highlight)
 
         self.delete_button:DeleteButton = DeleteButton(parent=self.view.viewport())
@@ -70,7 +70,7 @@ class ScheduleBlockItem(QGraphicsRectItem,QObject):
 				padding-top: 1px;
 			}
 		""")
-        
+
         self.delete_button.bind_event(self.event)
         self.delete_button.clicked.connect(self.on_delete_clicked)
         self.delete_button.hide()
@@ -118,7 +118,7 @@ class ScheduleBlockItem(QGraphicsRectItem,QObject):
 
     def mousePressEvent(self, event):
         self.clicked.emit(self.event)
-        
+
     def mouseDoubleClickEvent(self, event):
         self.double_clicked.emit(self.event)
 
@@ -485,7 +485,7 @@ class WeekView(QWidget):
         self.events = []
         first_date = self.dates[0].toString("yyyy-MM-dd")
         end_date = self.dates[-1].toString("yyyy-MM-dd")
-        self.events = EventSQLManager.get_events_between_twodays(first_date,end_date)
+        self.events = EventSQLManager.get_activities_between_twodays(first_date,end_date)
         if(len(self.events) == 0):
             log.info(f"Weekview load_schedules week{self.week_num}({first_date}~{end_date}): 没有找到任何活动日程")
         else:
