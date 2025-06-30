@@ -188,6 +188,7 @@ class SettingsPage(QWidget):
         set_font(deepseek_label)
         self.deepseek_api_edit = QLineEdit()
         self.deepseek_api_edit.setPlaceholderText("请输入 DeepSeek API 密钥")
+        self.deepseek_api_edit.setEchoMode(QLineEdit.Password)
         self.deepseek_api_edit.setStyleSheet("""QLineEdit {
             border-radius: 5px;
             border:1px solid #1E90FF;
