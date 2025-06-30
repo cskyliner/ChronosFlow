@@ -851,34 +851,38 @@ class MainWindow(QMainWindow):
 		self.floating_window.show()
 
 	def quit_application(self):
-		"""退出程序"""
+		"""安全退出程序（兼容 macOS，避免输入法残留和 bus error）"""
 		log.info("quit_application 方法被调用")
 
-		# 隐藏所有窗口（关键）
-		self.hide()
-		for widget in QApplication.topLevelWidgets():
-			try:
-				widget.hide()
-				widget.clearFocus()
-			except Exception as e:
-				log.warning(f"隐藏窗口失败: {e}")
-		# 安全关闭托盘与悬浮窗
-		if hasattr(self, "tray") and self.tray:
-			try:
+		try:
+			# 断开系统输入法连接，移除焦点
+			self.clearFocus()
+			for widget in QApplication.topLevelWidgets():
+				try:
+					widget.hide()
+					widget.setAttribute(Qt.WA_DeleteOnClose)
+					widget.close()
+				except Exception as e:
+					log.warning(f"关闭 widget 异常: {e}")
+		except Exception as e:
+			log.warning(f"清理焦点时出错: {e}")
+
+		# 安全销毁托盘和悬浮窗
+		try:
+			if hasattr(self, "tray") and self.tray:
 				self.tray.deleteLater()
-			except Exception as e:
-				log.warning(f"托盘关闭异常: {e}")
+		except Exception as e:
+			log.warning(f"托盘销毁异常: {e}")
 
-		if hasattr(self, "floating_window") and self.floating_window:
-			try:
-				self.floating_window.setVisible(False)
+		try:
+			if hasattr(self, "floating_window") and self.floating_window:
+				self.floating_window.hide()
 				self.floating_window.deleteLater()
-			except Exception as e:
-				log.warning(f"悬浮窗关闭异常: {e}")
+		except Exception as e:
+			log.warning(f"悬浮窗销毁异常: {e}")
 
-		# 使用 QTimer 延后退出，避免 Qt 内部对象未完全释放
-		QTimer.singleShot(150, QCoreApplication.quit)
-		QTimer.singleShot(200, lambda: os._exit(0))
+		# 使用 QTimer 延迟退出（给 Qt 主事件循环时间清理）
+		QTimer.singleShot(300, QCoreApplication.quit)
 
 	def closeEvent(self, event):
 		"""重写关闭事件"""
