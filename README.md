@@ -32,3 +32,9 @@ pip install -r requirements.txt
 ```
 python run.py
 ```
+
+## 项目demo下载链接
+
+https://disk.pku.edu.cn/link/AA6E078833918D44869E6584C4B428AE9E
+
+项目文档见https://github.com/cskyliner/ChronosFlow/blob/main/docs/Project_Report.pdf
