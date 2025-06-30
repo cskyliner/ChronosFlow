@@ -445,6 +445,8 @@ class MainWindow(QMainWindow):
 		btn_layout.addWidget(return_btn, alignment=Qt.AlignmentFlag.AlignRight)
 		# 加入热力图
 		self.heatmap_view = YearHeatMapView(year=2025)	# 这里年份暂时这样处理
+		self.heatmap_view.Double_Clicked.connect(
+    		lambda date: self.navigate_to("Upcoming", self.main_stack, date))
 		heatmap_layout.addWidget(self.heatmap_view)
 		self.add_page(self.main_stack, self.heatmap_window, "HeatMap")
 
@@ -683,6 +685,7 @@ class MainWindow(QMainWindow):
 						partial(self.navigate_to, "Schedule", self.main_stack, date))
 				else:
 					self.upcoming.refresh_upcoming()
+					self.upcoming.notify_no_events()
 					self.upcoming.float_btn.clicked.connect(partial(self.navigate_to, "Schedule", self.main_stack))
 			elif name == "Schedule":
 				self.schedule.group_box.setTitle("添加DDL")

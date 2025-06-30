@@ -10,13 +10,16 @@ LIGHT_THEME_COLORS = [
 DARK_THEME_COLORS = [
     "#222222", "#4e7933", "#6dc36d", "#a0e883", "#e5ffb2"
 ]
-class DayItem(QGraphicsRectItem):
+class DayItem(QObject, QGraphicsRectItem):
+    double_clicked = Signal(QDate)
     def __init__(self, date: QDate, count: int, rect: QRectF):
-        super().__init__(rect)
+        QObject.__init__(self)
+        QGraphicsRectItem.__init__(self, rect)
         self.date = date
         self.count = count 
         self.setBrush(QBrush(self.map_color(count)))
         self.setAcceptHoverEvents(True)
+        
         self.setToolTip(f"{date.toString()}:\n{count} events")
         self.setPen(QPen(Qt.NoPen))
 
@@ -47,11 +50,22 @@ class DayItem(QGraphicsRectItem):
             return QColor(color_map[3])
         else:
             return QColor(color_map[4])
-        
+    def mouseDoubleClickEvent(self, event):
+        """处理双击事件"""
+        if event.button() == Qt.LeftButton:  # 仅处理左键双击
+            # 在这里添加双击后的逻辑
+            log.info(f"双击了日期: {self.date.toString()}，事件数量: {self.count}")
 
-class MonthBlock(QGraphicsItemGroup):
+            # 示例：发出自定义信号（需先定义信号）
+            # self.doubleClicked.emit(self.date, self.count)
+            self.double_clicked.emit(self.date)
+            super().mouseDoubleClickEvent(event)  # 调用基类方法确保默认行为        
+
+class MonthBlock(QObject, QGraphicsItemGroup):
+    DoubleClicked = Signal(QDate)
     def __init__(self,year:int,month:int,data_list:dict,cell_size=12, spacing=2):
-        super().__init__()
+        QObject.__init__(self)
+        QGraphicsItemGroup.__init__(self)
         self.year = year
         self.month = month
         self.data_list = data_list
@@ -86,13 +100,14 @@ class MonthBlock(QGraphicsItemGroup):
 
             item = DayItem(d, count, rect)
             item.setParentItem(self)
-
+            item.double_clicked.connect(self.DoubleClicked)
             col += 1
             if col == 7:
                 col = 0
                 row += 1
 
 class YearHeatMapView(QWidget):
+    Double_Clicked = Signal(QDate)
     def __init__(self, year:int):
         super().__init__()
         self.year = year
@@ -275,6 +290,7 @@ class YearHeatMapView(QWidget):
             month = i + 1
 
             block = MonthBlock(self.year, month, self.data,cell_size=cell_size,spacing=2)
+            block.DoubleClicked.connect(self.Double_Clicked)
             x = col * (cell_size * 7 + spacing)
             y = row * (cell_size * 6 + 20 + spacing)
             block.setPos(x, y)
