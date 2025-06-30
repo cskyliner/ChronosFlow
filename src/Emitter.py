@@ -59,7 +59,7 @@ class Emitter(QObject):
 	def send_API_key(self,api):
 		"""发送设置中的API文件"""
 		self.send_API_key_signal.emit(api)
-
+    
 	# ===转发数据函数====
 
 	def send_backend_data_to_frontend_signal(self, data):
