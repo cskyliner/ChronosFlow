@@ -4,11 +4,7 @@ from src.NewCalendar import CalendarView
 from functools import partial
 from src.CreateEventWindow import Schedule
 from src.Emitter import Emitter
-<<<<<<< HEAD
-from src.Settings import SettingsPage
-=======
 from src.Settings import SettingsPage, SettingsDialog
->>>>>>> userA
 from src.Tray import Tray
 from src.FloatingWindow import FloatingWindow
 from src.Notice import Notice
@@ -449,11 +445,8 @@ class MainWindow(QMainWindow):
 		btn_layout.addWidget(return_btn, alignment=Qt.AlignmentFlag.AlignRight)
 		# 加入热力图
 		self.heatmap_view = YearHeatMapView(year=2025)	# 这里年份暂时这样处理
-<<<<<<< HEAD
 		self.heatmap_view.Double_Clicked.connect(
     		lambda date: self.navigate_to("Upcoming", self.main_stack, date))
-=======
->>>>>>> userA
 		heatmap_layout.addWidget(self.heatmap_view)
 		self.add_page(self.main_stack, self.heatmap_window, "HeatMap")
 
@@ -692,10 +685,7 @@ class MainWindow(QMainWindow):
 						partial(self.navigate_to, "Schedule", self.main_stack, date))
 				else:
 					self.upcoming.refresh_upcoming()
-<<<<<<< HEAD
 					self.upcoming.notify_no_events()
-=======
->>>>>>> userA
 					self.upcoming.float_btn.clicked.connect(partial(self.navigate_to, "Schedule", self.main_stack))
 			elif name == "Schedule":
 				self.schedule.group_box.setTitle("添加DDL")
@@ -733,10 +723,7 @@ class MainWindow(QMainWindow):
 			raise RuntimeError(f"错误：未知页面 {name}")
 
 	def check_one_schedule(self, data: tuple):
-<<<<<<< HEAD
-=======
 		"""跳转到指定天的日程编辑界面"""
->>>>>>> userA
 		event: BaseEvent = data[0]
 		if isinstance(event, DDLEvent):
 			self.schedule.id = event.id
@@ -851,10 +838,7 @@ class MainWindow(QMainWindow):
 		# 信号连接：托盘目录(右键显示)
 		self.tray.show_main.connect(self.show)
 		self.tray.show_floating.connect(self.show_floating_window)
-<<<<<<< HEAD
-=======
 		self.tray.show_settings.connect(self.show_setting_window)
->>>>>>> userA
 		self.tray.exit_app.connect(self.quit_application)
 		self.tray.activated_response.connect(self.show_main_window)
 		# 初始化托盘图标提醒
@@ -931,14 +915,10 @@ class MainWindow(QMainWindow):
 		elif self.isHidden():
 			self.show()
 
-<<<<<<< HEAD
-=======
 	def show_setting_window(self):
 		"""显示设置窗口"""
 		dialog = SettingsDialog(self)
 		dialog.exec()
-		
->>>>>>> userA
 	def _init_floating_window(self):
 		self.floating_window = FloatingWindow()
 		# 连接通知系统

@@ -368,10 +368,7 @@ class Upcoming(QListWidget):
 				log.info("正在加载数据，请稍等……")
 			elif self.no_more_events:
 				log.info("没有更多数据了，停止加载……")
-<<<<<<< HEAD
 				self.notify_no_events()
-=======
->>>>>>> userA
 			else:
 				log.error("未知错误，无法加载数据")
 
@@ -651,11 +648,7 @@ class Upcoming(QListWidget):
 		self.loading = False
 		if self.no_more_events:
 			log.info("show_specific_date:没有更多数据了，停止加载……")
-<<<<<<< HEAD
 			self.notify_no_events(date)
-=======
-			self.notify_no_events()
->>>>>>> userA
 			return
 		for event in self.events_used_to_update:
 			self.add_one_item(event)
@@ -679,7 +672,6 @@ class Upcoming(QListWidget):
 		self.load_more_data()
 		log.info(f"共{self.event_num}条日程")
 
-<<<<<<< HEAD
 	def notify_no_events(self, date: QDate = None):
 		# 创建自定义样式的提示项
 		# 创建提示项
@@ -692,22 +684,12 @@ class Upcoming(QListWidget):
 			notice_text = f"""📅{date_string} 当日没有任何日程安排哦
 			────────────────
 			✨ 快来点击下方 + 号按钮添加首个日程吧"""
-		else:
+		elif self.event_num == 0:
 			notice_text = """📅 当前没有任何日程安排哦
 			────────────────
 			✨ 快来点击下方 + 号按钮添加首个日程吧"""
-=======
-	def notify_no_events(self):
-		# 创建自定义样式的提示项
-		# 创建提示项
-		self.notify_item = QListWidgetItem()
-		self.notify_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)  # 文字居中
-
-		# 使用Unicode符号+多行文本
-		notice_text = """📅 当前没有日程安排
-		────────────────
-		✨ 点击下方 + 号添加首个日程"""
->>>>>>> userA
+		else:
+			return 
 
 		# 设置字体样式
 		set_font(self.notify_item, 4)

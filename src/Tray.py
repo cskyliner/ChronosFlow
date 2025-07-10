@@ -16,10 +16,7 @@ class Tray(QObject):
 	exit_app = Signal()
 	notification_received = Signal(object)
 	activated_response = Signal()
-<<<<<<< HEAD
-=======
 	show_settings = Signal()
->>>>>>> userA
 
 	def __init__(self, app, parent=None, icon_path=None):
 		super().__init__(parent)
@@ -64,10 +61,7 @@ class Tray(QObject):
 		menu = QMenu()
 		menu.addAction(QAction("打开主窗口", menu, triggered=lambda: self.show_main.emit()))
 		menu.addAction(QAction("打开悬浮窗", menu, triggered=lambda: self.show_floating.emit()))
-<<<<<<< HEAD
-=======
 		menu.addAction(QAction("设置", menu, triggered=lambda: self.show_settings.emit()))
->>>>>>> userA
 		menu.addAction(QAction("退出", menu, triggered=lambda: self.exit_app.emit()))
 		self.tray.setContextMenu(menu)
 		self.tray.activated.connect(self._on_tray_activated)
@@ -99,10 +93,7 @@ class Tray(QObject):
 		actions = [
 			("打开主窗口", lambda: self.show_main.emit()),
 			("打开悬浮窗", lambda: self.show_floating.emit()),
-<<<<<<< HEAD
-=======
 			("设置", lambda: self.show_settings.emit()),
->>>>>>> userA
 			("退出", lambda: self.exit_app.emit())
 		]
 
@@ -118,10 +109,7 @@ class Tray(QObject):
 		return pystray.Menu(
 			pystray.MenuItem('打开主窗口', self._pystray_show_main),
 			pystray.MenuItem('打开悬浮窗', self._pystray_show_floating),
-<<<<<<< HEAD
-=======
 			pystray.MenuItem('设置', self._show_settings),
->>>>>>> userA
 			pystray.MenuItem('退出', self._pystray_exit)
 		)
 
@@ -159,12 +147,9 @@ class Tray(QObject):
 	def _pystray_show_floating(self, icon, item):
 		self.show_floating.emit()
 
-<<<<<<< HEAD
-=======
 	def _show_settings(self, icon, item):
 		self.show_settings.emit()
 
->>>>>>> userA
 	def _pystray_exit(self, icon, item):
 		self.exit_app.emit()
 

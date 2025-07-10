@@ -10,25 +10,15 @@ LIGHT_THEME_COLORS = [
 DARK_THEME_COLORS = [
     "#222222", "#4e7933", "#6dc36d", "#a0e883", "#e5ffb2"
 ]
-<<<<<<< HEAD
 class DayItem(QObject, QGraphicsRectItem):
     double_clicked = Signal(QDate)
     def __init__(self, date: QDate, count: int, rect: QRectF):
         QObject.__init__(self)
         QGraphicsRectItem.__init__(self, rect)
-=======
-class DayItem(QGraphicsRectItem):
-    def __init__(self, date: QDate, count: int, rect: QRectF):
-        super().__init__(rect)
->>>>>>> userA
         self.date = date
         self.count = count 
         self.setBrush(QBrush(self.map_color(count)))
         self.setAcceptHoverEvents(True)
-<<<<<<< HEAD
-        
-=======
->>>>>>> userA
         self.setToolTip(f"{date.toString()}:\n{count} events")
         self.setPen(QPen(Qt.NoPen))
 
@@ -59,7 +49,7 @@ class DayItem(QGraphicsRectItem):
             return QColor(color_map[3])
         else:
             return QColor(color_map[4])
-<<<<<<< HEAD
+
     def mouseDoubleClickEvent(self, event):
         """处理双击事件"""
         if event.button() == Qt.LeftButton:  # 仅处理左键双击
@@ -76,13 +66,7 @@ class MonthBlock(QObject, QGraphicsItemGroup):
     def __init__(self,year:int,month:int,data_list:dict,cell_size=12, spacing=2):
         QObject.__init__(self)
         QGraphicsItemGroup.__init__(self)
-=======
-        
 
-class MonthBlock(QGraphicsItemGroup):
-    def __init__(self,year:int,month:int,data_list:dict,cell_size=12, spacing=2):
-        super().__init__()
->>>>>>> userA
         self.year = year
         self.month = month
         self.data_list = data_list
@@ -117,21 +101,15 @@ class MonthBlock(QGraphicsItemGroup):
 
             item = DayItem(d, count, rect)
             item.setParentItem(self)
-<<<<<<< HEAD
             item.double_clicked.connect(self.DoubleClicked)
-=======
-
->>>>>>> userA
             col += 1
             if col == 7:
                 col = 0
                 row += 1
 
 class YearHeatMapView(QWidget):
-<<<<<<< HEAD
+
     Double_Clicked = Signal(QDate)
-=======
->>>>>>> userA
     def __init__(self, year:int):
         super().__init__()
         self.year = year
@@ -314,10 +292,7 @@ class YearHeatMapView(QWidget):
             month = i + 1
 
             block = MonthBlock(self.year, month, self.data,cell_size=cell_size,spacing=2)
-<<<<<<< HEAD
             block.DoubleClicked.connect(self.Double_Clicked)
-=======
->>>>>>> userA
             x = col * (cell_size * 7 + spacing)
             y = row * (cell_size * 6 + 20 + spacing)
             block.setPos(x, y)
