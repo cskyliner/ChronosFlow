@@ -71,63 +71,84 @@ Python3.10,
 
 ### 主要功能
 
-1. **分级日历纵览**：  
+1. **分级日历纵览**：
+
 分级展示日程
+
 <img src="日历界面展示.png" alt="Calendar View" width="350"/>
 
-可以通过右上角搜索框搜索日程  
+可以通过右上角搜索框搜索日程
+
 <img src="日历界面搜索功能展示.png" alt="Calendar Search View" width="350"/>
 
-2. **音频提示，视觉提示**：  
+2. **音频提示，视觉提示**：
+
 通过任务栏小托盘实现快速操作，连接系统通知实现原生体验的日程提醒。  
+
 <img src="DDL创建界面与提醒功能展示.png" alt="Notice" width="350"/>
 
-3. **Upcoming**：  
+3. **Upcoming**：
+
 一次获取10个日程，并展示；翻到底部自动更新  
 可以查看具体DDL、删除DDL、标记DDL已完成  
+
 <img src="DDL列表展示.png" alt="Upcoming" width="350"/>  
 
 <img src="通过Upcoming查看日程.png" alt="Upcoming Detail" width="350"/>
 
-4. **不同类型的事件安排**：  
-对Event采取不同分类：  
-DDL直接使用截止日期和提前通知；  
-日程（Activity）则为长期打卡任务或长时任务段，实现重复提醒操作  
-创建DDL，可选截止日期及提醒时间  
+4. **不同类型的事件安排**：
+
+对Event采取不同分类：
+DDL直接使用截止日期和提前通知；
+日程（Activity）则为长期打卡任务或长时任务段，实现重复提醒操作
+创建DDL，可选截止日期及提醒时间
+
 <img src="DDL的创建.png" alt="CreateEventWindow - DDL" width="350"/>  
 
 创建日程，可选起止日期、是否重复  
-不重复：  
+不重复：
+
 <img src="日程创建0.png" alt="CreateEventWindow - Activity 0" width="350"/>  
 <img src="日程创建1.png" alt="CreateEventWindow - Activity 1" width="350"/>  
 重复：  
 <img src="日程创建2.png" alt="CreateEventWindow - Repeating" width="350"/>
 
-5. **课表**：  
+5. **课表**： 
+
 支持excel导入（北京大学春秋季课表已经过验证），尽可能减少手动操作，导入课程表时候会提取期末考试时间和上课地点等信息到日程备注中(即北大选课平台导出课程表的excel文件格式)(目前仅支持此格式，未来有待扩展)\
 鼠标放到某个日程上方，会显示删除按钮；点击日程，可以具体查看  
+
 <img src="周视图展示.png" alt="Week View" width="350"/>  
 
 <img src="通过周视图查看日程.png" alt="Week View Detail" width="350"/>
 
 6. **快速检索**：  
+
 根据日期、标题准确搜索，可支持多关键词搜索：将不同关键词之间加空格即可。
 
 7. **数据统计与可视化处理**：  
+
 年度热力图直观显示活动密度  
+
 <img src="热力图展示.png" alt="Heatmap" width="350"/>
 
 8. **AI日程规划助手**：  
+
 根据用户本地数据，调用LLM进行日程规划  
 <img src="AIChat.png" alt="AI Assistant" width="350"/>
 
 9. **设置**：  
+
 可以指定设置的数据的存储目录、选择壁纸、输入密钥、导入课表  
+
 <img src="设置界面.png" alt="Settings" width="350"/>  
 
 使用专用窗口选择路径  
-<img src="选择界面.png" alt="Path Selector" width="350"/>  
-壁纸效果  
+
+<img src="选择界面.png" alt="Path Selector" width="350"/> 
+
+壁纸效果
+  
 <img src="壁纸展示.png" alt="Wallpaper" width="350"/>
 
 ## 项目模块与类设计
