@@ -1,0 +1,17 @@
+/.idea/
+*.iml
+.vscode/
+.DS_Store
+__pycache__/
+*.pyc
+local_data/
+docs/framework_draft.md
+# 忽略打包生成文件夹
+build/
+dist/
+ChronosFlow.spec
+AppData/
+tests/
+pic/heat-map.svg
+pic/sidebar1.png
+pic/sidebar2.png
