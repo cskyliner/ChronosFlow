@@ -4,7 +4,7 @@ from src.NewCalendar import CalendarView
 from functools import partial
 from src.CreateEventWindow import Schedule
 from src.Emitter import Emitter
-from src.Settings import SettingsPage
+from src.Settings import SettingsPage, SettingsDialog
 from src.Tray import Tray
 from src.FloatingWindow import FloatingWindow
 from src.Notice import Notice
@@ -723,6 +723,7 @@ class MainWindow(QMainWindow):
 			raise RuntimeError(f"错误：未知页面 {name}")
 
 	def check_one_schedule(self, data: tuple):
+		"""跳转到指定天的日程编辑界面"""
 		event: BaseEvent = data[0]
 		if isinstance(event, DDLEvent):
 			self.schedule.id = event.id
@@ -837,6 +838,7 @@ class MainWindow(QMainWindow):
 		# 信号连接：托盘目录(右键显示)
 		self.tray.show_main.connect(self.show)
 		self.tray.show_floating.connect(self.show_floating_window)
+		self.tray.show_settings.connect(self.show_setting_window)
 		self.tray.exit_app.connect(self.quit_application)
 		self.tray.activated_response.connect(self.show_main_window)
 		# 初始化托盘图标提醒
@@ -913,6 +915,10 @@ class MainWindow(QMainWindow):
 		elif self.isHidden():
 			self.show()
 
+	def show_setting_window(self):
+		"""显示设置窗口"""
+		dialog = SettingsDialog(self)
+		dialog.exec()
 	def _init_floating_window(self):
 		self.floating_window = FloatingWindow()
 		# 连接通知系统

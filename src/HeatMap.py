@@ -19,7 +19,6 @@ class DayItem(QObject, QGraphicsRectItem):
         self.count = count 
         self.setBrush(QBrush(self.map_color(count)))
         self.setAcceptHoverEvents(True)
-        
         self.setToolTip(f"{date.toString()}:\n{count} events")
         self.setPen(QPen(Qt.NoPen))
 
@@ -50,6 +49,7 @@ class DayItem(QObject, QGraphicsRectItem):
             return QColor(color_map[3])
         else:
             return QColor(color_map[4])
+
     def mouseDoubleClickEvent(self, event):
         """处理双击事件"""
         if event.button() == Qt.LeftButton:  # 仅处理左键双击
@@ -66,6 +66,7 @@ class MonthBlock(QObject, QGraphicsItemGroup):
     def __init__(self,year:int,month:int,data_list:dict,cell_size=12, spacing=2):
         QObject.__init__(self)
         QGraphicsItemGroup.__init__(self)
+
         self.year = year
         self.month = month
         self.data_list = data_list
@@ -107,6 +108,7 @@ class MonthBlock(QObject, QGraphicsItemGroup):
                 row += 1
 
 class YearHeatMapView(QWidget):
+
     Double_Clicked = Signal(QDate)
     def __init__(self, year:int):
         super().__init__()
