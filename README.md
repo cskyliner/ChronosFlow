@@ -19,22 +19,31 @@ ChronosFlow 是一个基于 PySide6 的跨平台时间管理应用，作为北�
 - 💻 **跨平台兼容性**：已在 macOS 和 Windows 上通过测试。
 - 🤖 **AI日程规划助手**：集成大模型 API（支持 DeepSeek 等），自动分析指定时间段内的课程与任务，生成个性化日程建议，辅助用户科学规划学习生活。
 
-
-## 下载源代码运行步骤
+## 快速开始
 
 1.安装依赖\
 确保使用的是 Python 3.10 或以上版本，建议使用虚拟环境（如 venv、conda）等隔离依赖：
-```
+
+```bash
 pip install -r requirements.txt
 ```
+
 2.运行项目\
 进入项目根目录，执行主入口脚本：
-```
+
+```bash
 python run.py
 ```
 
 ## 项目demo下载链接
 
+<<<<<<< HEAD
+<https://disk.pku.edu.cn/link/AA6E078833918D44869E6584C4B428AE9E>
+
+## 项目文档
+
+<https://github.com/cskyliner/ChronosFlow/blob/main/docs/Project_Report.pdf>
+=======
 <<<<<<< HEAD
 https://disk.pku.edu.cn/link/AA6E078833918D44869E6584C4B428AE9E
 
@@ -42,3 +51,4 @@ https://disk.pku.edu.cn/link/AA6E078833918D44869E6584C4B428AE9E
 =======
 https://disk.pku.edu.cn/link/AA6E078833918D44869E6584C4B428AE9E
 >>>>>>> userA
+>>>>>>> origin
